@@ -15,9 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fa">
       <body
-        dir="rtl"
         className={`${vazir.className} font-light bg-white text-black max-w-[500px] m-auto antialiased`}
       >
         {children}
