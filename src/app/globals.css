@@ -29,3 +29,29 @@ body {
     text-wrap: balance;
   }
 }
+
+.fc-non-business {
+  background-image: linear-gradient(135deg, transparent 46%, #e5e5e5 49%, #e5e5e5 51%, transparent 55%) !important;
+  background-color: #f2f2f2 !important;
+  background-size: 8px 8px !important;
+}
+
+.fc-day-today {
+  background-color: #fff !important;
+}
+
+.fc .fc-scrollgrid-section-header.fc-scrollgrid-section-sticky > * {
+  top: 60px;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border-top: none !important;
+}
+
+.fc-timegrid-axis {
+  height: 68px !important;
+}
+
+.calendar-container.animating {
+  transition: transform 0.3s ease;
+}

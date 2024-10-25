@@ -14,6 +14,7 @@
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/resource": "^6.1.15",
     "@fullcalendar/resource-timegrid": "^6.1.15",
+    "@fullcalendar/scrollgrid": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
     "next": "14.2.15",
     "react": "^18",

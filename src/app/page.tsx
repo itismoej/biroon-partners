@@ -1,7 +1,5 @@
-import {Calendar} from "@/app/Calendar";
+import { Calendar } from "@/app/Calendar";
 
 export default function Home() {
-  return (
-    <Calendar />
-  );
+  return <Calendar />;
 }
