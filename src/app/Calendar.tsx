@@ -282,7 +282,6 @@ export function Calendar() {
               nowIndicator={true}
               editable={true}
               selectable={true}
-              selectMirror={true}
               stickyHeaderDates={"auto"}
             />
           </SwipeComponent>
@@ -313,13 +312,13 @@ export function Calendar() {
 
 function renderEventContent(eventInfo: EventContentArg) {
   return (
-    <>
-      <div>
+    <div>
+      <div style={{ direction: "ltr" }}>
         <b>{eventInfo.timeText}</b>
       </div>
       <div>
         <i>{eventInfo.event.title}</i>
       </div>
-    </>
+    </div>
   );
 }
