@@ -36,12 +36,12 @@ body {
   background-size: 8px 8px !important;
 }
 
-.fc-day-today {
-  background-color: #fff !important;
+.fc-scroller {
+  scrollbar-width: none !important;
 }
 
-.fc .fc-scrollgrid-section-header.fc-scrollgrid-section-sticky > * {
-  top: 60px;
+.fc-day-today {
+  background-color: #fff !important;
 }
 
 .fc-theme-standard .fc-scrollgrid {
@@ -54,4 +54,8 @@ body {
 
 .calendar-container.animating {
   transition: transform 0.3s ease;
+}
+
+.fc tfoot {
+  display: none;
 }
