@@ -29,6 +29,7 @@ const SwipeComponent: React.FC<SwipeComponentProps> = ({
 }) => {
   const [translateX, setTranslateX] = useState(0);
   const [startX, setStartX] = useState<number | null>(null);
+  const [startY, setStartY] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSwiping, setIsSwiping] = useState(false);
 
@@ -37,19 +38,21 @@ const SwipeComponent: React.FC<SwipeComponentProps> = ({
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (canSwipeDirectionRef.current === false) return;
     setStartX(e.touches[0].pageX);
+    setStartY(e.touches[0].clientY);
     setIsDragging(true);
     setIsSwiping(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging || startX === null || canSwipeDirectionRef.current === false) return;
+    if (!isDragging || startX === null || startY === null || canSwipeDirectionRef.current === false) return;
 
     const currentX = e.touches[0].pageX;
+    const currentY = e.touches[0].clientY;
     const deltaX = currentX - startX;
+    const deltaY = currentY - startY;
 
     if (!isSwiping) {
-      if (Math.abs(deltaX) > 25) {
-        // User is swiping horizontally
+      if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
         setIsSwiping(true);
       }
     } else {
@@ -86,6 +89,7 @@ const SwipeComponent: React.FC<SwipeComponentProps> = ({
     setTimeout(() => {
       setTranslateX(0);
       setStartX(null);
+      setStartY(null);
       setIsDragging(false);
       setIsSwiping(false);
     }, 200);
@@ -251,7 +255,6 @@ export function Calendar() {
                 setTranslateX(0);
               }}
               eventDragStop={() => {
-                console.log("stop");
                 const element = document.querySelector(
                   ".fc-scroller-harness .fc-timegrid-body",
                 )?.parentElement;
@@ -295,14 +298,10 @@ export function Calendar() {
               editable={true}
               selectable={true}
               eventDrop={(info) => {
-                console.log("event dropppppppp");
                 setEditingEvents((prev) => [...prev, info]);
               }}
               eventResize={(info) => {
                 setEditingEvents((prev) => [...prev, info]);
-              }}
-              eventChange={() => {
-                console.log("change");
               }}
               dragRevertDuration={100}
               dragScroll={true}
