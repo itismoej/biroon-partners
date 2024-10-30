@@ -1,14 +1,23 @@
 "use client";
 
-import { type CalendarEvent, type Employee, fetchAllEmployees, fetchAllEvents } from "@/app/api";
+import {
+  type CalendarEvent,
+  type CalendarEventPatchRequest,
+  type Employee,
+  fetchAllEmployees,
+  fetchAllEvents,
+  updateEvent,
+} from "@/app/api";
 import { toFarsiDigits } from "@/app/utils";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import interactionPlugin, { type EventResizeDoneArg } from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
+import type { ResourceApi } from "@fullcalendar/resource";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { format } from "date-fns-jalali";
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 type CanSwipeDirection = boolean | "Left" | "Right";
 
@@ -120,7 +129,9 @@ export function Calendar() {
   const calendarRef = useRef<FullCalendar>(null);
   const [translateX, setTranslateX] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [editingEvents, setEditingEvents] = useState<(EventDropArg | EventResizeDoneArg)[]>([]);
+  const [editingEvents, setEditingEvents] = useState<
+    (({ newResource?: ResourceApi } & EventDropArg) | EventResizeDoneArg)[]
+  >([]);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -152,6 +163,7 @@ export function Calendar() {
   }));
 
   const initialEvents = allEvents.map((event) => ({
+    id: event.id,
     title: event.service.name,
     start: event.startDateTime,
     end: event.endDateTime,
@@ -330,7 +342,7 @@ export function Calendar() {
         {editingEvents.length > 0 && (
           <div
             className={
-              "fixed flex w-[90%] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2.5 rounded-md py-1 px-3 bg-purple-600 text-white font-light text-center text-lg"
+              "fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2.5 rounded-md py-1 px-3 bg-purple-600 text-white font-light text-center text-lg"
             }
           >
             <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
@@ -361,7 +373,81 @@ export function Calendar() {
               <button
                 type="button"
                 onClick={() => {
-                  setEditingEvents([]);
+                  // Create a Map to store the latest edit per event id
+                  const uniqueEventsMap = new Map<string, CalendarEventPatchRequest>();
+
+                  // Iterate over editingEvents and update the map with the latest changes for each event id
+                  editingEvents.forEach((e) => {
+                    uniqueEventsMap.set(e.event.id, {
+                      ...(uniqueEventsMap.get(e.event.id) || {}),
+                      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                      // @ts-ignore
+                      ...(e.newResource ? { employeeId: e.newResource.id } : {}),
+                      startDateTime: e.event.startStr,
+                      endDateTime: e.event.endStr,
+                    });
+                  });
+
+                  // Convert the map values into an array of update promises
+                  const updatePromises: [string, Promise<{ data: CalendarEvent; response: Response }>][] =
+                    Array.from(uniqueEventsMap.entries()).map(([id, updateData]) => [
+                      id,
+                      updateEvent(id, updateData),
+                    ]);
+
+                  // Use Promise.all to handle all promises together
+                  Promise.all(
+                    updatePromises.map(([id, p]) =>
+                      p
+                        .then(({ data }) => {
+                          if (calendarRef.current) {
+                            const event = calendarRef.current.getApi().getEventById(id);
+                            if (!event) {
+                              return;
+                            }
+                            toast.success(`نوبت ${data.service.name} با موفقیت تغییر یافت`, {
+                              duration: 3000,
+                              position: "bottom-center",
+                            });
+                            setTimeout(() => {
+                              event.setProp("backgroundColor", "green");
+                            }, 10);
+                            setTimeout(() => {
+                              event.setProp("backgroundColor", "");
+                            }, 3000);
+                          }
+                          return true; // Indicate success for this promise
+                        })
+                        .catch(() => {
+                          if (calendarRef.current) {
+                            const event = calendarRef.current.getApi().getEventById(id);
+                            if (!event) {
+                              return;
+                            }
+                            toast.error(`ویرایش نوبت ${event.title} ناموفق بود`, {
+                              duration: 3000,
+                              position: "bottom-center",
+                            });
+                            setTimeout(() => {
+                              event.setProp("backgroundColor", "red");
+                            }, 200);
+                            setTimeout(() => {
+                              event.setProp("backgroundColor", "");
+                            }, 3000);
+                          }
+                          editingEvents
+                            .filter((e) => e.event.id === id)
+                            .reverse()
+                            .forEach((e) => {
+                              e.revert();
+                            });
+                          return false; // Indicate failure for this promise
+                        }),
+                    ),
+                  ).finally(() => {
+                    // Run setEditingEvents([]) after all promises have finished
+                    setEditingEvents([]);
+                  });
                 }}
                 className="w-full p-3 bg-black text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
               >

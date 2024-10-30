@@ -105,6 +105,7 @@ export interface ReserveData {
 }
 
 export interface CalendarEvent {
+  id: string;
   service: Service;
   employee: Employee;
   servicePrice: number;
@@ -122,5 +123,26 @@ export async function fetchAllEvents(): Promise<{ data: CalendarEvent[]; respons
 
 export async function fetchAllEmployees(): Promise<{ data: Employee[]; response: Response }> {
   const response = await fetch(`${apiUrl}/partners/employees/`, { credentials: "include" });
+  return { data: await response.json(), response };
+}
+
+export interface CalendarEventPatchRequest {
+  employeeId?: Employee["id"];
+  startDateTime?: string | Date;
+  endDateTime?: string | Date;
+}
+
+export async function updateEvent(
+  eventId: string,
+  eventPatch: CalendarEventPatchRequest,
+): Promise<{ data: CalendarEvent; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/events/${eventId}/`, {
+    method: "PATCH",
+    credentials: "include",
+    body: JSON.stringify(eventPatch),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   return { data: await response.json(), response };
 }

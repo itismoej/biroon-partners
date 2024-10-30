@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
 
 const vazir = Vazirmatn({ subsets: ["latin"] });
 
@@ -18,6 +19,7 @@ export default function RootLayout({
     <html lang="fa">
       <body className={`${vazir.className} font-light bg-white text-black max-w-[500px] m-auto antialiased`}>
         {children}
+        <Toaster />
       </body>
     </html>
   );
