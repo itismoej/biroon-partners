@@ -67,8 +67,12 @@ const config: Config = {
           '100%': { opacity: "1" },
         },
         fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(5px)' },
+          '0%': { opacity: '0', transform: 'translateY(30%)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        fadeOutDown: {
+          '0%': { opacity: '1', transform: 'translateY(0px)' },
+          '100%': { opacity: '0', transform: 'translateY(30%)' },
         },
       },
       animation: {
@@ -78,6 +82,7 @@ const config: Config = {
         slideOutBottom: 'slideOutBottom 0.5s ease-out',
         lightPulse: 'lightPulse 2s ease-out infinite',
         fadeInUp: 'fadeInUp 0.1s ease-out forwards',
+        fadeOutDown: 'fadeOutDown 0.1s ease-in forwards',
       },
     },
   },

@@ -23,6 +23,7 @@ import "./calendar.css";
 import { BottomSheet } from "@/app/Components/BottomSheet";
 import { type CanSwipeDirection, SwipeComponent } from "@/app/Components/SwipeComponent";
 import { Tooltip } from "@/app/Components/Tooltip";
+import { Modal } from "./Components/Modal";
 
 export function Calendar() {
   const canSwipeDirectionRef = useRef<CanSwipeDirection>("Left");
@@ -39,6 +40,7 @@ export function Calendar() {
   const router = useRouter();
 
   const [actionsBSIsOpen, setActionsBSIsOpen] = useState(false);
+  const [addAppointmentModalIsOpen, setAddAppointmentModalIsOpen] = useState(false);
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -316,7 +318,10 @@ export function Calendar() {
               <div className="-mx-3">
                 <ul className="flex flex-col">
                   <li>
-                    <button className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl">
+                    <button
+                      className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
+                      onClick={() => setAddAppointmentModalIsOpen(true)}
+                    >
                       <div className="bg-purple-100 rounded-full p-3">
                         <img src="/add-appointment.svg" className="w-6 h-6" />
                       </div>
@@ -460,6 +465,16 @@ export function Calendar() {
             </div>
           </div>
         )}
+
+        <Modal
+          isOpen={addAppointmentModalIsOpen}
+          onClose={() => {
+            setAddAppointmentModalIsOpen(false)
+          }}
+          title=""
+        >
+        افزودن یک نوبت
+        </Modal>
       </div>
     )
   );
