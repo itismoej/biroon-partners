@@ -21,109 +21,8 @@ import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import "./calendar.css";
 import { BottomSheet } from "@/app/Components/BottomSheet";
+import { type CanSwipeDirection, SwipeComponent } from "@/app/Components/SwipeComponent";
 import { Tooltip } from "@/app/Components/Tooltip";
-
-type CanSwipeDirection = boolean | "Left" | "Right";
-
-interface SwipeComponentProps {
-  onSwipeLeft?: () => void;
-  onSwipeRight?: () => void;
-  onSwipeUp?: () => void;
-  onSwipeDown?: () => void;
-  canSwipeDirectionRef: React.MutableRefObject<CanSwipeDirection>;
-  children: React.ReactNode;
-}
-
-const SwipeComponent: React.FC<SwipeComponentProps> = ({
-  onSwipeLeft,
-  onSwipeRight,
-  canSwipeDirectionRef,
-  children,
-}) => {
-  const [translateX, setTranslateX] = useState(0);
-  const [startX, setStartX] = useState<number | null>(null);
-  const [startY, setStartY] = useState<number | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isSwiping, setIsSwiping] = useState(false);
-
-  const sliderRef = useRef<HTMLDivElement>(null);
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (canSwipeDirectionRef.current === false) return;
-    setStartX(e.touches[0].pageX);
-    setStartY(e.touches[0].clientY);
-    setIsDragging(true);
-    setIsSwiping(false);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging || startX === null || startY === null || canSwipeDirectionRef.current === false) return;
-
-    const currentX = e.touches[0].pageX;
-    const currentY = e.touches[0].clientY;
-    const deltaX = currentX - startX;
-    const deltaY = currentY - startY;
-
-    if (!isSwiping) {
-      if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
-        setIsSwiping(true);
-      }
-    } else {
-      const newTranslateX = -deltaX;
-      if (
-        ((canSwipeDirectionRef.current === "Left" || canSwipeDirectionRef.current === true) &&
-          newTranslateX > 0) ||
-        ((canSwipeDirectionRef.current === "Right" || canSwipeDirectionRef.current === true) &&
-          newTranslateX < 0)
-      ) {
-        setTranslateX(newTranslateX);
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDragging || startX === null || canSwipeDirectionRef.current === false) return;
-
-    const containerWidth = sliderRef.current?.offsetWidth || 1;
-    const threshold = containerWidth * 0.3;
-
-    if (translateX < -threshold && onSwipeLeft) {
-      onSwipeLeft();
-      setTimeout(() => {
-        setTranslateX(600);
-      }, 50);
-    } else if (translateX > threshold && onSwipeRight) {
-      onSwipeRight();
-      setTimeout(() => {
-        setTranslateX(-600);
-      }, 50);
-    }
-
-    setTimeout(() => {
-      setTranslateX(0);
-      setStartX(null);
-      setStartY(null);
-      setIsDragging(false);
-      setIsSwiping(false);
-    }, 200);
-  };
-
-  return (
-    <div
-      ref={sliderRef}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      className={`${isDragging ? "" : "transition-transform duration-300"}`}
-      style={{
-        transform: `translateX(${-translateX}px)`,
-        flexDirection: "row",
-      }}
-    >
-      {children}
-    </div>
-  );
-};
 
 export function Calendar() {
   const canSwipeDirectionRef = useRef<CanSwipeDirection>("Left");
@@ -209,10 +108,13 @@ export function Calendar() {
   return (
     resources.length > 0 && (
       <div className="relative overflow-x-clip">
+        {/* Header */}
         <div className="sticky top-0 p-5 z-50 bg-white shadow flex flex-row gap-5 items-center">
           <img src="/hamburger.svg" className="w-6 h-6" />
           <h2 className="z-50 text-2xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
         </div>
+
+        {/* Calendar Container */}
         <div
           className={`relative calendar-container ${isAnimating ? "animating" : ""}`}
           style={{
@@ -337,39 +239,44 @@ export function Calendar() {
               dragScroll={true}
               nowIndicatorDidMount={(mountArg) => {
                 if (mountArg.isAxis) {
-                  mountArg.el.classList.add("!w-[90%]");
-                  mountArg.el.classList.add("!h-[16px]");
-                  mountArg.el.classList.add("!bg-white");
-                  mountArg.el.classList.add("!text-sm");
-                  mountArg.el.classList.add("!text-center");
-                  mountArg.el.classList.add("!font-bold");
-                  mountArg.el.classList.add("!text-red-600");
-                  mountArg.el.classList.add("!border");
-                  mountArg.el.classList.add("!rounded-full");
-                  mountArg.el.classList.add("!border-red-600");
-                  mountArg.el.classList.add("!absolute");
-                  mountArg.el.classList.add("!-translate-y-[2px]");
+                  mountArg.el.classList.add(
+                    "!w-[90%]",
+                    "!h-[16px]",
+                    "!bg-white",
+                    "!text-sm",
+                    "!text-center",
+                    "!font-bold",
+                    "!text-red-600",
+                    "!border",
+                    "!rounded-full",
+                    "!border-red-600",
+                    "!absolute",
+                    "!-translate-y-[2px]",
+                  );
 
-                  const scheduleNextMinute = () => {
+                  const updateNowIndicator = () => {
+                    mountArg.el.innerText = toFarsiDigits(format(new Date(), "HH:mm"));
+                  };
+
+                  const scheduleNextUpdate = () => {
                     const now = new Date();
                     const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
                     setTimeout(() => {
-                      onMinuteChange();
-                      scheduleNextMinute();
+                      updateNowIndicator();
+                      scheduleNextUpdate();
                     }, msUntilNextMinute);
                   };
 
-                  const onMinuteChange = () => {
-                    mountArg.el.innerText = toFarsiDigits(format(new Date(), "HH:mm"));
-                  };
-                  onMinuteChange()
-                  scheduleNextMinute();
+                  updateNowIndicator();
+                  scheduleNextUpdate();
                 }
               }}
             />
           </SwipeComponent>
         </div>
+
+        {/* Footer */}
         <div className="sticky bottom-0 z-50 bg-white pb-3 pt-1 px-3 w-full shadow">
           <div className="flex flex-row-reverse gap-4 items-center justify-between max-w-[300px] mx-auto">
             <Tooltip text="تقویم">
@@ -434,18 +341,18 @@ export function Calendar() {
             </Tooltip>
           </div>
         </div>
+
+        {/* Editing Indicator */}
         {editingEvents.length > 0 && (
-          <div
-            className={
-              "fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl"
-            }
-          >
+          <div className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
             <h2 className="z-50 text-2xl font-bold">
               {toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}
             </h2>
             <h2 className="animate-pulse">حالت ویرایش</h2>
           </div>
         )}
+
+        {/* Save/Cancel Editing Buttons */}
         {isVisible && (
           <div
             className={`fixed z-50 bottom-0 bg-white flex items-center px-4 h-[70px] w-full p-4 shadow-t-lg font-bold ${
@@ -543,7 +450,6 @@ export function Calendar() {
                       }),
                     ),
                   ).finally(() => {
-                    // Run setEditingEvents([]) after all promises have finished
                     setEditingEvents([]);
                   });
                 }}
