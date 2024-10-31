@@ -20,6 +20,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import "./calendar.css";
+import { BottomSheet } from "@/app/Components/BottomSheet";
+import { Tooltip } from "@/app/Components/Tooltip";
 
 type CanSwipeDirection = boolean | "Left" | "Right";
 
@@ -137,6 +139,8 @@ export function Calendar() {
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
 
+  const [actionsBSIsOpen, setActionsBSIsOpen] = useState(false);
+
   useEffect(() => {
     if (editingEvents.length > 0) {
       setIsVisible(true);
@@ -197,6 +201,11 @@ export function Calendar() {
 
   const ANIMATION_DURATION = 300;
 
+  const goToNow = (behavior: ScrollBehavior = "smooth") => {
+    const nowLine = document.querySelector(".fc-timegrid-now-indicator-line");
+    nowLine?.scrollIntoView({ behavior, block: "center" });
+  };
+
   return (
     resources.length > 0 && (
       <div className="relative overflow-x-clip">
@@ -254,6 +263,7 @@ export function Calendar() {
                   element.addEventListener("touchend", handleScroll);
                   element.addEventListener("mouseup", handleScroll);
                   setTimeout(handleScroll, 500);
+                  setTimeout(() => goToNow("instant"), 100);
                 }
               }}
               ref={calendarRef}
@@ -325,26 +335,103 @@ export function Calendar() {
               }}
               dragRevertDuration={100}
               dragScroll={true}
+              nowIndicatorDidMount={(mountArg) => {
+                if (mountArg.isAxis) {
+                  mountArg.el.classList.add("!w-[90%]");
+                  mountArg.el.classList.add("!h-[16px]");
+                  mountArg.el.classList.add("!bg-white");
+                  mountArg.el.classList.add("!text-sm");
+                  mountArg.el.classList.add("!text-center");
+                  mountArg.el.classList.add("!font-bold");
+                  mountArg.el.classList.add("!text-red-600");
+                  mountArg.el.classList.add("!border");
+                  mountArg.el.classList.add("!rounded-full");
+                  mountArg.el.classList.add("!border-red-600");
+                  mountArg.el.classList.add("!absolute");
+                  mountArg.el.classList.add("!-translate-y-[2px]");
+
+                  const scheduleNextMinute = () => {
+                    const now = new Date();
+                    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+                    setTimeout(() => {
+                      onMinuteChange();
+                      scheduleNextMinute();
+                    }, msUntilNextMinute);
+                  };
+
+                  const onMinuteChange = () => {
+                    mountArg.el.innerText = toFarsiDigits(format(new Date(), "HH:mm"));
+                  };
+                  onMinuteChange()
+                  scheduleNextMinute();
+                }
+              }}
             />
           </SwipeComponent>
         </div>
-        <div className="sticky bottom-0 z-50 bg-white p-3 w-full shadow">
+        <div className="sticky bottom-0 z-50 bg-white pb-3 pt-1 px-3 w-full shadow">
           <div className="flex flex-row-reverse gap-4 items-center justify-between max-w-[300px] mx-auto">
-            <button className="relative">
-              <img src="/calendar.svg" className="w-7 h-7" />
-              <p
-                className="absolute bottom-[1px] font-extrabold text-[10px] start-0 ms-[7px] tabular-nums pointer-events-none"
-                style={{ letterSpacing: "-1px" }}
+            <Tooltip text="تقویم">
+              <button
+                className="relative bg-white rounded-full p-3"
+                onClick={() => {
+                  if (calendarRef.current) {
+                    goToNow();
+                  }
+                }}
               >
-                {toFarsiDigits(format(new Date(), "dd"))}
-              </p>
-            </button>
-            <button className="bg-purple-600 rounded-full p-2">
+                <img src="/calendar.svg" className="w-7 h-7" />
+                <p
+                  className="absolute bottom-1/2 translate-y-[80%] -translate-x-[60%] font-extrabold text-[10px] tabular-nums pointer-events-none"
+                  style={{ letterSpacing: "-1px" }}
+                >
+                  {toFarsiDigits(format(new Date(), "dd"))}
+                </p>
+              </button>
+            </Tooltip>
+            <button
+              type="button"
+              className="bg-purple-600 rounded-full p-2"
+              onClick={() => {
+                setActionsBSIsOpen(true);
+              }}
+            >
               <img src="/plus-white.svg" className="w-7 h-7" />
             </button>
-            <button>
-              <img src="/client.svg" className="w-7 h-7" />
-            </button>
+            <BottomSheet
+              title="افزودن"
+              isOpen={actionsBSIsOpen}
+              onClose={() => {
+                setActionsBSIsOpen(false);
+              }}
+            >
+              <div className="-mx-3">
+                <ul className="flex flex-col">
+                  <li>
+                    <button className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl">
+                      <div className="bg-purple-100 rounded-full p-3">
+                        <img src="/add-appointment.svg" className="w-6 h-6" />
+                      </div>
+                      <p className="text-xl font-normal">نوبت</p>
+                    </button>
+                  </li>
+                  <li>
+                    <button className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl">
+                      <div className="bg-purple-100 rounded-full p-3">
+                        <img src="/add-blocked-time.svg" className="w-6 h-6" />
+                      </div>
+                      <p className="text-xl font-normal">زمان بلوکه شده</p>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </BottomSheet>
+            <Tooltip text="مشتریان">
+              <button className="bg-white rounded-full p-3">
+                <img src="/client.svg" className="w-7 h-7" />
+              </button>
+            </Tooltip>
           </div>
         </div>
         {editingEvents.length > 0 && (

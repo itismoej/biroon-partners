@@ -31,6 +31,15 @@ body {
   background: var(--background);
 }
 
+button {
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+button:active {
+  transform: scale(0.95);
+  filter: brightness(0.97);
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -65,4 +74,8 @@ body {
 
 .fc tfoot {
   display: none;
+}
+
+.fc .fc-timegrid-slot-minor {
+  border-top-color: #dddddd99;
 }
