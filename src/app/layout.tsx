@@ -3,10 +3,10 @@ import { Vazirmatn } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
-const vazir = Vazirmatn({ subsets: ["latin"] });
+const vazir = Vazirmatn({ subsets: ["latin"], variable: "--font-vazir" });
 
 export const metadata: Metadata = {
-  title: "پنل مدیریت بیرون | همکاران",
+  title: "همکاران | پنل مدیریت بیرون",
   description: "مدیریت و پنل همکاران بیرون",
 };
 
@@ -16,8 +16,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa">
-      <body className={`${vazir.className} font-light bg-white text-black max-w-[500px] m-auto antialiased`}>
+    <html lang="en">
+      <body
+        className={`${vazir.variable} font-sans font-light bg-white text-black max-w-[500px] m-auto`}
+        dir="rtl"
+      >
         {children}
         <Toaster />
       </body>

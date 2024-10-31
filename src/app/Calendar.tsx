@@ -16,8 +16,10 @@ import type { ResourceApi } from "@fullcalendar/resource";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { format } from "date-fns-jalali";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import "./calendar.css";
 
 type CanSwipeDirection = boolean | "Left" | "Right";
 
@@ -133,6 +135,7 @@ export function Calendar() {
     (({ newResource?: ResourceApi } & EventDropArg) | EventResizeDoneArg)[]
   >([]);
   const [isVisible, setIsVisible] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -143,11 +146,17 @@ export function Calendar() {
   }, [editingEvents]);
 
   useEffect(() => {
-    fetchAllEvents().then(({ data: events }) => {
-      setAllEvents(events);
-    });
-    fetchAllEmployees().then(({ data: employees }) => {
-      setAllEmployees(employees);
+    fetchAllEvents().then(({ data: events, response }) => {
+      if (response.status === 401) router.push("/auth");
+      else {
+        fetchAllEmployees().then(({ data: employees, response }) => {
+          if (response.status === 401) router.push("/auth");
+          else {
+            setAllEmployees(employees);
+            setAllEvents(events);
+          }
+        });
+      }
     });
   }, []);
 
@@ -176,11 +185,11 @@ export function Calendar() {
     if (stickyHeaders.length > 0) {
       stickyHeaders.forEach((stickyHeader) => {
         if (!isAnimating) {
-          stickyHeader.classList.add("!top-[60px]");
+          stickyHeader.classList.add("!top-[63px]");
           stickyHeader.classList.remove("!top-[0px]");
         } else {
           stickyHeader.classList.add("!top-[0px]");
-          stickyHeader.classList.remove("!top-[60px]");
+          stickyHeader.classList.remove("!top-[63px]");
         }
       });
     }
@@ -192,9 +201,9 @@ export function Calendar() {
     resources.length > 0 &&
     initialEvents.length > 0 && (
       <div className="relative overflow-x-clip">
-        <div className="sticky top-0 p-4 z-50 bg-white shadow flex flex-row gap-5 items-center">
+        <div className="sticky top-0 p-5 z-50 bg-white shadow flex flex-row gap-5 items-center">
           <img src="/hamburger.svg" className="w-6 h-6" />
-          <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
+          <h2 className="z-50 text-2xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
         </div>
         <div
           className={`relative calendar-container ${isAnimating ? "animating" : ""}`}
@@ -342,10 +351,12 @@ export function Calendar() {
         {editingEvents.length > 0 && (
           <div
             className={
-              "fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2.5 rounded-md py-1 px-3 bg-purple-600 text-white font-light text-center text-lg"
+              "fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl"
             }
           >
-            <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
+            <h2 className="z-50 text-2xl font-bold">
+              {toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}
+            </h2>
             <h2 className="animate-pulse">حالت ویرایش</h2>
           </div>
         )}
@@ -389,25 +400,24 @@ export function Calendar() {
                   });
 
                   // Convert the map values into an array of update promises
-                  const updatePromises: [string, Promise<{ data: CalendarEvent; response: Response }>][] =
-                    Array.from(uniqueEventsMap.entries()).map(([id, updateData]) => [
-                      id,
-                      updateEvent(id, updateData),
-                    ]);
+                  const updatePromises: [string, ReturnType<typeof updateEvent>][] = Array.from(
+                    uniqueEventsMap.entries(),
+                  ).map(([id, updateData]) => [id, updateEvent(id, updateData)]);
 
                   // Use Promise.all to handle all promises together
                   Promise.all(
                     updatePromises.map(([id, p]) =>
-                      p
-                        .then(({ data }) => {
+                      p.then(({ data, response }) => {
+                        if (response.status === 200) {
                           if (calendarRef.current) {
                             const event = calendarRef.current.getApi().getEventById(id);
                             if (!event) {
                               return;
                             }
                             toast.success(`نوبت ${data.service.name} با موفقیت تغییر یافت`, {
-                              duration: 3000,
-                              position: "bottom-center",
+                              duration: 5000,
+                              position: "top-center",
+                              className: "w-full font-medium",
                             });
                             setTimeout(() => {
                               event.setProp("backgroundColor", "green");
@@ -416,23 +426,25 @@ export function Calendar() {
                               event.setProp("backgroundColor", "");
                             }, 3000);
                           }
-                          return true; // Indicate success for this promise
-                        })
-                        .catch(() => {
+                        }
+                        if (response.status === 400) {
                           if (calendarRef.current) {
                             const event = calendarRef.current.getApi().getEventById(id);
                             if (!event) {
                               return;
                             }
-                            toast.error(`ویرایش نوبت ${event.title} ناموفق بود`, {
-                              duration: 3000,
-                              position: "bottom-center",
+                            toast.error(`ویرایش ناموفق بود. ${data.error}`, {
+                              duration: 5000,
+                              position: "top-center",
+                              className: "w-full font-medium",
                             });
                             setTimeout(() => {
                               event.setProp("backgroundColor", "red");
-                            }, 200);
+                              event.setProp("borderColor", "red");
+                            }, 10);
                             setTimeout(() => {
                               event.setProp("backgroundColor", "");
+                              event.setProp("borderColor", "");
                             }, 3000);
                           }
                           editingEvents
@@ -441,8 +453,8 @@ export function Calendar() {
                             .forEach((e) => {
                               e.revert();
                             });
-                          return false; // Indicate failure for this promise
-                        }),
+                        }
+                      }),
                     ),
                   ).finally(() => {
                     // Run setEditingEvents([]) after all promises have finished

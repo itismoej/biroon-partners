@@ -135,7 +135,7 @@ export interface CalendarEventPatchRequest {
 export async function updateEvent(
   eventId: string,
   eventPatch: CalendarEventPatchRequest,
-): Promise<{ data: CalendarEvent; response: Response }> {
+): Promise<{ data: CalendarEvent & { error?: string }; response: Response }> {
   const response = await fetch(`${apiUrl}/partners/events/${eventId}/`, {
     method: "PATCH",
     credentials: "include",
@@ -145,4 +145,41 @@ export async function updateEvent(
     },
   });
   return { data: await response.json(), response };
+}
+
+interface SendOTPResponse {
+  message: string;
+}
+
+export async function sendOTP(phoneNumber: string): Promise<SendOTPResponse> {
+  const response = await fetch(`${apiUrl}/otp/`, {
+    method: "POST",
+    body: JSON.stringify({ phoneNumber }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return await response.json();
+}
+
+interface LoginResponse {
+  expiry: string;
+  token: string;
+}
+
+export async function login(
+  phoneNumber: string,
+  code: string,
+): Promise<{ data: LoginResponse; response: Response }> {
+  const response = await fetch(`${apiUrl}/login/`, {
+    method: "POST",
+    body: JSON.stringify({ phoneNumber, code }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json();
+  return { data, response };
 }
