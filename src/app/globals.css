@@ -79,3 +79,7 @@ button:active {
 .fc .fc-timegrid-slot-minor {
   border-top-color: #dddddd99;
 }
+
+.fc .fc-scrollgrid-section-sticky > * {
+  z-index: 5;
+}
