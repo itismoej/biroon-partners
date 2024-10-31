@@ -149,11 +149,11 @@ export function Calendar() {
     fetchAllEvents().then(({ data: events, response }) => {
       if (response.status === 401) router.push("/auth");
       else {
+        setAllEvents(events);
         fetchAllEmployees().then(({ data: employees, response }) => {
           if (response.status === 401) router.push("/auth");
           else {
             setAllEmployees(employees);
-            setAllEvents(events);
           }
         });
       }
@@ -198,8 +198,7 @@ export function Calendar() {
   const ANIMATION_DURATION = 300;
 
   return (
-    resources.length > 0 &&
-    initialEvents.length > 0 && (
+    resources.length > 0 && (
       <div className="relative overflow-x-clip">
         <div className="sticky top-0 p-5 z-50 bg-white shadow flex flex-row gap-5 items-center">
           <img src="/hamburger.svg" className="w-6 h-6" />
@@ -334,7 +333,7 @@ export function Calendar() {
             <button className="relative">
               <img src="/calendar.svg" className="w-7 h-7" />
               <p
-                className="absolute bottom-[1.5px] font-extrabold text-[12px] start-0 ms-[7px] tabular-nums pointer-events-none"
+                className="absolute bottom-[1px] font-extrabold text-[10px] start-0 ms-[7px] tabular-nums pointer-events-none"
                 style={{ letterSpacing: "-1px" }}
               >
                 {toFarsiDigits(format(new Date(), "dd"))}
