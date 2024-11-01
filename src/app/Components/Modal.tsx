@@ -1,5 +1,5 @@
 import { useOnTopWithRef } from "@/app/utils";
-import {type FC, type ReactNode, useEffect, useState} from "react";
+import { type FC, type ReactNode, useEffect, useState } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,17 +11,19 @@ interface ModalProps {
 
 export const Modal: FC<ModalProps> = ({ isOpen, onClose, children, title, className = "" }) => {
   const [isOnTop, ref] = useOnTopWithRef();
-  const [animation, setAnimation] = useState('animate-fadeInUp')
-  const [isVisible, setIsVisible] = useState(isOpen)
+  const [animation, setAnimation] = useState("animate-fadeInUp");
+  const [isVisible, setIsVisible] = useState(isOpen);
 
   useEffect(() => {
     if (isOpen) {
-      setIsVisible(isOpen)
-      setAnimation('animate-fadeInUp')
+      setIsVisible(isOpen);
+      setAnimation("animate-fadeInUp");
       document.body.style.overflow = "hidden";
     } else {
-      setTimeout(() => {setIsVisible(isOpen)}, 200)
-      setAnimation('animate-fadeOutDown')
+      setTimeout(() => {
+        setIsVisible(isOpen);
+      }, 200);
+      setAnimation("animate-fadeOutDown");
       document.body.style.overflow = "";
     }
 
@@ -32,7 +34,9 @@ export const Modal: FC<ModalProps> = ({ isOpen, onClose, children, title, classN
 
   return (
     isVisible && (
-      <div className={`fixed max-w-[500px] m-auto inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ${animation} ${className}`}>
+      <div
+        className={`fixed max-w-[500px] m-auto inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ${animation} ${className}`}
+      >
         <div ref={ref} className="bg-white px-5 w-full h-dvh overflow-y-scroll relative">
           <div
             className={`flex gap-5 bg-white py-5 -mx-5 px-5 sticky top-0 ${isOnTop ? "" : "shadow-md"} z-50`}

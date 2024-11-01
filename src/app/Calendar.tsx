@@ -469,11 +469,11 @@ export function Calendar() {
         <Modal
           isOpen={addAppointmentModalIsOpen}
           onClose={() => {
-            setAddAppointmentModalIsOpen(false)
+            setAddAppointmentModalIsOpen(false);
           }}
           title=""
         >
-        افزودن یک نوبت
+          افزودن یک نوبت
         </Modal>
       </div>
     )
