@@ -5,11 +5,19 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
-  title: string;
+  title: ReactNode | string;
+  topBarTitle?: ReactNode | string;
   className?: string;
 }
 
-export const Modal: FC<ModalProps> = ({ isOpen, onClose, children, title, className = "" }) => {
+export const Modal: FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  children,
+  title,
+  topBarTitle = null,
+  className = "",
+}) => {
   const [isOnTop, ref] = useOnTopWithRef();
   const [animation, setAnimation] = useState("animate-fadeInUp");
   const [isVisible, setIsVisible] = useState(isOpen);
@@ -48,9 +56,9 @@ export const Modal: FC<ModalProps> = ({ isOpen, onClose, children, title, classN
             >
               <img src="/back.svg" alt="بازگشت" className="w-7 h-7" />
             </button>
-            {!isOnTop && <h3 className="text-xl font-semibold">{title}</h3>}
+            {!isOnTop && (topBarTitle ? topBarTitle : <h3 className="text-xl font-semibold">{title}</h3>)}
           </div>
-          <h2 className="my-8 text-3xl font-semibold">{title}</h2>
+          {title && <h2 className="my-8 text-3xl font-semibold">{title}</h2>}
           {children}
         </div>
       </div>

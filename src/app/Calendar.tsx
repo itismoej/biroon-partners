@@ -15,7 +15,7 @@ import FullCalendar from "@fullcalendar/react";
 import type { ResourceApi } from "@fullcalendar/resource";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
-import { format } from "date-fns-jalali";
+import { addDays, addMinutes, format, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -23,6 +23,7 @@ import "./calendar.css";
 import { BottomSheet } from "@/app/Components/BottomSheet";
 import { type CanSwipeDirection, SwipeComponent } from "@/app/Components/SwipeComponent";
 import { Tooltip } from "@/app/Components/Tooltip";
+import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
 
 export function Calendar() {
@@ -41,6 +42,11 @@ export function Calendar() {
 
   const [actionsBSIsOpen, setActionsBSIsOpen] = useState(false);
   const [addAppointmentModalIsOpen, setAddAppointmentModalIsOpen] = useState(false);
+  const [selectDateInAddAppointmentModalBSIsOpen, setSelectDateInAddAppointmentModalBSIsOpen] =
+    useState(false);
+  const [selectTimeInAddAppointmentModalBSIsOpen, setSelectTimeInAddAppointmentModalBSIsOpen] =
+    useState(false);
+  const [newAppointmentTime, setNewAppointmentTime] = useState(setMinutes(setSeconds(new Date(), 0), 0));
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -471,9 +477,192 @@ export function Calendar() {
           onClose={() => {
             setAddAppointmentModalIsOpen(false);
           }}
-          title=""
+          title={
+            <button
+              className="flex flex-row gap-2"
+              type="button"
+              onClick={() => {
+                setSelectDateInAddAppointmentModalBSIsOpen(true);
+              }}
+            >
+              <h1 className="text-3xl font-bold">{toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}</h1>
+              <img src="/dropdown.svg" />
+            </button>
+          }
+          topBarTitle={
+            <button
+              className="flex flex-row gap-2"
+              type="button"
+              onClick={() => {
+                setSelectDateInAddAppointmentModalBSIsOpen(true);
+              }}
+            >
+              <h1 className="text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}</h1>
+              <img src="/dropdown.svg" />
+            </button>
+          }
         >
-          افزودن یک نوبت
+          <div className="pb-12">
+            <div className="-mx-5 mt-2 mb-6">
+              <hr />
+            </div>
+            <div className="flex flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7">
+              <div>
+                <p className="text-xl font-normal">افزودن مشتری</p>
+                <p className="text-md text-gray-500">برای مشتری حضوری خالی بگذارید</p>
+              </div>
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                <img src="/person-plus.svg" className="w-7 h-7" />
+              </div>
+            </div>
+            <div className="mt-7 flex flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7">
+              <button
+                className="flex flex-row gap-2"
+                type="button"
+                onClick={() => {
+                  setSelectDateInAddAppointmentModalBSIsOpen(true);
+                }}
+              >
+                <img src="/calendar.svg" className="w-6 h-6" />
+                <span className="text-lg font-normal">
+                  {toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}
+                </span>
+              </button>
+              <button
+                className="flex flex-row gap-2"
+                type="button"
+                onClick={() => {
+                  setSelectTimeInAddAppointmentModalBSIsOpen(true);
+                }}
+              >
+                <img src="/time.svg" className="w-6 h-6" />
+                <span className="text-lg font-normal">
+                  {toFarsiDigits(format(newAppointmentTime, "HH:mm"))}
+                </span>
+              </button>
+            </div>
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold">سرویس</h2>
+              <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
+                <img src="/service.png" className="w-16 h-16" />
+                <p className="text-lg text-gray-500 text-center mt-4">
+                  برای ذخیره‌ی این نوبت یک سرویس اضافه کنید
+                </p>
+                <button
+                  className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-200"
+                  type="button"
+                >
+                  <img src="/circular-plus.svg" className="w-6 h-6" />
+                  <span className="text-md font-normal">افزودن سرویس</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex sticky w-[100vw] -mx-5 bottom-0 bg-white border-t py-5 px-5">
+            <div className="relative w-full me-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  // handleModalClose();
+                  // setCalendarValue(date);
+                }}
+                className="w-full p-3 bg-white text-black border rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
+              >
+                بستن
+              </button>
+            </div>
+            <div className="relative w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  // setDate(isAnyDate ? undefined : calendarValue);
+                  // setCalendarValue((prev) => (isAnyDate ? undefined : prev));
+                  // handleModalClose();
+                }}
+                className="w-full p-3 bg-black text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
+              >
+                انتخاب
+              </button>
+            </div>
+          </div>
+
+          <BottomSheet
+            isOpen={selectDateInAddAppointmentModalBSIsOpen}
+            onClose={() => {
+              setSelectDateInAddAppointmentModalBSIsOpen(false);
+            }}
+          >
+            <DatePicker
+              selectedDate={currentDate}
+              onDateSelect={(date) => {
+                setCurrentDate(date);
+                setSelectDateInAddAppointmentModalBSIsOpen(false);
+              }}
+            />
+            <div className="mt-9">
+              <button
+                type="button"
+                className={"px-5 py-2 text-xl border rounded-full me-1"}
+                onClick={() => {
+                  const today = new Date();
+                  setCurrentDate(today);
+                  setSelectDateInAddAppointmentModalBSIsOpen(false);
+                }}
+              >
+                امروز
+              </button>
+              <button
+                type="button"
+                className={"px-5 py-2 text-xl border rounded-full me-1"}
+                onClick={() => {
+                  const tomorrow = addDays(new Date(), 1);
+                  setCurrentDate(tomorrow);
+                  setSelectDateInAddAppointmentModalBSIsOpen(false);
+                }}
+              >
+                فردا
+              </button>
+            </div>
+          </BottomSheet>
+
+          <BottomSheet
+            isOpen={selectTimeInAddAppointmentModalBSIsOpen}
+            onClose={() => {
+              setSelectTimeInAddAppointmentModalBSIsOpen(false);
+            }}
+            title="زمان شروع"
+          >
+            <ul>
+              {Array.from({ length: 24 * 4 }, (_, i) => addMinutes(startOfDay(new Date()), i * 15)).map(
+                (time) =>
+                  format(time, "HH:mm") === format(newAppointmentTime, "HH:mm") ? (
+                    <li
+                      key={time.toISOString()}
+                      className="flex flex-row content-start px-2 justify-between items-center text-2xl py-4 text-left"
+                      onClick={() => {
+                        setNewAppointmentTime(time);
+                        setSelectTimeInAddAppointmentModalBSIsOpen(false);
+                      }}
+                    >
+                      <img src="/check.svg" className="invert" />
+                      <p>{toFarsiDigits(format(time, "HH:mm"))}</p>
+                    </li>
+                  ) : (
+                    <li
+                      key={time.toISOString()}
+                      className="flex flex-row content-start px-2 justify-end items-center text-2xl py-4 text-left"
+                      onClick={() => {
+                        setNewAppointmentTime(time);
+                        setSelectTimeInAddAppointmentModalBSIsOpen(false);
+                      }}
+                    >
+                      <p>{toFarsiDigits(format(time, "HH:mm"))}</p>
+                    </li>
+                  ),
+              )}
+            </ul>
+          </BottomSheet>
         </Modal>
       </div>
     )
