@@ -35,11 +35,11 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
         </button>
       )}
       <div className="flex flex-col justify-center pt-6 gap-5 items-center">
-        <h2 className="text-3xl font-bold text-center">بیرون برای مشتریان</h2>
+        <h2 className="text-3xl font-bold text-center">بیرون برای همکاران</h2>
         {step === "phone" && (
           <>
             <p className="text-gray-500 text-lg text-center px-9">
-              ورود و یا ایجاد حساب کاربری برای دریافت و مدیریت نوبت‌های شما.
+              ورود و یا ایجاد حساب کاربری برای مدیریت سالن خود.
             </p>
             <form className="max-w-sm mx-auto px-5" style={{ direction: "ltr" }}>
               <div className="flex items-center text-2xl" style={{ direction: "ltr" }}>

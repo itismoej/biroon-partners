@@ -183,3 +183,39 @@ export async function login(
   const data = await response.json();
   return { data, response };
 }
+
+interface AddedUser extends Omit<User, "avatar"> {
+  username: string;
+}
+
+export interface Customer {
+  id: string;
+  user: AddedUser;
+}
+
+export async function fetchCustomers(): Promise<{ data: Customer[]; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/clients/`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const data = await response.json();
+  return { data, response };
+}
+
+export async function createCustomer(
+  phoneNumber: string,
+  code: string,
+): Promise<{ data: Customer[]; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/clients/`, {
+    method: "POST",
+    body: JSON.stringify({ phoneNumber, code }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json();
+  return { data, response };
+}

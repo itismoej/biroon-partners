@@ -3,9 +3,11 @@
 import {
   type CalendarEvent,
   type CalendarEventPatchRequest,
+  type Customer,
   type Employee,
   fetchAllEmployees,
   fetchAllEvents,
+  fetchCustomers,
   updateEvent,
 } from "@/app/api";
 import { toFarsiDigits } from "@/app/utils";
@@ -47,6 +49,10 @@ export function Calendar() {
   const [selectTimeInAddAppointmentModalBSIsOpen, setSelectTimeInAddAppointmentModalBSIsOpen] =
     useState(false);
   const [newAppointmentTime, setNewAppointmentTime] = useState(setMinutes(setSeconds(new Date(), 0), 0));
+  const [addServiceInNewAppointmentIsOpen, setAddServiceInNewAppointmentIsOpen] = useState(false);
+  const [createCustomerModalIsOpen, setCreateCustomerModalIsOpen] = useState(false);
+  const [clients, setClients] = useState<Customer[]>([]);
+  const [newAppointmentCustomer, setNewAppointmentCustomer] = useState<Customer | null>(null);
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -68,6 +74,10 @@ export function Calendar() {
           }
         });
       }
+    });
+
+    fetchCustomers().then(({ data }) => {
+      setClients(data);
     });
   }, []);
 
@@ -506,15 +516,24 @@ export function Calendar() {
             <div className="-mx-5 mt-2 mb-6">
               <hr />
             </div>
-            <div className="flex flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7">
-              <div>
-                <p className="text-xl font-normal">افزودن مشتری</p>
-                <p className="text-md text-gray-500">برای مشتری حضوری خالی بگذارید</p>
-              </div>
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                <img src="/person-plus.svg" className="w-7 h-7" />
-              </div>
-            </div>
+            {/* TODO: fix this UI for the selected customer */}
+            {newAppointmentCustomer ? (
+              newAppointmentCustomer.user.username
+            ) : (
+              <button
+                type="button"
+                className="flex w-full flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7"
+                onClick={() => setCreateCustomerModalIsOpen(true)}
+              >
+                <div className="text-right">
+                  <p className="text-xl font-normal">افزودن مشتری</p>
+                  <p className="text-md text-gray-500">برای مشتری حضوری خالی بگذارید</p>
+                </div>
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                  <img src="/person-plus.svg" className="w-7 h-7" />
+                </div>
+              </button>
+            )}
             <div className="mt-7 flex flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7">
               <button
                 className="flex flex-row gap-2"
@@ -549,11 +568,12 @@ export function Calendar() {
                   برای ذخیره‌ی این نوبت یک سرویس اضافه کنید
                 </p>
                 <button
-                  className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-200"
+                  className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
                   type="button"
+                  onClick={() => setAddServiceInNewAppointmentIsOpen(true)}
                 >
                   <img src="/circular-plus.svg" className="w-6 h-6" />
-                  <span className="text-md font-normal">افزودن سرویس</span>
+                  <span className="text-lg font-normal">افزودن سرویس</span>
                 </button>
               </div>
             </div>
@@ -564,6 +584,7 @@ export function Calendar() {
               <button
                 type="button"
                 onClick={() => {
+                  setAddAppointmentModalIsOpen(false);
                   // handleModalClose();
                   // setCalendarValue(date);
                 }}
@@ -582,7 +603,7 @@ export function Calendar() {
                 }}
                 className="w-full p-3 bg-black text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
               >
-                انتخاب
+                ذخیره
               </button>
             </div>
           </div>
@@ -663,6 +684,67 @@ export function Calendar() {
               )}
             </ul>
           </BottomSheet>
+        </Modal>
+
+        <Modal
+          isOpen={addServiceInNewAppointmentIsOpen}
+          onClose={() => setAddServiceInNewAppointmentIsOpen(false)}
+          title=""
+        >
+          <div>add service</div>
+        </Modal>
+
+        <Modal
+          isOpen={createCustomerModalIsOpen}
+          onClose={() => setCreateCustomerModalIsOpen(false)}
+          title="انتخاب مشتری"
+        >
+          <hr className="-mx-5" />
+          <ul className="-mx-5">
+            <li>
+              <button className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5">
+                <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
+                  <img src="/plus-purple.svg" className="w-7 h-7" />
+                </div>
+                <p className="font-medium text-lg">افزودن مشتری جدید</p>
+              </button>
+            </li>
+            <li>
+              <button className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5">
+                <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
+                  <img src="/walk-in.svg" className="w-8 h-8" />
+                </div>
+                <p className="font-medium text-lg">مراجعه‌‌کننده‌ی حضوری</p>
+              </button>
+            </li>
+          </ul>
+          {clients.length > 0 && (
+            <>
+              <hr />
+              <ul className="-mx-5">
+                {clients.map((customer) => (
+                  <li key={customer.id}>
+                    <button
+                      type="button"
+                      className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
+                      onClick={() => {
+                        setNewAppointmentCustomer(customer);
+                      }}
+                    >
+                      <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
+                        <img src="/person-purple.svg" className="w-7 h-7" />
+                      </div>
+                      <p className="font-medium text-lg" style={{ direction: "ltr" }}>
+                        {toFarsiDigits(
+                          `${customer.user.username.slice(0, 3)} ${customer.user.username.slice(3, 6)} ${customer.user.username.slice(6, 9)} ${customer.user.username.slice(9)}`,
+                        )}
+                      </p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </Modal>
       </div>
     )
