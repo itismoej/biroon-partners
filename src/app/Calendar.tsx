@@ -1,29 +1,37 @@
 "use client";
 
 import {
+  type AvailableEmployee,
+  type AvailableEmployeesByService,
   type CalendarEvent,
   type CalendarEventPatchRequest,
   type Customer,
   type Employee,
+  type Location,
+  type Service,
+  createReservation,
   fetchAllEmployees,
   fetchAllEvents,
+  fetchAvailableEmployeesByService,
   fetchCustomers,
+  fetchLocation,
   updateEvent,
 } from "@/app/api";
-import { toFarsiDigits } from "@/app/utils";
+import { formatPriceInFarsi, toFarsiDigits } from "@/app/utils";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import interactionPlugin, { type EventResizeDoneArg } from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import type { ResourceApi } from "@fullcalendar/resource";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
-import { addDays, addMinutes, format, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
+import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import "./calendar.css";
 import { BottomSheet } from "@/app/Components/BottomSheet";
 import { type CanSwipeDirection, SwipeComponent } from "@/app/Components/SwipeComponent";
+import { Tile } from "@/app/Components/Tile";
 import { Tooltip } from "@/app/Components/Tooltip";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
@@ -48,11 +56,25 @@ export function Calendar() {
     useState(false);
   const [selectTimeInAddAppointmentModalBSIsOpen, setSelectTimeInAddAppointmentModalBSIsOpen] =
     useState(false);
-  const [newAppointmentTime, setNewAppointmentTime] = useState(setMinutes(setSeconds(new Date(), 0), 0));
+  const [newAppointmentTime, setNewAppointmentTime] = useState<Date>(
+    setMinutes(setSeconds(new Date(), 0), 0),
+  );
   const [addServiceInNewAppointmentIsOpen, setAddServiceInNewAppointmentIsOpen] = useState(false);
   const [createCustomerModalIsOpen, setCreateCustomerModalIsOpen] = useState(false);
   const [clients, setClients] = useState<Customer[]>([]);
   const [newAppointmentCustomer, setNewAppointmentCustomer] = useState<Customer | null>(null);
+  const [location, setLocation] = useState<Location | undefined>();
+  const [selectedServiceToAddInNewAppointment, setSelectedServiceToAddInNewAppointment] = useState<
+    Service | undefined
+  >();
+  const [availableEmployeesByService, setAvailableEmployeesByService] = useState<
+    AvailableEmployeesByService | undefined
+  >();
+  const [selectedEmployeeForNewAppointment, setSelectedEmployeeForNewAppointment] = useState<
+    AvailableEmployee | undefined
+  >();
+  const [selectEmployeeBSIsOpen, setSelectEmployeeBSIsOpen] = useState<boolean>(false);
+  // const [editSelectedNewServiceIsOpen, setEditSelectedNewServiceIsOpen] = useState(false);
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -78,6 +100,17 @@ export function Calendar() {
 
     fetchCustomers().then(({ data }) => {
       setClients(data);
+    });
+
+    fetchLocation().then(({ data, response }) => {
+      if (response.status === 401) router.push("/auth");
+      else if (response.status !== 200)
+        toast.error("دریافت اطلاعات سالن با خطا مواجه شد", {
+          duration: 5000,
+          position: "top-center",
+          className: "w-full font-medium",
+        });
+      else setLocation(data);
     });
   }, []);
 
@@ -562,20 +595,52 @@ export function Calendar() {
             </div>
             <div className="mt-8">
               <h2 className="text-2xl font-bold">سرویس</h2>
-              <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
-                <img src="/service.png" className="w-16 h-16" />
-                <p className="text-lg text-gray-500 text-center mt-4">
-                  برای ذخیره‌ی این نوبت یک سرویس اضافه کنید
-                </p>
+              {selectedServiceToAddInNewAppointment ? (
                 <button
-                  className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
                   type="button"
-                  onClick={() => setAddServiceInNewAppointmentIsOpen(true)}
+                  className="w-full -mx-2 flex flex-row gap-4 items-center bg-white p-2 rounded-xl active:inner-w-8"
+                  onClick={() => {
+                    setAddServiceInNewAppointmentIsOpen(true);
+                    // setEditSelectedNewServiceIsOpen(true);
+                  }}
                 >
-                  <img src="/circular-plus.svg" className="w-6 h-6" />
-                  <span className="text-lg font-normal">افزودن سرویس</span>
+                  <div className="h-[70px] w-[4px] bg-purple-300 rounded-full" />
+                  <div className="flex flex-col w-full">
+                    <div className="flex flex-row gap-4 justify-between">
+                      <h3 className="text-xl font-normal">{selectedServiceToAddInNewAppointment.name}</h3>
+                      <h3 className="text-xl font-normal">
+                        {formatPriceInFarsi(selectedServiceToAddInNewAppointment.price)}
+                      </h3>
+                    </div>
+                    <p className="text-lg font-normal text-gray-500 text-start">
+                      <span>{toFarsiDigits(format(newAppointmentTime, "HH:mm"))}</span>
+                      <span className="text-xl mx-2 inline-block translate-y-[1px]">•</span>
+                      <span>{selectedServiceToAddInNewAppointment.formattedDuration}</span>
+                      {selectedEmployeeForNewAppointment && (
+                        <>
+                          <span className="text-xl mx-2 inline-block translate-y-[1px]">•</span>
+                          <span>{selectedEmployeeForNewAppointment.nickname}</span>
+                        </>
+                      )}
+                    </p>
+                  </div>
                 </button>
-              </div>
+              ) : (
+                <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
+                  <img src="/service.png" className="w-16 h-16" />
+                  <p className="text-lg text-gray-500 text-center mt-4">
+                    برای ذخیره‌ی این نوبت یک سرویس اضافه کنید
+                  </p>
+                  <button
+                    className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
+                    type="button"
+                    onClick={() => setAddServiceInNewAppointmentIsOpen(true)}
+                  >
+                    <img src="/circular-plus.svg" className="w-6 h-6" />
+                    <span className="text-lg font-normal">افزودن سرویس</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -585,8 +650,6 @@ export function Calendar() {
                 type="button"
                 onClick={() => {
                   setAddAppointmentModalIsOpen(false);
-                  // handleModalClose();
-                  // setCalendarValue(date);
                 }}
                 className="w-full p-3 bg-white text-black border rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
               >
@@ -596,12 +659,59 @@ export function Calendar() {
             <div className="relative w-full">
               <button
                 type="button"
+                disabled={!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment}
                 onClick={() => {
-                  // setDate(isAnyDate ? undefined : calendarValue);
-                  // setCalendarValue((prev) => (isAnyDate ? undefined : prev));
-                  // handleModalClose();
+                  if (!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment) {
+                    toast.error("ابتدا یک سرویس انتخاب کنید", {
+                      duration: 5000,
+                      position: "top-center",
+                      className: "w-full font-medium",
+                    });
+                    return;
+                  }
+
+                  createReservation({
+                    customerId: newAppointmentCustomer ? newAppointmentCustomer.id : undefined,
+                    startDateTime: setMinutes(
+                      setHours(currentDate, newAppointmentTime.getHours()),
+                      newAppointmentTime.getMinutes(),
+                    ).toISOString(),
+                    cartInput: [
+                      {
+                        serviceId: selectedServiceToAddInNewAppointment.id,
+                        employeeAssociations: [selectedEmployeeForNewAppointment.id],
+                      },
+                    ],
+                  }).then(({ data, response }) => {
+                    if (response.status === 201 && calendarRef.current) {
+                      calendarRef.current.getApi().addEvent({
+                        id: data.id,
+                        title: selectedServiceToAddInNewAppointment.name,
+                        start: data.startDateTime,
+                        end: data.endDateTime,
+                        editable: true,
+                        resourceId: selectedEmployeeForNewAppointment.id,
+                      });
+                      toast.success(
+                        `نوبت «${selectedServiceToAddInNewAppointment.name}» با متخصص «${selectedEmployeeForNewAppointment.nickname}» در «${toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}» اضافه شد.`,
+                        {
+                          duration: 5000,
+                          position: "top-center",
+                          className: "w-full font-medium",
+                        },
+                      );
+                      setAddAppointmentModalIsOpen(false);
+                      setActionsBSIsOpen(false);
+                      calendarRef.current.getApi().gotoDate(currentDate);
+                    } else {
+                      response.text().then((error) => {
+                        console.log(error);
+                      });
+                      console.log(response.status);
+                    }
+                  });
                 }}
-                className="w-full p-3 bg-black text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
+                className={`w-full p-3 text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300 ${selectedServiceToAddInNewAppointment ? "bg-black" : "bg-gray-300 active:transform-none active:filter-none"}`}
               >
                 ذخیره
               </button>
@@ -686,13 +796,59 @@ export function Calendar() {
           </BottomSheet>
         </Modal>
 
-        <Modal
-          isOpen={addServiceInNewAppointmentIsOpen}
-          onClose={() => setAddServiceInNewAppointmentIsOpen(false)}
-          title=""
-        >
-          <div>add service</div>
-        </Modal>
+        {location && (
+          <Modal
+            isOpen={addServiceInNewAppointmentIsOpen}
+            onClose={() => setAddServiceInNewAppointmentIsOpen(false)}
+            title={<span className="text-3xl font-bold">انتخاب سرویس</span>}
+            topBarTitle={<span className="text-xl font-bold">انتخاب سرویس</span>}
+          >
+            <div className="pb-12">
+              <div className="-mx-5 mt-2 mb-6">
+                <hr />
+              </div>
+              <div className="flex flex-col gap-8">
+                {location.serviceCatalog.map((category) => (
+                  <div key={category.id}>
+                    <div className="flex flex-row gap-3">
+                      <h2 className="text-2xl font-medium mb-4">{category.name}</h2>
+                      <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-200 text-gray-500 rounded-full font-bold">
+                        <span className="translate-y-[2px]">{toFarsiDigits(category.items.length)}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      {category.items.map((svc) => (
+                        <button
+                          key={svc.id}
+                          type="button"
+                          className="-mx-2 flex flex-row gap-4 items-center bg-white p-2 rounded-xl active:inner-w-8"
+                          onClick={() => {
+                            setSelectedServiceToAddInNewAppointment(svc);
+                            fetchAvailableEmployeesByService(svc.id).then(({ data }) => {
+                              setAvailableEmployeesByService(data);
+                              setSelectEmployeeBSIsOpen(true);
+                            });
+                          }}
+                        >
+                          <div className="h-[70px] w-[4px] bg-purple-300 rounded-full" />
+                          <div className="flex flex-col w-full">
+                            <div className="flex flex-row gap-4 justify-between">
+                              <h3 className="text-xl font-normal">{svc.name}</h3>
+                              <h3 className="text-xl font-normal">{formatPriceInFarsi(svc.price)}</h3>
+                            </div>
+                            <p className="text-lg font-normal text-gray-500 text-start">
+                              {svc.formattedDuration}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Modal>
+        )}
 
         <Modal
           isOpen={createCustomerModalIsOpen}
@@ -746,6 +902,79 @@ export function Calendar() {
             </>
           )}
         </Modal>
+
+        {availableEmployeesByService && (
+          <BottomSheet
+            isOpen={selectEmployeeBSIsOpen}
+            onClose={() => setSelectEmployeeBSIsOpen(false)}
+            title="انتخاب متخصص"
+          >
+            <div className="flex gap-4 overflow-x-auto -mx-5 px-5" style={{ scrollbarWidth: "none" }}>
+              {availableEmployeesByService.employees.map((employee) => (
+                <Tile
+                  key={employee.id}
+                  employee={employee}
+                  selectedEmployeeId={"none"}
+                  onTileChange={(employee) => {
+                    setSelectedEmployeeForNewAppointment(employee);
+                    setSelectEmployeeBSIsOpen(false);
+                    setAddServiceInNewAppointmentIsOpen(false);
+                  }}
+                />
+              ))}
+            </div>
+          </BottomSheet>
+        )}
+
+        {/*{selectedEmployeeForNewAppointment && (*/}
+        {/*  <Modal*/}
+        {/*    isOpen={editSelectedNewServiceIsOpen}*/}
+        {/*    onClose={() => setEditSelectedNewServiceIsOpen(false)}*/}
+        {/*    title="ویرایش سرویس"*/}
+        {/*  >*/}
+        {/*    <div className="pb-40">*/}
+        {/*      <button className="flex w-full items-center rounded-lg text-xl py-6 px-5 font-normal border border-gray-300 justify-between border-r-8 border-r-purple-300">*/}
+        {/*        <div className="flex gap-1">*/}
+        {/*          <p>*/}
+        {/*            {selectedServiceToAddInNewAppointment?.name}،*/}
+        {/*          </p>*/}
+        {/*          <p className="text-gray-500 text-lg">*/}
+        {/*            {selectedServiceToAddInNewAppointment?.formattedDuration}*/}
+        {/*          </p>*/}
+        {/*        </div>*/}
+        {/*        <img src="/left.svg" className="w-6 h-6" />*/}
+        {/*      </button>*/}
+        {/*      <div className="flex fixed w-[100vw] -mx-5 bottom-0 bg-white border-t py-5 px-5">*/}
+        {/*        <div className="relative me-2.5 w-16">*/}
+        {/*          <button*/}
+        {/*            type="button"*/}
+        {/*            onClick={() => {*/}
+        {/*              setAddAppointmentModalIsOpen(false);*/}
+        {/*              // handleModalClose();*/}
+        {/*              // setCalendarValue(date);*/}
+        {/*            }}*/}
+        {/*            className="p-3 bg-white text-black border rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"*/}
+        {/*          >*/}
+        {/*            <img src="/delete.svg" className="w-7" />*/}
+        {/*          </button>*/}
+        {/*        </div>*/}
+        {/*        <div className="relative w-full">*/}
+        {/*          <button*/}
+        {/*            type="button"*/}
+        {/*            onClick={() => {*/}
+        {/*              // setDate(isAnyDate ? undefined : calendarValue);*/}
+        {/*              // setCalendarValue((prev) => (isAnyDate ? undefined : prev));*/}
+        {/*              // handleModalClose();*/}
+        {/*            }}*/}
+        {/*            className="w-full p-3 bg-black text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"*/}
+        {/*          >*/}
+        {/*            ذخیره*/}
+        {/*          </button>*/}
+        {/*        </div>*/}
+        {/*      </div>*/}
+        {/*    </div>*/}
+        {/*  </Modal>*/}
+        {/*)}*/}
       </div>
     )
   );

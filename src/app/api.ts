@@ -219,3 +219,79 @@ export async function createCustomer(
   const data = await response.json();
   return { data, response };
 }
+
+export const fetchLocation: () => Promise<{ data: Location; response: Response }> = async () => {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await fetch(`${apiUrl}/partners/my-location/`, {
+    headers: {
+      "X-Timezone": timeZone,
+    },
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+};
+
+export interface AvailableEmployee {
+  id: string;
+  nickname: string;
+  user: User;
+  formattedPrice: string;
+  price: number;
+  durationInMins: number;
+  formattedDuration: string;
+}
+
+export interface AvailableEmployeesByService {
+  noPreferenceEmployee: {
+    formattedMinimumPrice: string;
+    minimumPrice: number;
+    minimumDurationInMins: number;
+    formattedMinimumDuration: string;
+  };
+  employees: AvailableEmployee[];
+}
+
+export async function fetchAvailableEmployeesByService(
+  svcItem: Service["id"],
+): Promise<{ data: AvailableEmployeesByService; response: Response }> {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await fetch(`${apiUrl}/partners/available-employees/?svcItems=${svcItem}`, {
+    headers: {
+      "X-Timezone": timeZone,
+    },
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}
+
+type StartDateTime = string;
+
+interface CartInputItem {
+  serviceId: string;
+  employeeAssociations: string[];
+}
+
+export type CartInput = CartInputItem[];
+
+export interface NewAppointment {
+  startDateTime: StartDateTime;
+  cartInput: CartInput;
+  customerId?: Customer["id"];
+}
+
+export async function createReservation(
+  newAppointment: NewAppointment,
+): Promise<{ data: ReserveData; response: Response }> {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await fetch(`${apiUrl}/partners/events/`, {
+    method: "POST",
+    body: JSON.stringify(newAppointment),
+    headers: {
+      "Content-Type": "application/json",
+      "X-Timezone": timeZone,
+    },
+    credentials: "include",
+  });
+  const data = await response.json();
+  return { data, response };
+}
