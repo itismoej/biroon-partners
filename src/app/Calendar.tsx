@@ -74,7 +74,6 @@ export function Calendar() {
     AvailableEmployee | undefined
   >();
   const [selectEmployeeBSIsOpen, setSelectEmployeeBSIsOpen] = useState<boolean>(false);
-  // const [editSelectedNewServiceIsOpen, setEditSelectedNewServiceIsOpen] = useState(false);
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -157,7 +156,7 @@ export function Calendar() {
   };
 
   return (
-    resources.length > 0 && (
+    resources.length > 0 ? (
       <div className="relative overflow-x-clip">
         {/* Header */}
         <div className="sticky top-0 p-5 z-50 bg-white shadow flex flex-row gap-5 items-center">
@@ -369,7 +368,10 @@ export function Calendar() {
                   <li>
                     <button
                       className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                      onClick={() => setAddAppointmentModalIsOpen(true)}
+                      onClick={() => {
+                        setAddAppointmentModalIsOpen(true)
+                        setActionsBSIsOpen(false)
+                      }}
                     >
                       <div className="bg-purple-100 rounded-full p-3">
                         <img src="/add-appointment.svg" className="w-6 h-6" />
@@ -378,7 +380,13 @@ export function Calendar() {
                     </button>
                   </li>
                   <li>
-                    <button className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl">
+                    <button
+                      type="button"
+                      className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
+                      onClick={() => {
+                        setActionsBSIsOpen(false)
+                      }}
+                    >
                       <div className="bg-purple-100 rounded-full p-3">
                         <img src="/add-blocked-time.svg" className="w-6 h-6" />
                       </div>
@@ -551,7 +559,18 @@ export function Calendar() {
             </div>
             {/* TODO: fix this UI for the selected customer */}
             {newAppointmentCustomer ? (
-              newAppointmentCustomer.user.username
+              <button
+                type="button"
+                className="flex w-full flex-row justify-between items-center rounded-lg border border-gray-200 py-6 px-6 border-l-4 border-l-purple-400"
+                onClick={() => setCreateCustomerModalIsOpen(true)}
+              >
+                <img src="/right.svg" className="w-6 h-6"/>
+                <div className="text-left">
+                  <p className="text-xl font-medium" style={{direction: "ltr"}}>{toFarsiDigits(
+                    `${newAppointmentCustomer.user.username.slice(0, 3)} ${newAppointmentCustomer.user.username.slice(3, 6)} ${newAppointmentCustomer.user.username.slice(6, 9)} ${newAppointmentCustomer.user.username.slice(9)}`,
+                  )}</p>
+                </div>
+              </button>
             ) : (
               <button
                 type="button"
@@ -701,7 +720,6 @@ export function Calendar() {
                         },
                       );
                       setAddAppointmentModalIsOpen(false);
-                      setActionsBSIsOpen(false);
                       calendarRef.current.getApi().gotoDate(currentDate);
                     } else {
                       response.text().then((error) => {
@@ -824,9 +842,9 @@ export function Calendar() {
                           className="-mx-2 flex flex-row gap-4 items-center bg-white p-2 rounded-xl active:inner-w-8"
                           onClick={() => {
                             setSelectedServiceToAddInNewAppointment(svc);
+                            setSelectEmployeeBSIsOpen(true);
                             fetchAvailableEmployeesByService(svc.id).then(({ data }) => {
                               setAvailableEmployeesByService(data);
-                              setSelectEmployeeBSIsOpen(true);
                             });
                           }}
                         >
@@ -866,7 +884,14 @@ export function Calendar() {
               </button>
             </li>
             <li>
-              <button className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5">
+              <button
+                type="button"
+                className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
+                onClick={() => {
+                  setNewAppointmentCustomer(null)
+                  setCreateCustomerModalIsOpen(false)
+                }}
+              >
                 <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
                   <img src="/walk-in.svg" className="w-8 h-8" />
                 </div>
@@ -885,6 +910,7 @@ export function Calendar() {
                       className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
                       onClick={() => {
                         setNewAppointmentCustomer(customer);
+                        setCreateCustomerModalIsOpen(false)
                       }}
                     >
                       <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
@@ -903,14 +929,17 @@ export function Calendar() {
           )}
         </Modal>
 
-        {availableEmployeesByService && (
-          <BottomSheet
-            isOpen={selectEmployeeBSIsOpen}
-            onClose={() => setSelectEmployeeBSIsOpen(false)}
-            title="انتخاب متخصص"
-          >
-            <div className="flex gap-4 overflow-x-auto -mx-5 px-5" style={{ scrollbarWidth: "none" }}>
-              {availableEmployeesByService.employees.map((employee) => (
+        <BottomSheet
+          isOpen={selectEmployeeBSIsOpen}
+          onClose={() => {
+            setSelectEmployeeBSIsOpen(false)
+            setAvailableEmployeesByService(undefined)
+          }}
+          title="انتخاب متخصص"
+        >
+          <div className={`flex gap-4 overflow-x-auto -mx-5 px-5${availableEmployeesByService ? "" : " animate-pulse"}`} style={{ scrollbarWidth: "none" }}>
+            {availableEmployeesByService ? (
+              availableEmployeesByService.employees.map((employee) => (
                 <Tile
                   key={employee.id}
                   employee={employee}
@@ -921,60 +950,62 @@ export function Calendar() {
                     setAddServiceInNewAppointmentIsOpen(false);
                   }}
                 />
-              ))}
-            </div>
-          </BottomSheet>
-        )}
-
-        {/*{selectedEmployeeForNewAppointment && (*/}
-        {/*  <Modal*/}
-        {/*    isOpen={editSelectedNewServiceIsOpen}*/}
-        {/*    onClose={() => setEditSelectedNewServiceIsOpen(false)}*/}
-        {/*    title="ویرایش سرویس"*/}
-        {/*  >*/}
-        {/*    <div className="pb-40">*/}
-        {/*      <button className="flex w-full items-center rounded-lg text-xl py-6 px-5 font-normal border border-gray-300 justify-between border-r-8 border-r-purple-300">*/}
-        {/*        <div className="flex gap-1">*/}
-        {/*          <p>*/}
-        {/*            {selectedServiceToAddInNewAppointment?.name}،*/}
-        {/*          </p>*/}
-        {/*          <p className="text-gray-500 text-lg">*/}
-        {/*            {selectedServiceToAddInNewAppointment?.formattedDuration}*/}
-        {/*          </p>*/}
-        {/*        </div>*/}
-        {/*        <img src="/left.svg" className="w-6 h-6" />*/}
-        {/*      </button>*/}
-        {/*      <div className="flex fixed w-[100vw] -mx-5 bottom-0 bg-white border-t py-5 px-5">*/}
-        {/*        <div className="relative me-2.5 w-16">*/}
-        {/*          <button*/}
-        {/*            type="button"*/}
-        {/*            onClick={() => {*/}
-        {/*              setAddAppointmentModalIsOpen(false);*/}
-        {/*              // handleModalClose();*/}
-        {/*              // setCalendarValue(date);*/}
-        {/*            }}*/}
-        {/*            className="p-3 bg-white text-black border rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"*/}
-        {/*          >*/}
-        {/*            <img src="/delete.svg" className="w-7" />*/}
-        {/*          </button>*/}
-        {/*        </div>*/}
-        {/*        <div className="relative w-full">*/}
-        {/*          <button*/}
-        {/*            type="button"*/}
-        {/*            onClick={() => {*/}
-        {/*              // setDate(isAnyDate ? undefined : calendarValue);*/}
-        {/*              // setCalendarValue((prev) => (isAnyDate ? undefined : prev));*/}
-        {/*              // handleModalClose();*/}
-        {/*            }}*/}
-        {/*            className="w-full p-3 bg-black text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"*/}
-        {/*          >*/}
-        {/*            ذخیره*/}
-        {/*          </button>*/}
-        {/*        </div>*/}
-        {/*      </div>*/}
-        {/*    </div>*/}
-        {/*  </Modal>*/}
-        {/*)}*/}
+              ))
+            ) : (
+              <>
+                <div
+                  className={"flex justify-center h-[196px] pt-12 pb-7 px-9 min-w-[168px] cursor-pointer border-2 rounded-lg border-gray-200"}
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-[60px] h-[60px] rounded-full mb-6 bg-gray-200"/>
+                    <div className="w-[100px] h-[14px] rounded-full bg-gray-200"/>
+                    <div className="w-[40px] h-[14px] rounded-full mt-2 bg-gray-200"/>
+                    <div className="w-[40px] h-[14px] rounded-full mt-4 bg-gray-200"/>
+                  </div>
+                </div>
+                <div
+                  className={"flex justify-center h-[196px] pt-12 pb-7 px-9 min-w-[168px] cursor-pointer border-2 rounded-lg border-gray-200"}
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-[60px] h-[60px] rounded-full mb-6 bg-gray-200"/>
+                    <div className="w-[100px] h-[14px] rounded-full bg-gray-200"/>
+                    <div className="w-[40px] h-[14px] rounded-full mt-2 bg-gray-200"/>
+                    <div className="w-[40px] h-[14px] rounded-full mt-4 bg-gray-200"/>
+                  </div>
+                </div>
+                <div
+                  className={"flex justify-center h-[196px] pt-12 pb-7 px-9 min-w-[168px] cursor-pointer border-2 rounded-lg border-gray-200"}
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-[60px] h-[60px] rounded-full mb-6 bg-gray-200"/>
+                    <div className="w-[100px] h-[14px] rounded-full bg-gray-200"/>
+                    <div className="w-[40px] h-[14px] rounded-full mt-2 bg-gray-200"/>
+                    <div className="w-[40px] h-[14px] rounded-full mt-4 bg-gray-200"/>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </BottomSheet>
+      </div>
+    ) : (
+      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">
+        <svg
+          aria-hidden="true"
+          className="w-20 h-20 text-gray-200 animate-spin fill-black"
+          viewBox="0 0 100 101"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+            fill="currentColor"
+          />
+          <path
+            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+            fill="currentFill"
+          />
+        </svg>
       </div>
     )
   );
