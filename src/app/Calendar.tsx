@@ -160,7 +160,6 @@ export function Calendar() {
     <div className="relative overflow-x-clip">
       {/* Header */}
       <div className="sticky top-0 p-5 z-50 bg-white shadow flex flex-row gap-5 items-center">
-        <img src="/hamburger.svg" className="w-6 h-6" />
         <button
           className="flex flex-row gap-2"
           type="button"
@@ -346,6 +345,11 @@ export function Calendar() {
               <img src="/calendar.svg" className="w-7 h-7" />
             </button>
           </Tooltip>
+          <Tooltip text="فروش">
+            <button className="bg-white rounded-full p-3">
+              <img src="/sales.svg" className="w-7 h-7" />
+            </button>
+          </Tooltip>
           <button
             type="button"
             className="bg-purple-600 rounded-full p-2"
@@ -398,6 +402,11 @@ export function Calendar() {
           <Tooltip text="مشتریان">
             <button className="bg-white rounded-full p-3">
               <img src="/client.svg" className="w-7 h-7" />
+            </button>
+          </Tooltip>
+          <Tooltip text="تنظیمات">
+            <button className="bg-white rounded-full p-3">
+              <img src="/more.svg" className="w-7 h-7" />
             </button>
           </Tooltip>
         </div>
