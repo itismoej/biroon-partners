@@ -339,12 +339,6 @@ export function Calendar() {
                 }}
               >
                 <img src="/calendar.svg" className="w-7 h-7" />
-                <p
-                  className="absolute bottom-1/2 translate-y-[80%] -translate-x-[60%] font-extrabold text-[10px] tabular-nums pointer-events-none"
-                  style={{ letterSpacing: "-1px" }}
-                >
-                  {toFarsiDigits(format(new Date(), "dd"))}
-                </p>
               </button>
             </Tooltip>
             <button
