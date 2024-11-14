@@ -28,6 +28,7 @@ export interface LocationServiceCatalogCategory {
 export type ServiceCatalog = LocationServiceCatalogCategory[];
 
 export interface Address {
+  region: string;
   latitude: number;
   longitude: number;
   title: string;
@@ -73,7 +74,6 @@ export interface Location {
   slug: string;
   name: string;
   address: Address;
-  city: string;
   rating: number;
   reviews: number;
   serviceCatalog: ServiceCatalog;
@@ -295,3 +295,115 @@ export async function createReservation(
   const data = await response.json();
   return { data, response };
 }
+
+export interface UserStatus {
+  status: "NoLocation" | "Employee" | "LocationOwner";
+}
+
+export async function fetchUserStatus(): Promise<{ data: UserStatus; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/status/`, {
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}
+
+export async function logout() {
+  const response = await fetch(`${apiUrl}/logout/`, {
+    method: "POST",
+    credentials: "include",
+  });
+  return { response };
+}
+
+export interface Onboarding {
+  firstName?: string;
+  lastName?: string;
+  businessName?: string;
+  enBusinessName?: string;
+  website?: string;
+  categories?: string;
+  address?: {
+    region: string;
+    latitude: number;
+    longitude: number;
+    address: string;
+    title: string;
+  };
+  isConfirmed?: boolean;
+}
+
+export async function fetchOnboarding(): Promise<{ data: Onboarding; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/onboarding/`, {
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}
+
+export async function updateOnboarding(data: Onboarding): Promise<{ data: Onboarding; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/onboarding/`, {
+    method: "PATCH",
+    credentials: "include",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return { data: await response.json(), response };
+}
+
+export async function confirmOnboarding(): Promise<{ data: Location; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/onboarding/confirm/`, {
+    method: "POST",
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  is_primary: boolean;
+}
+
+export async function fetchCategories(): Promise<{ data: Category[]; response: Response }> {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await fetch(`${apiUrl}/location/main-categories/`, {
+    headers: {
+      "X-Timezone": timeZone,
+    },
+  });
+  return { data: await response.json(), response };
+}
+
+export interface ReverseGeocodeResponse {
+  status: "OK" | "ERROR"; // Adjust "ERROR" based on any potential error codes if available
+  formatted_address: string; // Full address
+  route_name: string | null; // Street name at the end of the address
+  route_type: string | null; // Type of street (e.g., primary, secondary)
+  neighbourhood: string | null; // Neighborhood name (if available)
+  city: string; // City name
+  state: string; // Province/State name
+  place: string | null; // Name of public place (if available)
+  municipality_zone: string | null; // Municipality zone (if available)
+  in_traffic_zone: boolean; // Whether in a traffic zone
+  in_odd_even_zone: boolean; // Whether in odd/even traffic zone
+  village: string | null; // Village name (if applicable)
+  county: string; // County name
+  district: string; // District name
+}
+
+export const fetchReverseGeocode = async (
+  latitude: number,
+  longitude: number,
+): Promise<ReverseGeocodeResponse> => {
+  const response = await fetch(`https://api.neshan.org/v5/reverse?lat=${latitude}&lng=${longitude}`, {
+    headers: {
+      "Api-Key": "service.af65e25ca7c24b3081d0a330bfbfdf25",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch data");
+  }
+  return (await response.json()) as ReverseGeocodeResponse;
+};

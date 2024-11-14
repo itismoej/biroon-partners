@@ -1,5 +1,5 @@
-import { Calendar } from "@/app/Calendar";
+import { ThePage } from "@/app/ThePage";
 
-export default function Home() {
-  return <Calendar />;
+export default async function Home() {
+  return <ThePage />;
 }

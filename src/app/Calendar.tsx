@@ -168,7 +168,7 @@ export function Calendar() {
           }}
         >
           <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
-          <img src="/dropdown.svg"/>
+          <img src="/dropdown.svg" />
         </button>
       </div>
 
@@ -332,7 +332,7 @@ export function Calendar() {
 
       {/* Footer */}
       <div className="sticky bottom-0 z-50 bg-white pb-3 pt-1 px-3 w-full shadow">
-        <div className="flex flex-row-reverse gap-4 items-center justify-between max-w-[300px] mx-auto">
+        <div className="flex flex-row-reverse gap-4 items-center justify-between max-w-[400px] mx-auto">
           <Tooltip text="تقویم">
             <button
               className="relative bg-white rounded-full p-3"
@@ -405,7 +405,12 @@ export function Calendar() {
             </button>
           </Tooltip>
           <Tooltip text="تنظیمات">
-            <button className="bg-white rounded-full p-3">
+            <button
+              className="bg-white rounded-full p-3"
+              onClick={() => {
+                // setPage(2);
+              }}
+            >
               <img src="/more.svg" className="w-7 h-7" />
             </button>
           </Tooltip>
@@ -539,7 +544,7 @@ export function Calendar() {
           selectedDate={currentDate}
           onDateSelect={(date) => {
             if (calendarRef.current) {
-              calendarRef.current.getApi().gotoDate(date)
+              calendarRef.current.getApi().gotoDate(date);
               setCurrentDate(date);
               setSelectDateInCalendarBSIsOpen(false);
             }
@@ -796,7 +801,7 @@ export function Calendar() {
             selectedDate={currentDate}
             onDateSelect={(date) => {
               if (calendarRef.current) {
-                calendarRef.current.getApi().gotoDate(date)
+                calendarRef.current.getApi().gotoDate(date);
                 setCurrentDate(date);
                 setSelectDateInAddAppointmentModalBSIsOpen(false);
               }

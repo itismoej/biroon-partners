@@ -3,20 +3,26 @@ import { type FC, type ReactNode, useEffect, useState } from "react";
 
 interface ModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   children: ReactNode;
   title: ReactNode | string;
   topBarTitle?: ReactNode | string;
   className?: string;
+  disableBackBtn?: boolean;
+  leftBtn?: ReactNode | null;
+  stepBar?: ReactNode | null;
 }
 
 export const Modal: FC<ModalProps> = ({
   isOpen,
-  onClose,
+  onClose = () => {},
   children,
   title,
   topBarTitle = null,
   className = "",
+  disableBackBtn = false,
+  leftBtn = null,
+  stepBar = null,
 }) => {
   const [isOnTop, ref] = useOnTopWithRef();
   const [animation, setAnimation] = useState("animate-fadeInUp");
@@ -47,16 +53,22 @@ export const Modal: FC<ModalProps> = ({
       >
         <div ref={ref} className="bg-white px-5 w-full h-dvh overflow-y-scroll relative">
           <div
-            className={`flex gap-5 bg-white py-5 -mx-5 px-5 sticky top-0 ${isOnTop ? "" : "shadow-md"} z-50`}
+            className={`flex flex-col gap-5 bg-white py-5 -mx-5 px-5 sticky top-0 ${isOnTop ? "" : "shadow-md"} z-50`}
           >
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-none border-none cursor-pointer flex items-center"
-            >
-              <img src="/back.svg" alt="بازگشت" className="w-7 h-7" />
-            </button>
-            {!isOnTop && (topBarTitle ? topBarTitle : <h3 className="text-xl font-semibold">{title}</h3>)}
+            {stepBar}
+            <div className="flex gap-5 flex-row items-center justify-between">
+              {disableBackBtn ? null : (
+                <button
+                  type="button"
+                  onClick={disableBackBtn ? () => {} : onClose}
+                  className="bg-none border-none cursor-pointer flex items-center"
+                >
+                  <img src="/back.svg" alt="بازگشت" className={"w-7 h-7"} />
+                </button>
+              )}
+              {!isOnTop && (topBarTitle ? topBarTitle : <h3 className="text-xl font-semibold">{title}</h3>)}
+              {leftBtn}
+            </div>
           </div>
           {title && <h2 className="my-8 text-3xl font-semibold">{title}</h2>}
           {children}
