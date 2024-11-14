@@ -514,7 +514,7 @@ export default function Onboarding() {
                     // @ts-ignore
                     mapSetter={setMap}
                     options={{
-                      mapKey: process.env.NEXT_PUBLIC_NESHAN_WEB_API_KEY || "",
+                      mapKey: "web.4265bbfa21d2414dbf28c8ebdd43f308",
                       mapType: "neshanVector",
                       isTouchPlatform: true,
                       mapTypeControllerOptions: {
