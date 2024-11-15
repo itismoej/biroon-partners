@@ -14,6 +14,7 @@ export interface Service {
   formattedDuration: string;
   price: number;
   formattedPrice: string;
+  upfrontPrice: number;
   priceType: "FIXED" | "STARTS_AT";
   description?: string;
 }
@@ -408,3 +409,51 @@ export const fetchReverseGeocode = async (
   }
   return (await response.json()) as ReverseGeocodeResponse;
 };
+
+export interface ServiceCategory {
+  id: string;
+  name: string;
+}
+
+export async function fetchServiceCategories(): Promise<{ data: ServiceCategory[]; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/service-categories/`, {
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}
+
+export interface NewServicePerEmployee {
+  id: string;
+  isOperator: boolean;
+  price?: Service['price'];
+  upfrontPrice?: Service['upfrontPrice'];
+  durationInMins?: Service['durationInMins'];
+}
+
+export interface CreateNewService {
+  name: string;
+  category: Category['id'];
+  serviceCategory: ServiceCategory['id'];
+  durationInMins?: number;
+  price: number;
+  upfrontPrice?: number;
+  description?: string;
+  isRecommendedByLocation?: boolean;
+  gender: string;
+  perEmployeeSettings: NewServicePerEmployee[];
+}
+
+export async function createNewService(
+  newService: CreateNewService,
+): Promise<{ data: unknown; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/services/`, {
+    method: "POST",
+    body: JSON.stringify(newService),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+  const data = await response.json();
+  return { data, response };
+}

@@ -3,7 +3,13 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 
-export const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
+interface TooltipProps{
+  children: React.ReactNode;
+  text: string
+  place?: 'center' | 'left' | 'right';
+}
+
+export const Tooltip = ({ children, text, place = 'center' }: TooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
   const showTooltip = () => {
@@ -32,7 +38,7 @@ export const Tooltip = ({ children, text }: { children: React.ReactNode; text: s
     >
       {children}
       {isVisible && (
-        <div className="absolute bottom-full flex flex-col items-center animate-fadeInUp">
+        <div className={`absolute bottom-full flex flex-col items-center animate-fadeInUp ${place === 'left' ? "left-[5px]" : place === 'right' ? 'right-[5px]' : ''}`}>
           <div className="relative bg-gray-900 text-white text-md font-normal rounded py-2 px-3 shadow-lg">
             {text}
           </div>

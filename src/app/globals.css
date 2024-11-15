@@ -40,6 +40,13 @@ button:active {
   filter: brightness(0.97);
 }
 
+textarea:focus,
+input:focus,
+select:focus {
+  border: 1px solid #a855f7;
+  outline: none;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

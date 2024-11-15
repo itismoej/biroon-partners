@@ -57,16 +57,18 @@ export const Modal: FC<ModalProps> = ({
           >
             {stepBar}
             <div className="flex gap-5 flex-row items-center justify-between">
-              {disableBackBtn ? null : (
-                <button
-                  type="button"
-                  onClick={disableBackBtn ? () => {} : onClose}
-                  className="bg-none border-none cursor-pointer flex items-center"
-                >
-                  <img src="/back.svg" alt="بازگشت" className={"w-7 h-7"} />
-                </button>
-              )}
-              {!isOnTop && (topBarTitle ? topBarTitle : <h3 className="text-xl font-semibold">{title}</h3>)}
+              <div className="flex gap-5 flex-row items-center justify-between">
+                {disableBackBtn ? null : (
+                  <button
+                    type="button"
+                    onClick={disableBackBtn ? () => {} : onClose}
+                    className="bg-none border-none cursor-pointer flex items-center"
+                  >
+                    <img src="/back.svg" alt="بازگشت" className={"w-7 h-7"} />
+                  </button>
+                )}
+                {!isOnTop && (topBarTitle ? topBarTitle : <h3 className="text-xl font-semibold">{title}</h3>)}
+              </div>
               {leftBtn}
             </div>
           </div>

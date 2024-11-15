@@ -22,7 +22,7 @@ export default function RootLayout({
         dir="rtl"
       >
         {children}
-        <Toaster />
+        <Toaster containerClassName="!top-[65px] !bottom-[78px]" />
       </body>
     </html>
   );
