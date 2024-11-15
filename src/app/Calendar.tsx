@@ -5,38 +5,72 @@ import {
   type AvailableEmployeesByService,
   type CalendarEvent,
   type CalendarEventPatchRequest,
+  type Category,
+  createNewService,
+  createReservation,
   type Customer,
   type Employee,
-  type Location,
-  type Service,
-  createReservation,
   fetchAllEmployees,
   fetchAllEvents,
   fetchAvailableEmployeesByService,
+  fetchCategories,
   fetchCustomers,
   fetchLocation,
+  fetchServiceCategories,
+  type Location,
+  NewServicePerEmployee,
+  type Service,
+  ServiceCategory,
   updateEvent,
 } from "@/app/api";
-import { formatPriceInFarsi, toFarsiDigits } from "@/app/utils";
-import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
-import interactionPlugin, { type EventResizeDoneArg } from "@fullcalendar/interaction";
+import {
+  formatDurationInFarsi,
+  formatPriceInFarsi,
+  formatPriceWithSeparator,
+  toEnglishDigits,
+  toFarsiDigits
+} from "@/app/utils";
+import type {EventContentArg, EventDropArg} from "@fullcalendar/core";
+import interactionPlugin, {type EventResizeDoneArg} from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
-import type { ResourceApi } from "@fullcalendar/resource";
+import type {ResourceApi} from "@fullcalendar/resource";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
-import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay} from "date-fns-jalali";
+import {useRouter} from "next/navigation";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import toast from "react-hot-toast";
 import "./calendar.css";
-import { BottomSheet } from "@/app/Components/BottomSheet";
-import { type CanSwipeDirection, SwipeComponent } from "@/app/Components/SwipeComponent";
-import { Tile } from "@/app/Components/Tile";
-import { Tooltip } from "@/app/Components/Tooltip";
-import { useUserData } from "@/context/UserContext";
+import {BottomSheet, BottomSheetFooter} from "@/app/Components/BottomSheet";
+import {type CanSwipeDirection, SwipeComponent} from "@/app/Components/SwipeComponent";
+import {Tile} from "@/app/Components/Tile";
+import {Tooltip} from "@/app/Components/Tooltip";
+import {useUserData} from "@/context/UserContext";
 import NextImage from "next/image";
-import { DatePicker } from "./Components/DatePicker";
-import { Modal } from "./Components/Modal";
+import {DatePicker} from "./Components/DatePicker";
+import {Modal} from "./Components/Modal";
+import {ServicesSection} from "@/app/Components/ServicesSection";
+
+const generateDurations = () => {
+  const durations = [];
+  for (let i = 5; i <= 720; i += 5) {
+    let label = '';
+    if (i < 60) {
+      label = `${i} دقیقه`;
+    } else if (i % 60 === 0) {
+      if (i === 60) label = `${i / 60} ساعت`;
+      else label = `${i / 60} ساعت`;
+    } else {
+      const hours = Math.floor(i / 60);
+      const minutes = i % 60;
+      label = `${hours} ساعت و ${minutes} دقیقه`;
+    }
+    durations.push({ value: i, label: toFarsiDigits(label) });
+  }
+  return durations;
+};
+
+const durations = generateDurations();
 
 export function Calendar() {
   const canSwipeDirectionRef = useRef<CanSwipeDirection>("Left");
@@ -78,6 +112,28 @@ export function Calendar() {
   const [selectEmployeeBSIsOpen, setSelectEmployeeBSIsOpen] = useState<boolean>(false);
   const [selectDateInCalendarBSIsOpen, setSelectDateInCalendarBSIsOpen] = useState<boolean>(false);
   const { userData } = useUserData();
+  const [servicesModalIsOpen, setServicesModalIsOpen] = useState(false);
+  const [addNewServicesModalIsOpen, setAddNewServicesModalIsOpen] = useState(false);
+  const [editingServiceInServicesPage, setEditingServiceInServicesPage] = useState<Service>();
+  const [newServiceName, setNewServiceName] = useState<Service['name']>('')
+  const [newServiceMainCategory, setNewServiceMainCategory] = useState<Category>()
+  const [newServiceSelectMainCategoryBSIsOpen, setNewServiceSelectMainCategoryBSIsOpen] = useState<boolean>(false)
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
+  const [newServiceCategory, setNewServiceCategory] = useState<ServiceCategory>()
+  const [newServiceSelectServiceCategoryBSIsOpen, setNewServiceSelectServiceCategoryBSIsOpen] = useState<boolean>(false)
+  const [newServiceDescription, setNewServiceDescription] = useState<Service['description']>('');
+  const [newServiceDuration, setNewServiceDuration] = useState<Service['durationInMins']>(60);
+  const [newServicePrice, setNewServicePrice] = useState<Service['price']>();
+  const [newServiceUpfrontPrice, setNewServiceUpfrontPrice] = useState<Service['upfrontPrice']>();
+  const [newServiceGender, setNewServiceGender] = useState<'f'|'m'|''>('f');
+  const [newServiceIsRecommendedByLocation, setNewServiceIsRecommendedByLocation] = useState<boolean>(false);
+  const [newServiceAdvancedSettingsModalIsOpen, setNewServiceAdvancedSettingsModalIsOpen] = useState<boolean>(false);
+  const [newServiceAdvancedPerEmployeeSettings, setNewServiceAdvancedPerEmployeeSettings] =
+    useState<Record<Employee['id'], NewServicePerEmployee>>({});
+  const [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee, setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee] =
+    useState<Employee>();
+  const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -114,6 +170,26 @@ export function Calendar() {
           className: "w-full font-medium",
         });
       else setLocation(data);
+    });
+
+    fetchCategories().then(({ data, response }) => {
+      if (response.status !== 200)
+        toast.error("دریافت لیست سرویس‌های قابل انتخاب", {
+          duration: 5000,
+          position: "bottom-center",
+          className: "w-full font-medium",
+        });
+      else setAvailableCategories(data);
+    });
+
+    fetchServiceCategories().then(({ data, response }) => {
+      if (response.status !== 200)
+        toast.error("دریافت منوی کاتالوگ شما با خطا مواجه شد", {
+          duration: 5000,
+          position: "bottom-center",
+          className: "w-full font-medium",
+        });
+      else setServiceCategories(data);
     });
   }, []);
 
@@ -167,25 +243,31 @@ export function Calendar() {
     nowLine?.scrollIntoView({ behavior, block: "center" });
   };
 
+  const [page, setPage] = useState(0);
+
   return resources.length > 0 ? (
     <div className="relative overflow-x-clip">
       {/* Header */}
       <div className="sticky top-0 ps-2 pe-5 z-50 h-[59px] bg-white shadow flex flex-row gap-5 items-center justify-between">
-        <div className="flex flex-row gap-2 items-center">
-          <button className="bg-white p-3 rounded-xl">
-            <NextImage width={24} height={24} alt="منو" src="/hamburger.svg" className="w-[24px] h-[24px]" />
-          </button>
-          <button
-            className="flex flex-row gap-1"
-            type="button"
-            onClick={() => {
-              setSelectDateInCalendarBSIsOpen(true);
-            }}
-          >
-            <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM"))}</h2>
-            <NextImage width={24} height={24} alt="باز کردن تقویم" src="/dropdown.svg" />
-          </button>
-        </div>
+        {page === 0 ? (
+          <div className="flex flex-row gap-2 items-center">
+            <button className="bg-white p-3 rounded-xl">
+              <NextImage width={24} height={24} alt="منو" src="/hamburger.svg" className="w-[24px] h-[24px]"/>
+            </button>
+            <button
+              className="flex flex-row gap-1"
+              type="button"
+              onClick={() => {
+                setSelectDateInCalendarBSIsOpen(true);
+              }}
+            >
+              <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM"))}</h2>
+              <NextImage width={24} height={24} alt="باز کردن تقویم" src="/dropdown.svg"/>
+            </button>
+          </div>
+        ) : (
+          <div></div>
+        )}
         <button>
           {userData?.user?.avatar.url ? (
             <NextImage
@@ -196,269 +278,977 @@ export function Calendar() {
               className="w-[30px] h-[30px] rounded-full"
             />
           ) : userData?.user ? (
-            <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold bg-purple-200">
+            <div
+              className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold bg-purple-200">
               {userData.user.name.slice(0, 2)}
             </div>
           ) : null}
         </button>
       </div>
 
-      {/* Calendar Container */}
-      <div
-        className={`relative calendar-container ${isAnimating ? "animating" : ""}`}
-        style={{
-          transform: `translateX(${translateX}px)`,
-          overflowX: isAnimating ? "hidden" : "visible",
-        }}
-      >
-        <SwipeComponent
-          canSwipeDirectionRef={canSwipeDirectionRef}
-          onSwipeRight={() => {
-            setIsAnimating(true);
-            setTranslateX(-window.innerWidth);
-            setTimeout(() => {
-              if (calendarRef.current) {
-                calendarRef.current.getApi().next();
-              }
-              setTranslateX(0);
-              setIsAnimating(false);
-            }, ANIMATION_DURATION);
-          }}
-          onSwipeLeft={() => {
-            setIsAnimating(true);
-            setTranslateX(window.innerWidth);
-            setTimeout(() => {
-              if (calendarRef.current) {
-                calendarRef.current.getApi().prev();
-              }
-              setTranslateX(0);
-              setIsAnimating(false);
-            }, ANIMATION_DURATION);
+      {page === 0 ? (
+        // Calendar Container
+        <div
+          className={`pb-[60px] relative calendar-container ${isAnimating ? "animating" : ""}`}
+          style={{
+            transform: `translateX(${translateX}px)`,
+            overflowX: isAnimating ? "hidden" : "visible",
           }}
         >
-          <FullCalendar
-            viewDidMount={() => {
-              const element = document.querySelector(".fc-scroller-harness .fc-timegrid-body")?.parentElement;
-              if (element) {
-                const handleScroll = () => {
-                  const _isAtStart = element.scrollLeft === 0;
-                  const _isAtEnd = element.scrollWidth + element.scrollLeft === element.clientWidth;
-                  if (_isAtStart) canSwipeDirectionRef.current = "Left";
-                  if (_isAtEnd) canSwipeDirectionRef.current = "Right";
-                  if (!_isAtStart && !_isAtEnd) canSwipeDirectionRef.current = false;
-                  if (_isAtStart && _isAtEnd) canSwipeDirectionRef.current = true;
-                };
-
-                element.addEventListener("touchend", handleScroll);
-                element.addEventListener("mouseup", handleScroll);
-                setTimeout(handleScroll, 500);
-                setTimeout(() => goToNow("instant"), 100);
-              }
-            }}
-            ref={calendarRef}
-            datesSet={(d) => {
-              setCurrentDate(d.start);
-              setIsAnimating(false);
-              setTranslateX(0);
-            }}
-            longPressDelay={200}
-            selectAllow={() => false}
-            eventDragStart={() => {
-              canSwipeDirectionRef.current = false;
-              setIsAnimating(false);
-              setTranslateX(0);
-            }}
-            eventClick={() => {
-              canSwipeDirectionRef.current = false;
-              setIsAnimating(false);
-              setTranslateX(0);
-            }}
-            eventDragStop={() => {
-              const element = document.querySelector(".fc-scroller-harness .fc-timegrid-body")?.parentElement;
-              if (element) {
-                const handleScroll = () => {
-                  const _isAtStart = element.scrollLeft === 0;
-                  const _isAtEnd = element.scrollWidth + element.scrollLeft === element.clientWidth;
-                  if (_isAtStart) canSwipeDirectionRef.current = "Left";
-                  if (_isAtEnd) canSwipeDirectionRef.current = "Right";
-                  if (!_isAtStart && !_isAtEnd) canSwipeDirectionRef.current = false;
-                  if (_isAtStart && _isAtEnd) canSwipeDirectionRef.current = true;
-                };
-
-                setTimeout(handleScroll, 200);
-              }
-            }}
-            snapDuration={{ minute: 15 }}
-            plugins={[resourceTimeGridPlugin, scrollGridPlugin, interactionPlugin]}
-            initialView="resourceTimeGridDay"
-            resourceLabelDidMount={(info) => {
-              if (info.resource.extendedProps.avatar) {
-                const avatar = document.createElement("img");
-                avatar.src = info.resource.extendedProps.avatar;
-                avatar.className = "w-8 h-8 rounded-full mx-auto border-2 border-gray-300 mt-2";
-                info.el.prepend(avatar);
-              } else {
-                const avatar = document.createElement("div");
-                avatar.className =
-                  "w-8 h-8 text-xs flex items-center justify-center font-normal rounded-full mx-auto border-2 bg-purple-100 border-gray-300 mt-2";
-                avatar.innerText = info.resource.title.slice(0, 2);
-                info.el.prepend(avatar);
-              }
-            }}
-            slotLabelFormat={{
-              hour: "2-digit",
-              minute: "2-digit",
-            }}
-            slotDuration={{ minute: 15 }}
-            resources={resources}
-            initialEvents={initialEvents}
-            allDaySlot={false}
-            eventContent={renderEventContent}
-            schedulerLicenseKey="GPL-My-Project-Is-Open-Source"
-            locale="fa"
-            height="auto"
-            dayMinWidth={120}
-            headerToolbar={false}
-            nowIndicator={true}
-            editable={true}
-            selectable={true}
-            eventDrop={(info) => {
-              setEditingEvents((prev) => [...prev, info]);
-            }}
-            eventResize={(info) => {
-              setEditingEvents((prev) => [...prev, info]);
-            }}
-            dragRevertDuration={100}
-            dragScroll={true}
-            nowIndicatorDidMount={(mountArg) => {
-              if (mountArg.isAxis) {
-                mountArg.el.classList.add(
-                  "!w-[90%]",
-                  "!h-[16px]",
-                  "!bg-white",
-                  "!text-sm",
-                  "!text-center",
-                  "!font-bold",
-                  "!text-red-600",
-                  "!border",
-                  "!rounded-full",
-                  "!border-red-600",
-                  "!absolute",
-                  "!-translate-y-[2px]",
-                );
-
-                const updateNowIndicator = () => {
-                  mountArg.el.innerText = toFarsiDigits(format(new Date(), "HH:mm"));
-                };
-
-                const scheduleNextUpdate = () => {
-                  const now = new Date();
-                  const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-
-                  setTimeout(() => {
-                    updateNowIndicator();
-                    scheduleNextUpdate();
-                  }, msUntilNextMinute);
-                };
-
-                updateNowIndicator();
-                scheduleNextUpdate();
-              }
-            }}
-          />
-        </SwipeComponent>
-      </div>
-
-      {/* Footer */}
-      <div className="sticky bottom-0 z-50 bg-white pb-3 pt-1 px-3 w-full shadow">
-        <div className="flex flex-row-reverse gap-4 items-center justify-between max-w-[400px] mx-auto">
-          <Tooltip text="تقویم">
-            <button
-              className="relative bg-white rounded-full p-3"
-              onClick={() => {
+          <SwipeComponent
+            canSwipeDirectionRef={canSwipeDirectionRef}
+            onSwipeRight={() => {
+              setIsAnimating(true);
+              setTranslateX(-window.innerWidth);
+              setTimeout(() => {
                 if (calendarRef.current) {
-                  goToNow();
+                  calendarRef.current.getApi().next();
+                }
+                setTranslateX(0);
+                setIsAnimating(false);
+              }, ANIMATION_DURATION);
+            }}
+            onSwipeLeft={() => {
+              setIsAnimating(true);
+              setTranslateX(window.innerWidth);
+              setTimeout(() => {
+                if (calendarRef.current) {
+                  calendarRef.current.getApi().prev();
+                }
+                setTranslateX(0);
+                setIsAnimating(false);
+              }, ANIMATION_DURATION);
+            }}
+          >
+            <FullCalendar
+              viewDidMount={() => {
+                const element = document.querySelector(".fc-scroller-harness .fc-timegrid-body")?.parentElement;
+                if (element) {
+                  const handleScroll = () => {
+                    const _isAtStart = element.scrollLeft === 0;
+                    const _isAtEnd = element.scrollWidth + element.scrollLeft === element.clientWidth;
+                    if (_isAtStart) canSwipeDirectionRef.current = "Left";
+                    if (_isAtEnd) canSwipeDirectionRef.current = "Right";
+                    if (!_isAtStart && !_isAtEnd) canSwipeDirectionRef.current = false;
+                    if (_isAtStart && _isAtEnd) canSwipeDirectionRef.current = true;
+                  };
+
+                  element.addEventListener("touchend", handleScroll);
+                  element.addEventListener("mouseup", handleScroll);
+                  setTimeout(handleScroll, 500);
+                  setTimeout(() => goToNow("smooth"), 100);
                 }
               }}
-            >
-              <img src="/calendar.svg" className="w-7 h-7" />
-            </button>
-          </Tooltip>
-          <Tooltip text="فروش">
-            <button className="bg-white rounded-full p-3">
-              <img src="/sales.svg" className="w-7 h-7" />
-            </button>
-          </Tooltip>
-          <button
-            type="button"
-            className="bg-purple-600 rounded-full p-2"
-            onClick={() => {
-              setActionsBSIsOpen(true);
-            }}
-          >
-            <img src="/plus-white.svg" className="w-7 h-7" />
-          </button>
-          <BottomSheet
-            title="افزودن"
-            isOpen={actionsBSIsOpen}
-            onClose={() => {
-              setActionsBSIsOpen(false);
-            }}
-          >
-            <div className="-mx-3">
-              <ul className="flex flex-col">
-                <li>
-                  <button
-                    className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                    onClick={() => {
-                      setAddAppointmentModalIsOpen(true);
-                      setActionsBSIsOpen(false);
-                    }}
-                  >
-                    <div className="bg-purple-100 rounded-full p-3">
-                      <img src="/add-appointment.svg" className="w-6 h-6" />
-                    </div>
-                    <p className="text-xl font-normal">نوبت</p>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                    onClick={() => {
-                      setActionsBSIsOpen(false);
-                    }}
-                  >
-                    <div className="bg-purple-100 rounded-full p-3">
-                      <img src="/add-blocked-time.svg" className="w-6 h-6" />
-                    </div>
-                    <p className="text-xl font-normal">زمان بلوکه شده</p>
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </BottomSheet>
-          <Tooltip text="مشتریان">
-            <button className="bg-white rounded-full p-3">
-              <img src="/client.svg" className="w-7 h-7" />
-            </button>
-          </Tooltip>
-          <Tooltip text="تنظیمات">
+              ref={calendarRef}
+              datesSet={(d) => {
+                setCurrentDate(d.start);
+                setIsAnimating(false);
+                setTranslateX(0);
+              }}
+              longPressDelay={200}
+              selectAllow={() => false}
+              eventDragStart={() => {
+                canSwipeDirectionRef.current = false;
+                setIsAnimating(false);
+                setTranslateX(0);
+              }}
+              eventClick={() => {
+                canSwipeDirectionRef.current = false;
+                setIsAnimating(false);
+                setTranslateX(0);
+              }}
+              eventDragStop={() => {
+                const element = document.querySelector(".fc-scroller-harness .fc-timegrid-body")?.parentElement;
+                if (element) {
+                  const handleScroll = () => {
+                    const _isAtStart = element.scrollLeft === 0;
+                    const _isAtEnd = element.scrollWidth + element.scrollLeft === element.clientWidth;
+                    if (_isAtStart) canSwipeDirectionRef.current = "Left";
+                    if (_isAtEnd) canSwipeDirectionRef.current = "Right";
+                    if (!_isAtStart && !_isAtEnd) canSwipeDirectionRef.current = false;
+                    if (_isAtStart && _isAtEnd) canSwipeDirectionRef.current = true;
+                  };
+
+                  setTimeout(handleScroll, 200);
+                }
+              }}
+              snapDuration={{ minute: 15 }}
+              plugins={[resourceTimeGridPlugin, scrollGridPlugin, interactionPlugin]}
+              initialView="resourceTimeGridDay"
+              resourceLabelDidMount={(info) => {
+                if (info.resource.extendedProps.avatar) {
+                  const avatar = document.createElement("img");
+                  avatar.src = info.resource.extendedProps.avatar;
+                  avatar.className = "w-8 h-8 rounded-full mx-auto border-2 border-gray-300 mt-2";
+                  info.el.prepend(avatar);
+                } else {
+                  const avatar = document.createElement("div");
+                  avatar.className =
+                    "w-8 h-8 text-xs flex items-center justify-center font-normal rounded-full mx-auto border-2 bg-purple-100 border-gray-300 mt-2";
+                  avatar.innerText = info.resource.title.slice(0, 2);
+                  info.el.prepend(avatar);
+                }
+              }}
+              slotLabelFormat={{
+                hour: "2-digit",
+                minute: "2-digit",
+              }}
+              slotDuration={{ minute: 15 }}
+              resources={resources}
+              initialEvents={initialEvents}
+              allDaySlot={false}
+              eventContent={renderEventContent}
+              schedulerLicenseKey="GPL-My-Project-Is-Open-Source"
+              locale="fa"
+              height="auto"
+              dayMinWidth={120}
+              headerToolbar={false}
+              nowIndicator={true}
+              editable={true}
+              selectable={true}
+              eventDrop={(info) => {
+                setEditingEvents((prev) => [...prev, info]);
+              }}
+              eventResize={(info) => {
+                setEditingEvents((prev) => [...prev, info]);
+              }}
+              dragRevertDuration={100}
+              dragScroll={true}
+              nowIndicatorDidMount={(mountArg) => {
+                if (mountArg.isAxis) {
+                  mountArg.el.classList.add(
+                    "!w-[90%]",
+                    "!h-[16px]",
+                    "!bg-white",
+                    "!text-sm",
+                    "!text-center",
+                    "!font-bold",
+                    "!text-red-600",
+                    "!border",
+                    "!rounded-full",
+                    "!border-red-600",
+                    "!absolute",
+                    "!-translate-y-[2px]",
+                  );
+
+                  const updateNowIndicator = () => {
+                    mountArg.el.innerText = toFarsiDigits(format(new Date(), "HH:mm"));
+                  };
+
+                  const scheduleNextUpdate = () => {
+                    const now = new Date();
+                    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+                    setTimeout(() => {
+                      updateNowIndicator();
+                      scheduleNextUpdate();
+                    }, msUntilNextMinute);
+                  };
+
+                  updateNowIndicator();
+                  scheduleNextUpdate();
+                }
+              }}
+            />
+          </SwipeComponent>
+        </div>
+      ) : page === 1 ? (
+        "sales"
+      ) : page === 2 ? (
+        "clients"
+      ) : page === 3 ? (
+        <div className="p-5 bg-gray-100" style={{minHeight: 'calc(100dvh - 119px)'}}>
+          <div className="py-5 grid grid-cols-2 gap-3">
             <button
-              className="bg-white rounded-full p-3"
-              onClick={() => {
-                // setPage(2);
+              className={`relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5`}
+              onClick={() => {setServicesModalIsOpen(true)}}
+            >
+              <NextImage
+                width={24}
+                height={24}
+                alt="سرویس‌ها"
+                src='/catalog.svg'
+              />
+              <p className="text-lg font-medium">سرویس‌ها</p>
+            </button>
+            <button
+              className={`relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5`}
+            >
+              <NextImage
+                width={24}
+                height={24}
+                alt="تیم متخصصان"
+                src='/team.svg'
+              />
+              <p className="text-lg font-medium">تیم متخصصان</p>
+            </button>
+            <button
+              className={`relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5`}
+            >
+              <NextImage
+                width={24}
+                height={24}
+                alt="پرداخت‌ها"
+                src='/payments.svg'
+              />
+              <p className="text-lg font-medium">پرداخت‌ها</p>
+            </button>
+          </div>
+          <Modal
+            isOpen={servicesModalIsOpen}
+            onClose={() => {
+              setServicesModalIsOpen(false);
+            }}
+            title={
+              <div className="-mt-4">
+                <h1 className="text-3xl">منوی سرویس‌ها</h1>
+                <p className="text-lg font-normal text-gray-500">
+                  مشاهده و مدیریت سرویس‌هایی که در کسب‌و‌کار شما ارائه می‌شود.
+                </p>
+              </div>
+            }
+            topBarTitle={
+              <h2 className="text-xl font-bold">منوی سرویس‌ها</h2>
+            }
+            leftBtn={
+              <button
+                className="bg-black px-3 py-2 text-white text-lg rounded-lg font-bold flex flex-row gap-2 items-center justify-center"
+                onClick={() => setAddNewServicesModalIsOpen(true)}
+              >
+                <NextImage src="/plus-white.svg" alt="افزودن سرویس" width={20} height={20} />
+                افزودن
+              </button>
+            }
+          >
+            {location && (
+              <>
+                <ServicesSection
+                  location={location}
+                  serviceOnClick={(svc) => {
+                    setEditingServiceInServicesPage(svc)
+                  }}
+                />
+                <BottomSheet
+                  isOpen={editingServiceInServicesPage !== undefined}
+                  onClose={() => setEditingServiceInServicesPage(undefined)}
+                  title={editingServiceInServicesPage?.name}
+                >
+                  <div className="-mt-6 -mx-3">
+                    <ul className="flex flex-col">
+                      <li>
+                        <button
+                          className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
+                          onClick={() => {
+                          }}
+                        >
+                          <p className="text-lg font-medium">ویرایش</p>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
+                          onClick={() => {
+                          }}
+                        >
+                          <p className="text-lg text-red-600 font-medium">حذف دائمی (غیر قابل بازگشت)</p>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </BottomSheet>
+              </>
+            )}
+          </Modal>
+          <Modal
+            isOpen={addNewServicesModalIsOpen}
+            onClose={() => {
+              setIsConfirmCloseAddNewServiceBSOpen(true)
+            }}
+            title="افزودن سرویس"
+          >
+            <div className="flex flex-col gap-6 pb-28">
+              <h2 className="text-2xl font-bold">اطلاعات کلی</h2>
+              <div className="flex flex-col gap-2">
+                <label className="font-bold text-md">نام سرویس</label>
+                <input
+                  className="border text-lg rounded-lg py-3 px-5 outline-0"
+                  placeholder="نام سرویس؛ مثلاً مانیکور"
+                  value={newServiceName}
+                  onChange={(e) => setNewServiceName(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-bold text-md">نوع سرویس</label>
+                <div className="relative">
+                  <input
+                    className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
+                    placeholder="نوع سرویس را انتخاب کنید"
+                    value={newServiceMainCategory?.name || ''}
+                    readOnly
+                  />
+                  <div className="left-1 top-1/2 -translate-y-1/2 absolute text-purple-600 text-xl font-medium">
+                    <button
+                      className="bg-white py-2 px-3 rounded-xl"
+                      onClick={() => setNewServiceSelectMainCategoryBSIsOpen(true)}
+                    >
+                      انتخاب
+                    </button>
+                  </div>
+                  <BottomSheet
+                    isOpen={newServiceSelectMainCategoryBSIsOpen}
+                    onClose={() => setNewServiceSelectMainCategoryBSIsOpen(false)}
+                    title="دسته‌بندی‌های اصلی"
+                  >
+                    <div className="grid grid-cols-2 gap-3">
+                      {availableCategories.map((category) => {
+                        return (
+                          <button
+                            key={category.id}
+                            className={`relative border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5 ${newServiceMainCategory?.id === category.id ? "shadow-[inset_0_0_0_2px] shadow-purple-500" : ""}`}
+                            onClick={() => {
+                              setNewServiceMainCategory(category)
+                              setNewServiceSelectMainCategoryBSIsOpen(false)
+                            }}
+                          >
+                            <NextImage
+                              width={32}
+                              height={32}
+                              alt={category.name}
+                              src={category.icon}
+                              style={{filter: "saturate(0) brightness(0)"}}
+                            />
+                            <p className="text-lg font-bold">{category.name}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </BottomSheet>
+                </div>
+                <p className="text-gray-500 text-sm font-light">
+                  انتخاب درست این فیلد، برای پیدا کردن شما در پلتفرم بیرون توسط مشتریان، تأثیر مهمی دارد. این گزینه فقط
+                  در موتور جستجوی بیرون اثرگذاری دارد و به کاربران نمایش داده نمی‌شود.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-bold text-md">دسته‌بندی منوی شما</label>
+                <div className="relative">
+                  <input
+                    className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
+                    placeholder="در کدام منو قرار بگیرد؟"
+                    value={newServiceCategory?.name || ''}
+                    readOnly
+                  />
+                  <div className="left-1 top-1/2 -translate-y-1/2 absolute text-purple-600 text-xl font-medium">
+                    <button
+                      className="bg-white py-2 px-3 rounded-xl"
+                      onClick={() => setNewServiceSelectServiceCategoryBSIsOpen(true)}
+                    >
+                      انتخاب
+                    </button>
+                  </div>
+                  <BottomSheet
+                    isOpen={newServiceSelectServiceCategoryBSIsOpen}
+                    onClose={() => setNewServiceSelectServiceCategoryBSIsOpen(false)}
+                    title="دسته‌بندی‌های منوی شما"
+                  >
+                    <div className="flex flex-col items-start gap-4">
+                      {serviceCategories.map((svcCategory) => (
+                        <button
+                          key={svcCategory.id}
+                          className="w-full flex flex-row justify-between items-center text-xl font-normal"
+                          onClick={() => {
+                            setNewServiceCategory(svcCategory)
+                            setNewServiceSelectServiceCategoryBSIsOpen(false)
+                          }}
+                        >
+                          {svcCategory.name}
+                          {newServiceCategory?.id === svcCategory.id && (
+                            <NextImage className="invert" src="/check.svg" alt="انتخاب شده" width={18} height={18}/>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </BottomSheet>
+                </div>
+                <p className="text-gray-500 text-sm font-light">
+                  همان دسته‌بندی که به مشتریان شما در صفحه‌ی کسب‌و‌کارتان نمایش داده می‌شود.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-bold text-md">توضیحات</label>
+                <textarea
+                  className="border text-lg rounded-lg py-3 px-5 outline-0 min-h-[120px]"
+                  placeholder="می‌توانید توضیح کوتاهی اضافه کنید"
+                  value={newServiceDescription}
+                  maxLength={1000}
+                  onChange={(e) => setNewServiceDescription(e.target.value)}
+                />
+              </div>
+              <hr className="my-4"/>
+              <h2 className="text-2xl font-bold">هزینه و زمان</h2>
+              <div className="flex flex-col gap-2">
+                <label className="font-bold text-md">مدت‌زمان سرویس</label>
+                <select
+                  value={newServiceDuration}
+                  onChange={(e) => {
+                    setNewServiceDuration(+e.target.value)
+                  }}
+                  className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
+                  style={{
+                    backgroundImage: `url('/dropdown.svg')`,
+                    backgroundPosition: "left 1rem center",
+                    backgroundSize: "1.5rem 1.5rem",
+                    backgroundRepeat: "no-repeat",
+                    paddingRight: "1.5rem",
+                  }}
+                >
+                  {durations.map((duration) => (
+                    <option key={duration.value} value={duration.value}>
+                      {duration.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-bold text-md">هزینه</label>
+                <div className="relative">
+                  <input
+                    className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
+                    style={{direction: "ltr"}}
+                    placeholder="۵۰۰٫۰۰۰"
+                    value={newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice))) : ""}
+                    onChange={(e) => {
+                      const val = toEnglishDigits(e.target.value).replaceAll('٫', '')
+                      if (!isNaN(Number(val)) && +val < 100000000) {
+                        setNewServicePrice(+val)
+                        setNewServiceUpfrontPrice(newServiceUpfrontPrice ? Math.min(+val, newServiceUpfrontPrice) : newServiceUpfrontPrice)
+                        setNewServiceAdvancedPerEmployeeSettings((prevSettings) => {
+                          return Object.keys(prevSettings).reduce((acc, employeeId) => {
+                            const employeeSettings = prevSettings[employeeId];
+
+                            const updatedUpfrontPrice =
+                              employeeSettings.upfrontPrice !== undefined
+                                ? Math.min(+val, employeeSettings.upfrontPrice)
+                                : employeeSettings.upfrontPrice;
+
+                            acc[employeeId] = {
+                              ...employeeSettings,
+                              upfrontPrice: updatedUpfrontPrice,
+                            };
+
+                            return acc;
+                          }, {} as Record<Employee['id'], NewServicePerEmployee>);
+                        });
+                      }
+                    }}
+                  />
+                  <div
+                    className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
+                    تومــان
+                  </div>
+                </div>
+              </div>
+              <div className={`flex flex-col gap-2 ${!newServicePrice ? "opacity-40" : ""}`}>
+                <label className="font-bold text-md">پیش‌بها</label>
+                <div className="relative">
+                  <input
+                    className={`w-full border text-lg rounded-lg py-3 px-5 outline-0`}
+                    style={{direction: "ltr"}}
+                    disabled={!newServicePrice}
+                    placeholder={newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Math.ceil(newServicePrice / 2))) : "۲۵۰٫۰۰۰"}
+                    value={newServiceUpfrontPrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServiceUpfrontPrice))) : ""}
+                    onChange={(e) => {
+                      const val = toEnglishDigits(e.target.value).replaceAll('٫', '')
+                      if (newServicePrice && !isNaN(Number(val)) && +val <= newServicePrice)
+                        setNewServiceUpfrontPrice(+val)
+                    }}
+                  />
+                  <div
+                    className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium"
+                  >
+                    تومــان
+                  </div>
+                </div>
+              </div>
+              <button
+                disabled={!newServicePrice}
+                className={`mt-3 text-xl font-medium text-purple-600 flex flex-row gap-3 ${newServicePrice ? "" : "opacity-30" }`}
+                onClick={() => setNewServiceAdvancedSettingsModalIsOpen(true)}
+              >
+                <span>تنظیمات پیشرفته‌ی هزینه و زمان</span>
+                {Object.keys(newServiceAdvancedPerEmployeeSettings).length > 0 && (
+                  <div
+                    className="w-6 h-6 flex items-center justify-center text-md bg-purple-500 border text-white rounded-full font-bold"
+                  >
+                  <span
+                    className="translate-y-[2px] text-sm font-normal"
+                  >
+                    {toFarsiDigits(Object.keys(newServiceAdvancedPerEmployeeSettings).length)}
+                  </span>
+                  </div>
+                )}
+              </button>
+              {newServicePrice ? <Modal
+                  isOpen={newServiceAdvancedSettingsModalIsOpen}
+                  onClose={() => setNewServiceAdvancedSettingsModalIsOpen(false)}
+                  title="تنظیمات پیشرفته‌ی هزینه و زمان"
+              >
+                  <p className="text-lg text-gray-500">
+                      به‌ازای هر متخصص، می‌توانید هزینه و مدت‌زمان این سرویس را به‌طور مجزا تنظیم کنید.
+                  </p>
+                  <div className="flex flex-col gap-4 mt-12 pb-28">
+                    {allEmployees.map((emp) => (
+                      <div key={emp.id} className="flex flex-row items-center gap-4">
+                        <input
+                          type="checkbox"
+                          checked={newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== undefined ? newServiceAdvancedPerEmployeeSettings[emp.id].isOperator : true}
+                          onChange={(e) => {
+                            setNewServiceAdvancedPerEmployeeSettings({
+                              ...newServiceAdvancedPerEmployeeSettings,
+                              [emp.id]: {
+                                ...newServiceAdvancedPerEmployeeSettings[emp.id],
+                                id: emp.id,
+                                isOperator: e.target.checked,
+                              }
+                            })
+                          }}
+                          className="form-checkbox h-8 w-8 text-blue-600 rounded accent-purple-500"
+                        />
+                        <button
+                          disabled={newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator === false}
+                          className={`w-full flex flex-row justify-between items-center ${newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator === false ? "opacity-30 active:transform-none active:filter-none" : ""}`}
+                          onClick={() => setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(emp)}
+                        >
+                          <div className="flex flex-row items-center gap-3">
+                            {emp.user?.avatar?.url ? (
+                              <NextImage
+                                width={40}
+                                height={40}
+                                alt="پروفایل"
+                                src={emp.user.avatar.url}
+                                className="rounded-lg"
+                              />
+                            ) : (
+                              <div
+                                className="w-[45px] h-[45px] rounded-full flex items-center justify-center text-md font-bold bg-purple-100 text-purple-700"
+                              >
+                                {emp.nickname.slice(0, 2)}
+                              </div>
+                            )}
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium text-lg">{emp.nickname}</span>
+                              <span
+                                className="font-normal text-gray-500"
+                              >
+                            {newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== false ? (
+                              formatDurationInFarsi(newServiceAdvancedPerEmployeeSettings[emp.id]?.durationInMins || newServiceDuration)
+                            ) : '-'}
+                          </span>
+                            </div>
+                          </div>
+                          {newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== false && (
+                            <div className="flex flex-col gap-1 items-end">
+                              <div
+                                className={`font-normal text-lg ${newServiceAdvancedPerEmployeeSettings[emp.id]?.price ? "" : "text-gray-500"}`}
+                              >
+                                {toFarsiDigits(formatPriceWithSeparator(newServiceAdvancedPerEmployeeSettings[emp.id]?.price || newServicePrice || 0))}
+                                <span className="text-xs font-light text-gray-500"> تومان</span>
+                              </div>
+                              <div
+                                className={`font-normal text-sm ${newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice ? "" : "text-gray-500"}`}
+                              >
+                                {toFarsiDigits(formatPriceWithSeparator(newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice || newServiceUpfrontPrice || Math.ceil(newServicePrice / 2)))}
+                                <span className="text-xs font-light text-gray-500"> تومان</span>
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <BottomSheet
+                      isOpen={!!newServiceAdvancedPerEmployeeSettingsIsEditingEmployee?.id}
+                      onClose={() => {
+                        setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined)
+                      }}
+                      title={`تنظیم هزینه و مدت‌زمان برای ${newServiceAdvancedPerEmployeeSettingsIsEditingEmployee?.nickname}`}
+                  >
+                    {newServiceAdvancedPerEmployeeSettingsIsEditingEmployee && (
+                      <div className="flex flex-col gap-6 pb-8">
+                        <div className="flex flex-col gap-2">
+                          <label className="font-bold text-md">مدت‌زمان سرویس</label>
+                          <select
+                            value={newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.durationInMins || newServiceDuration}
+                            onChange={(e) => {
+                              setNewServiceAdvancedPerEmployeeSettings({
+                                ...newServiceAdvancedPerEmployeeSettings,
+                                [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
+                                  ...newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id],
+                                  id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
+                                  durationInMins: +e.target.value,
+                                }
+                              })
+                            }}
+                            className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
+                            style={{
+                              backgroundImage: `url('/dropdown.svg')`,
+                              backgroundPosition: "left 1rem center",
+                              backgroundSize: "1.5rem 1.5rem",
+                              backgroundRepeat: "no-repeat",
+                              paddingRight: "1.5rem",
+                            }}
+                          >
+                            {durations.map((duration) => (
+                              <option key={duration.value} value={duration.value}>
+                                {duration.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="font-bold text-md">هزینه</label>
+                          <div className="relative">
+                            <input
+                              className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
+                              style={{direction: "ltr"}}
+                              placeholder={newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice))) : "۵۰۰٫۰۰۰"}
+                              value={newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.price ? toFarsiDigits(formatPriceWithSeparator(Number(newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.price))) : ""}
+                              onChange={(e) => {
+                                const val = toEnglishDigits(e.target.value).replaceAll('٫', '')
+                                const prevUpfrontPrice = newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.upfrontPrice
+                                const upfrontPrice = prevUpfrontPrice ? Math.min(+val, prevUpfrontPrice) : prevUpfrontPrice
+                                if (!isNaN(Number(val)) && +val < 100000000) {
+                                  setNewServiceAdvancedPerEmployeeSettings({
+                                    ...newServiceAdvancedPerEmployeeSettings,
+                                    [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
+                                      ...newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id],
+                                      id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
+                                      price: val ? +val : undefined,
+                                      upfrontPrice,
+                                    }
+                                  })
+                                }
+                              }}
+                            />
+                            <div
+                              className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
+                              تومــان
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="font-bold text-md">پیش‌بها</label>
+                          <div className="relative">
+                            <input
+                              className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
+                              style={{direction: "ltr"}}
+                              placeholder={newServiceUpfrontPrice ? toFarsiDigits(formatPriceWithSeparator(newServiceUpfrontPrice)) : newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Math.ceil(newServicePrice / 2))) : "۲۵۰٫۰۰۰"}
+                              value={newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.upfrontPrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.upfrontPrice))) : ""}
+                              onChange={(e) => {
+                                const val = toEnglishDigits(e.target.value).replaceAll('٫', '')
+                                const maxUpfront = newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.price || newServicePrice
+                                if (maxUpfront && !isNaN(Number(val)) && +val <= maxUpfront) {
+                                  setNewServiceAdvancedPerEmployeeSettings({
+                                    ...newServiceAdvancedPerEmployeeSettings,
+                                    [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
+                                      ...newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id],
+                                      id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
+                                      upfrontPrice: val ? +val : undefined,
+                                    }
+                                  })
+                                }
+                              }}
+                            />
+                            <div
+                              className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
+                              تومــان
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                      <div className="fixed bottom-0 w-full -mx-5 px-4 py-4 bg-white border-t">
+                          <button
+                              className="w-full bg-black text-white font-bold rounded-lg text-xl py-3"
+                              onClick={() => {
+                                setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined)
+                              }}
+                          >
+                              ذخیره
+                          </button>
+                      </div>
+                  </BottomSheet>
+
+                  <div className="fixed bottom-0 w-full -mx-5 px-4 py-4 bg-white border-t">
+                      <button
+                          className="w-full bg-black text-white font-bold rounded-lg text-xl py-3"
+                          onClick={() => {
+                            setNewServiceAdvancedSettingsModalIsOpen(false)
+                            setNewServiceAdvancedPerEmployeeSettings(prev => {
+                              const cleaned: typeof prev = {}
+                              for (const k of Object.keys(prev))
+                                if (
+                                  (prev[k]?.price !== undefined && prev[k]?.price !== newServicePrice)
+                                  || (prev[k]?.durationInMins !== undefined && prev[k]?.durationInMins !== newServiceDuration)
+                                  || (prev[k]?.isOperator !== undefined && prev[k]?.isOperator !== true)
+                                  || (prev[k]?.upfrontPrice !== undefined && prev[k]?.upfrontPrice !== (newServiceUpfrontPrice || Math.ceil(newServicePrice / 2)))
+                                )
+                                  cleaned[k] = prev[k]
+                              return cleaned
+                            })
+                          }}
+                      >
+                          ذخیره
+                      </button>
+                  </div>
+              </Modal> : null}
+              <hr className="my-4"/>
+              <h2 className="text-2xl font-bold">تنظیمات عمومی</h2>
+              <div className="flex flex-col gap-2">
+                <label className="font-bold text-md">محدودیت جنسیت</label>
+                <select
+                  value={newServiceGender}
+                  onChange={(e) => {
+                    setNewServiceGender(e.target.value === 'f' ? 'f' : e.target.value === 'm' ? 'm' : '')
+                  }}
+                  className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
+                  style={{
+                    backgroundImage: `url('/dropdown.svg')`,
+                    backgroundPosition: "left 1rem center",
+                    backgroundSize: "1.5rem 1.5rem",
+                    backgroundRepeat: "no-repeat",
+                    paddingRight: "1.5rem",
+                  }}
+                >
+                  <option value='f'>
+                    فقط زنانه
+                  </option>
+                  <option value='m'>
+                    فقط مردانه
+                  </option>
+                  <option value=''>
+                    فرقی ندارد
+                  </option>
+                </select>
+              </div>
+              <label className="flex flex-row gap-2 font-bold text-md items-center">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5"
+                  checked={newServiceIsRecommendedByLocation}
+                  onChange={(e) => {
+                    setNewServiceIsRecommendedByLocation(e.target.checked)
+                  }}
+                />
+                به دسته‌بندی ویژه اضافه شود (حداکثر ۴ سرویس)
+              </label>
+            </div>
+            <div className="fixed bottom-0 w-full -mx-5 px-4 py-4 bg-white border-t">
+              <button
+                className="w-full bg-black text-white font-bold rounded-lg text-xl py-3"
+                onClick={() => {
+                  if (!newServiceName)
+                    toast.error("نام سرویس را باید وارد کنید", {
+                      duration: 5000,
+                      position: "top-center",
+                      className: "w-full font-medium",
+                    });
+                  else if (!newServiceMainCategory)
+                    toast.error("نوع سرویس را باید انتخاب کنید", {
+                      duration: 5000,
+                      position: "top-center",
+                      className: "w-full font-medium",
+                    });
+                  else if (!newServiceCategory)
+                    toast.error("دسته‌بندی سرویس را باید انتخاب کنید", {
+                      duration: 5000,
+                      position: "top-center",
+                      className: "w-full font-medium",
+                    });
+                  else if (!newServicePrice)
+                    toast.error("هزینه‌ی سرویس را باید وارد کنید", {
+                      duration: 5000,
+                      position: "top-center",
+                      className: "w-full font-medium",
+                    });
+                  else {
+                    createNewService({
+                      name: newServiceName,
+                      category: newServiceMainCategory.id,
+                      serviceCategory: newServiceCategory.id,
+                      description: newServiceDescription,
+                      gender: newServiceGender,
+                      durationInMins: newServiceDuration,
+                      price: newServicePrice,
+                      upfrontPrice: newServiceUpfrontPrice,
+                      isRecommendedByLocation: newServiceIsRecommendedByLocation,
+                      perEmployeeSettings: Object.values(newServiceAdvancedPerEmployeeSettings),
+                    }).then(({response}) => {
+                      if (response.status === 201) {
+                        toast.success(`سرویس جدید ${newServiceName} با موفقیت ایجاد شد`, {
+                          duration: 5000,
+                          position: "top-center",
+                          className: "w-full font-medium",
+                        });
+                        fetchLocation().then(({ data, response }) => {
+                          if (response.status !== 200) router.push("/")
+                          else {
+                            setLocation(data)
+                            setAddNewServicesModalIsOpen(false)
+                          }
+                        });
+                      } else {
+                        toast.error(`ایجاد سرویس جدید ${newServiceName} با مشکل مواجه شد`, {
+                          duration: 5000,
+                          position: "top-center",
+                          className: "w-full font-medium",
+                        });
+                      }
+                    })
+                  }
+                }}
+              >
+                افزودن سرویس
+              </button>
+            </div>
+            <BottomSheet
+              className="h-[90dvh]"
+              isOpen={isConfirmCloseAddNewServiceBSOpen}
+              onClose={() => {
+                setIsConfirmCloseAddNewServiceBSOpen(false)
               }}
             >
-              <img src="/more.svg" className="w-7 h-7" />
-            </button>
-          </Tooltip>
+              <div>
+                <h2 className="text-3xl font-bold mb-10">مطمئنید که می‌خواهید این صفحه را ترک کنید؟</h2>
+                <p className="text-lg ">همه‌ی اطلاعات وارد شده پاک خواهند شد.</p>
+              </div>
+              <BottomSheetFooter
+                onClose={() => {
+                  setIsConfirmCloseAddNewServiceBSOpen(false)
+                }}
+                onSelect={() => {
+                  setIsConfirmCloseAddNewServiceBSOpen(false)
+                  setAddNewServicesModalIsOpen(false);
+
+                  setNewServiceName('')
+                  setNewServiceMainCategory(undefined)
+                  setNewServiceCategory(undefined)
+                  setNewServiceDescription(undefined)
+                  setNewServiceDuration(60)
+                  setNewServicePrice(undefined)
+                  setNewServiceUpfrontPrice(undefined)
+                  setNewServiceGender('f')
+                  setNewServiceIsRecommendedByLocation(false)
+                  setNewServiceAdvancedPerEmployeeSettings({})
+                  setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined)
+                }}
+                selectText="بله، خارج شو"
+                closeText="بمان!"
+              />
+            </BottomSheet>
+          </Modal>
         </div>
-      </div>
+      ) : null}
+
+      {/* Footer */}
+      {!addNewServicesModalIsOpen && (
+        <div className="fixed bottom-0 z-50 bg-white pb-3 pt-1 px-3 w-full shadow h-[60px]">
+          <div className="flex flex-row-reverse gap-4 items-center justify-between max-w-[400px] mx-auto">
+            <Tooltip text="تقویم" place="left">
+              <button
+                className="relative bg-white rounded-full p-3"
+                onClick={() => {
+                  setPage(0)
+                  if (calendarRef.current) {
+                    goToNow();
+                  }
+                }}
+              >
+                <img src="/calendar.svg" className="w-7 h-7"/>
+              </button>
+            </Tooltip>
+            <Tooltip text="فروش">
+              <button
+                className="bg-white rounded-full p-3"
+                onClick={() => setPage(1)}
+              >
+                <img src="/sales.svg" className="w-7 h-7"/>
+              </button>
+            </Tooltip>
+            <button
+              type="button"
+              className="bg-purple-600 rounded-full p-2"
+              onClick={() => {
+                setActionsBSIsOpen(true);
+              }}
+            >
+              <img src="/plus-white.svg" className="w-7 h-7"/>
+            </button>
+            <BottomSheet
+              title="افزودن"
+              isOpen={actionsBSIsOpen}
+              onClose={() => {
+                setActionsBSIsOpen(false);
+              }}
+            >
+              <div className="-mx-3">
+                <ul className="flex flex-col">
+                  <li>
+                    <button
+                      className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
+                      onClick={() => {
+                        setAddAppointmentModalIsOpen(true);
+                        setActionsBSIsOpen(false);
+                      }}
+                    >
+                      <div className="bg-purple-100 rounded-full p-3">
+                        <img src="/add-appointment.svg" className="w-6 h-6"/>
+                      </div>
+                      <p className="text-xl font-normal">نوبت</p>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
+                      onClick={() => {
+                        setActionsBSIsOpen(false);
+                      }}
+                    >
+                      <div className="bg-purple-100 rounded-full p-3">
+                        <img src="/add-blocked-time.svg" className="w-6 h-6"/>
+                      </div>
+                      <p className="text-xl font-normal">زمان بلوکه شده</p>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </BottomSheet>
+            <Tooltip text="مشتریان">
+              <button
+                className="bg-white rounded-full p-3"
+                onClick={() => setPage(2)}
+              >
+                <img src="/client.svg" className="w-7 h-7"/>
+              </button>
+            </Tooltip>
+            <Tooltip text="تنظیمات" place="right">
+              <button
+                className="bg-white rounded-full p-3"
+                onClick={() => setPage(3)}
+              >
+                <img src="/more.svg" className="w-7 h-7"/>
+              </button>
+            </Tooltip>
+          </div>
+        </div>
+      )}
 
       {/* Editing Indicator */}
       {editingEvents.length > 0 && (
-        <div className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
+        <div
+          className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
           <h2 className="z-50 text-2xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
           <h2 className="animate-pulse">حالت ویرایش</h2>
         </div>
@@ -498,7 +1288,7 @@ export function Calendar() {
                     ...(uniqueEventsMap.get(e.event.id) || {}),
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    ...(e.newResource ? { employeeId: e.newResource.id } : {}),
+                    ...(e.newResource ? {employeeId: e.newResource.id} : {}),
                     startDateTime: e.event.startStr,
                     endDateTime: e.event.endStr,
                   });
@@ -512,7 +1302,7 @@ export function Calendar() {
                 // Use Promise.all to handle all promises together
                 Promise.all(
                   updatePromises.map(([id, p]) =>
-                    p.then(({ data, response }) => {
+                    p.then(({data, response}) => {
                       if (response.status === 200) {
                         if (calendarRef.current) {
                           const event = calendarRef.current.getApi().getEventById(id);
@@ -948,10 +1738,13 @@ export function Calendar() {
                         <div className="h-[70px] w-[4px] bg-purple-300 rounded-full" />
                         <div className="flex flex-col w-full">
                           <div className="flex flex-row gap-4 justify-between">
-                            <h3 className="text-xl font-normal">{svc.name}</h3>
-                            <h3 className="text-xl font-normal">{formatPriceInFarsi(svc.price)}</h3>
+                            <h3 className="text-lg font-normal">{svc.name}</h3>
+                            <h3 className="font-normal text-lg">
+                              {toFarsiDigits(formatPriceWithSeparator(svc.price))}
+                              <span className="text-xs font-light text-gray-500"> تومان</span>
+                            </h3>
                           </div>
-                          <p className="text-lg font-normal text-gray-500 text-start">
+                          <p className="font-normal text-gray-500 text-start">
                             {svc.formattedDuration}
                           </p>
                         </div>
