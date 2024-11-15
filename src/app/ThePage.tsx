@@ -2,12 +2,13 @@
 
 import { Calendar } from "@/app/Calendar";
 import { fetchUserStatus } from "@/app/api";
+import { UserProvider, useUserData } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function ThePage() {
   const [loading, setLoading] = useState(true);
-  // const [userStatus, setUserStatus] = useState<UserStatus["status"]>();
+  const { setUserData } = useUserData();
   const router = useRouter();
 
   useEffect(() => {
@@ -15,7 +16,7 @@ export function ThePage() {
       if (response.status === 401) router.push("/auth");
       else if (response.status !== 200) router.push("/404");
       else {
-        // setUserStatus(userStatus.status);
+        setUserData(userStatus);
         if (userStatus.status !== "NoLocation") setLoading(false);
         else router.push("/onboarding");
       }
