@@ -298,6 +298,7 @@ export async function createReservation(
 
 export interface UserStatus {
   status: "NoLocation" | "Employee" | "LocationOwner";
+  user?: User;
 }
 
 export async function fetchUserStatus(): Promise<{ data: UserStatus; response: Response }> {

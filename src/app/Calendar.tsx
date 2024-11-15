@@ -26,13 +26,15 @@ import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import "./calendar.css";
 import { BottomSheet } from "@/app/Components/BottomSheet";
 import { type CanSwipeDirection, SwipeComponent } from "@/app/Components/SwipeComponent";
 import { Tile } from "@/app/Components/Tile";
 import { Tooltip } from "@/app/Components/Tooltip";
+import { useUserData } from "@/context/UserContext";
+import NextImage from "next/image";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
 
@@ -75,6 +77,7 @@ export function Calendar() {
   >();
   const [selectEmployeeBSIsOpen, setSelectEmployeeBSIsOpen] = useState<boolean>(false);
   const [selectDateInCalendarBSIsOpen, setSelectDateInCalendarBSIsOpen] = useState<boolean>(false);
+  const { userData } = useUserData();
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -114,25 +117,33 @@ export function Calendar() {
     });
   }, []);
 
-  const resources = allEmployees.map((employee) => ({
-    id: employee.id,
-    title: employee.nickname || employee.user.name,
-    avatar: employee.user.avatar.url,
-    businessHours: employee.businessHours.map((i) => ({
-      daysOfWeek: [i.weekday],
-      startTime: i.startTime,
-      endTime: i.endTime,
-    })),
-  }));
+  const resources = useMemo(
+    () =>
+      allEmployees.map((employee) => ({
+        id: employee.id,
+        title: employee.nickname || employee.user.name,
+        avatar: employee.user.avatar.url,
+        businessHours: employee.businessHours.map((i) => ({
+          daysOfWeek: [i.weekday],
+          startTime: i.startTime,
+          endTime: i.endTime,
+        })),
+      })),
+    [allEmployees],
+  );
 
-  const initialEvents = allEvents.map((event) => ({
-    id: event.id,
-    title: event.service.name,
-    start: event.startDateTime,
-    end: event.endDateTime,
-    editable: true,
-    resourceId: event.employee.id,
-  }));
+  const initialEvents = useMemo(
+    () =>
+      allEvents.map((event) => ({
+        id: event.id,
+        title: event.service.name,
+        start: event.startDateTime,
+        end: event.endDateTime,
+        editable: true,
+        resourceId: event.employee.id,
+      })),
+    [allEvents],
+  );
 
   useEffect(() => {
     const stickyHeaders = document.querySelectorAll(".fc .fc-scrollgrid-section-sticky > *");
@@ -159,16 +170,36 @@ export function Calendar() {
   return resources.length > 0 ? (
     <div className="relative overflow-x-clip">
       {/* Header */}
-      <div className="sticky top-0 p-5 z-50 bg-white shadow flex flex-row gap-5 items-center">
-        <button
-          className="flex flex-row gap-2"
-          type="button"
-          onClick={() => {
-            setSelectDateInCalendarBSIsOpen(true);
-          }}
-        >
-          <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
-          <img src="/dropdown.svg" />
+      <div className="sticky top-0 ps-2 pe-5 z-50 h-[59px] bg-white shadow flex flex-row gap-5 items-center justify-between">
+        <div className="flex flex-row gap-2 items-center">
+          <button className="bg-white p-3 rounded-xl">
+            <NextImage width={24} height={24} alt="منو" src="/hamburger.svg" className="w-[24px] h-[24px]" />
+          </button>
+          <button
+            className="flex flex-row gap-1"
+            type="button"
+            onClick={() => {
+              setSelectDateInCalendarBSIsOpen(true);
+            }}
+          >
+            <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM"))}</h2>
+            <NextImage width={24} height={24} alt="باز کردن تقویم" src="/dropdown.svg" />
+          </button>
+        </div>
+        <button>
+          {userData?.user?.avatar.url ? (
+            <NextImage
+              width={30}
+              height={30}
+              alt="پروفایل"
+              src={userData.user.avatar.url}
+              className="w-[30px] h-[30px] rounded-full"
+            />
+          ) : userData?.user ? (
+            <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold bg-purple-200">
+              {userData.user.name.slice(0, 2)}
+            </div>
+          ) : null}
         </button>
       </div>
 
@@ -261,10 +292,18 @@ export function Calendar() {
             plugins={[resourceTimeGridPlugin, scrollGridPlugin, interactionPlugin]}
             initialView="resourceTimeGridDay"
             resourceLabelDidMount={(info) => {
-              const avatar = document.createElement("img");
-              avatar.src = info.resource.extendedProps.avatar;
-              avatar.className = "w-8 h-8 rounded-full mx-auto border-2 border-gray-300 mt-2";
-              info.el.prepend(avatar);
+              if (info.resource.extendedProps.avatar) {
+                const avatar = document.createElement("img");
+                avatar.src = info.resource.extendedProps.avatar;
+                avatar.className = "w-8 h-8 rounded-full mx-auto border-2 border-gray-300 mt-2";
+                info.el.prepend(avatar);
+              } else {
+                const avatar = document.createElement("div");
+                avatar.className =
+                  "w-8 h-8 text-xs flex items-center justify-center font-normal rounded-full mx-auto border-2 bg-purple-100 border-gray-300 mt-2";
+                avatar.innerText = info.resource.title.slice(0, 2);
+                info.el.prepend(avatar);
+              }
             }}
             slotLabelFormat={{
               hour: "2-digit",
