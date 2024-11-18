@@ -125,7 +125,7 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                     type="text"
                     aria-describedby="کد تأیید"
                     value={farsiOtpCode}
-                    className="text-left mx-auto block tracking-[4px] !tabular-nums p-2.5 w-[90px] text-white caret-black focus:outline-0"
+                    className="text-left mx-auto block tracking-[4px] !tabular-nums p-2.5 w-[90px] text-white caret-black focus:!outline-0 focus:!border-none"
                     placeholder=""
                     onChange={(e) => {
                       const val = e.target.value.replaceAll(" ", "");
