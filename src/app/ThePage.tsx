@@ -2,7 +2,7 @@
 
 import { Calendar } from "@/app/Calendar";
 import { fetchUserStatus } from "@/app/api";
-import { UserProvider, useUserData } from "@/context/UserContext";
+import { useUserData } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 

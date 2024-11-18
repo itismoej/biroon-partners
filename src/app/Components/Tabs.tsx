@@ -1,4 +1,4 @@
-import React, {useRef, useEffect, ReactNode} from "react";
+import React, { useRef, useEffect, type ReactNode } from "react";
 
 interface Tab {
   id: string;

@@ -425,15 +425,15 @@ export async function fetchServiceCategories(): Promise<{ data: ServiceCategory[
 export interface NewServicePerEmployee {
   id: string;
   isOperator: boolean;
-  price?: Service['price'];
-  upfrontPrice?: Service['upfrontPrice'];
-  durationInMins?: Service['durationInMins'];
+  price?: Service["price"];
+  upfrontPrice?: Service["upfrontPrice"];
+  durationInMins?: Service["durationInMins"];
 }
 
 export interface CreateNewService {
   name: string;
-  category: Category['id'];
-  serviceCategory: ServiceCategory['id'];
+  category: Category["id"];
+  serviceCategory: ServiceCategory["id"];
   durationInMins?: number;
   price: number;
   upfrontPrice?: number;

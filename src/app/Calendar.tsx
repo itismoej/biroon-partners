@@ -6,10 +6,14 @@ import {
   type CalendarEvent,
   type CalendarEventPatchRequest,
   type Category,
-  createNewService,
-  createReservation,
   type Customer,
   type Employee,
+  type Location,
+  type NewServicePerEmployee,
+  type Service,
+  type ServiceCategory,
+  createNewService,
+  createReservation,
   fetchAllEmployees,
   fetchAllEvents,
   fetchAvailableEmployeesByService,
@@ -17,10 +21,6 @@ import {
   fetchCustomers,
   fetchLocation,
   fetchServiceCategories,
-  type Location,
-  NewServicePerEmployee,
-  type Service,
-  ServiceCategory,
   updateEvent,
 } from "@/app/api";
 import {
@@ -28,33 +28,33 @@ import {
   formatPriceInFarsi,
   formatPriceWithSeparator,
   toEnglishDigits,
-  toFarsiDigits
+  toFarsiDigits,
 } from "@/app/utils";
-import type {EventContentArg, EventDropArg} from "@fullcalendar/core";
-import interactionPlugin, {type EventResizeDoneArg} from "@fullcalendar/interaction";
+import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
+import interactionPlugin, { type EventResizeDoneArg } from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
-import type {ResourceApi} from "@fullcalendar/resource";
+import type { ResourceApi } from "@fullcalendar/resource";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
-import {addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay} from "date-fns-jalali";
-import {useRouter} from "next/navigation";
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import "./calendar.css";
-import {BottomSheet, BottomSheetFooter} from "@/app/Components/BottomSheet";
-import {type CanSwipeDirection, SwipeComponent} from "@/app/Components/SwipeComponent";
-import {Tile} from "@/app/Components/Tile";
-import {Tooltip} from "@/app/Components/Tooltip";
-import {useUserData} from "@/context/UserContext";
+import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
+import { ServicesSection } from "@/app/Components/ServicesSection";
+import { type CanSwipeDirection, SwipeComponent } from "@/app/Components/SwipeComponent";
+import { Tile } from "@/app/Components/Tile";
+import { Tooltip } from "@/app/Components/Tooltip";
+import { useUserData } from "@/context/UserContext";
 import NextImage from "next/image";
-import {DatePicker} from "./Components/DatePicker";
-import {Modal} from "./Components/Modal";
-import {ServicesSection} from "@/app/Components/ServicesSection";
+import { DatePicker } from "./Components/DatePicker";
+import { Modal } from "./Components/Modal";
 
 const generateDurations = () => {
   const durations = [];
   for (let i = 5; i <= 720; i += 5) {
-    let label = '';
+    let label = "";
     if (i < 60) {
       label = `${i} دقیقه`;
     } else if (i % 60 === 0) {
@@ -115,24 +115,30 @@ export function Calendar() {
   const [servicesModalIsOpen, setServicesModalIsOpen] = useState(false);
   const [addNewServicesModalIsOpen, setAddNewServicesModalIsOpen] = useState(false);
   const [editingServiceInServicesPage, setEditingServiceInServicesPage] = useState<Service>();
-  const [newServiceName, setNewServiceName] = useState<Service['name']>('')
-  const [newServiceMainCategory, setNewServiceMainCategory] = useState<Category>()
-  const [newServiceSelectMainCategoryBSIsOpen, setNewServiceSelectMainCategoryBSIsOpen] = useState<boolean>(false)
+  const [newServiceName, setNewServiceName] = useState<Service["name"]>("");
+  const [newServiceMainCategory, setNewServiceMainCategory] = useState<Category>();
+  const [newServiceSelectMainCategoryBSIsOpen, setNewServiceSelectMainCategoryBSIsOpen] =
+    useState<boolean>(false);
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
-  const [newServiceCategory, setNewServiceCategory] = useState<ServiceCategory>()
-  const [newServiceSelectServiceCategoryBSIsOpen, setNewServiceSelectServiceCategoryBSIsOpen] = useState<boolean>(false)
-  const [newServiceDescription, setNewServiceDescription] = useState<Service['description']>('');
-  const [newServiceDuration, setNewServiceDuration] = useState<Service['durationInMins']>(60);
-  const [newServicePrice, setNewServicePrice] = useState<Service['price']>();
-  const [newServiceUpfrontPrice, setNewServiceUpfrontPrice] = useState<Service['upfrontPrice']>();
-  const [newServiceGender, setNewServiceGender] = useState<'f'|'m'|''>('f');
+  const [newServiceCategory, setNewServiceCategory] = useState<ServiceCategory>();
+  const [newServiceSelectServiceCategoryBSIsOpen, setNewServiceSelectServiceCategoryBSIsOpen] =
+    useState<boolean>(false);
+  const [newServiceDescription, setNewServiceDescription] = useState<Service["description"]>("");
+  const [newServiceDuration, setNewServiceDuration] = useState<Service["durationInMins"]>(60);
+  const [newServicePrice, setNewServicePrice] = useState<Service["price"]>();
+  const [newServiceUpfrontPrice, setNewServiceUpfrontPrice] = useState<Service["upfrontPrice"]>();
+  const [newServiceGender, setNewServiceGender] = useState<"f" | "m" | "">("f");
   const [newServiceIsRecommendedByLocation, setNewServiceIsRecommendedByLocation] = useState<boolean>(false);
-  const [newServiceAdvancedSettingsModalIsOpen, setNewServiceAdvancedSettingsModalIsOpen] = useState<boolean>(false);
-  const [newServiceAdvancedPerEmployeeSettings, setNewServiceAdvancedPerEmployeeSettings] =
-    useState<Record<Employee['id'], NewServicePerEmployee>>({});
-  const [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee, setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee] =
-    useState<Employee>();
+  const [newServiceAdvancedSettingsModalIsOpen, setNewServiceAdvancedSettingsModalIsOpen] =
+    useState<boolean>(false);
+  const [newServiceAdvancedPerEmployeeSettings, setNewServiceAdvancedPerEmployeeSettings] = useState<
+    Record<Employee["id"], NewServicePerEmployee>
+  >({});
+  const [
+    newServiceAdvancedPerEmployeeSettingsIsEditingEmployee,
+    setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee,
+  ] = useState<Employee>();
   const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] = useState<boolean>(false);
 
   useEffect(() => {
@@ -252,7 +258,13 @@ export function Calendar() {
         {page === 0 ? (
           <div className="flex flex-row gap-2 items-center">
             <button className="bg-white p-3 rounded-xl">
-              <NextImage width={24} height={24} alt="منو" src="/hamburger.svg" className="w-[24px] h-[24px]"/>
+              <NextImage
+                width={24}
+                height={24}
+                alt="منو"
+                src="/hamburger.svg"
+                className="w-[24px] h-[24px]"
+              />
             </button>
             <button
               className="flex flex-row gap-1"
@@ -262,11 +274,11 @@ export function Calendar() {
               }}
             >
               <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM"))}</h2>
-              <NextImage width={24} height={24} alt="باز کردن تقویم" src="/dropdown.svg"/>
+              <NextImage width={24} height={24} alt="باز کردن تقویم" src="/dropdown.svg" />
             </button>
           </div>
         ) : (
-          <div></div>
+          <div />
         )}
         <button>
           {userData?.user?.avatar.url ? (
@@ -278,8 +290,7 @@ export function Calendar() {
               className="w-[30px] h-[30px] rounded-full"
             />
           ) : userData?.user ? (
-            <div
-              className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold bg-purple-200">
+            <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold bg-purple-200">
               {userData.user.name.slice(0, 2)}
             </div>
           ) : null}
@@ -322,7 +333,9 @@ export function Calendar() {
           >
             <FullCalendar
               viewDidMount={() => {
-                const element = document.querySelector(".fc-scroller-harness .fc-timegrid-body")?.parentElement;
+                const element = document.querySelector(
+                  ".fc-scroller-harness .fc-timegrid-body",
+                )?.parentElement;
                 if (element) {
                   const handleScroll = () => {
                     const _isAtStart = element.scrollLeft === 0;
@@ -358,7 +371,9 @@ export function Calendar() {
                 setTranslateX(0);
               }}
               eventDragStop={() => {
-                const element = document.querySelector(".fc-scroller-harness .fc-timegrid-body")?.parentElement;
+                const element = document.querySelector(
+                  ".fc-scroller-harness .fc-timegrid-body",
+                )?.parentElement;
                 if (element) {
                   const handleScroll = () => {
                     const _isAtStart = element.scrollLeft === 0;
@@ -457,40 +472,33 @@ export function Calendar() {
       ) : page === 2 ? (
         "clients"
       ) : page === 3 ? (
-        <div className="p-5 bg-gray-100" style={{minHeight: 'calc(100dvh - 119px)'}}>
+        <div className="p-5 bg-gray-100" style={{ minHeight: "calc(100dvh - 119px)" }}>
           <div className="py-5 grid grid-cols-2 gap-3">
             <button
-              className={`relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5`}
-              onClick={() => {setServicesModalIsOpen(true)}}
+              className={
+                "relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5"
+              }
+              onClick={() => {
+                setServicesModalIsOpen(true);
+              }}
             >
-              <NextImage
-                width={24}
-                height={24}
-                alt="سرویس‌ها"
-                src='/catalog.svg'
-              />
+              <NextImage width={24} height={24} alt="سرویس‌ها" src="/catalog.svg" />
               <p className="text-lg font-medium">سرویس‌ها</p>
             </button>
             <button
-              className={`relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5`}
+              className={
+                "relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5"
+              }
             >
-              <NextImage
-                width={24}
-                height={24}
-                alt="تیم متخصصان"
-                src='/team.svg'
-              />
+              <NextImage width={24} height={24} alt="تیم متخصصان" src="/team.svg" />
               <p className="text-lg font-medium">تیم متخصصان</p>
             </button>
             <button
-              className={`relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5`}
+              className={
+                "relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5"
+              }
             >
-              <NextImage
-                width={24}
-                height={24}
-                alt="پرداخت‌ها"
-                src='/payments.svg'
-              />
+              <NextImage width={24} height={24} alt="پرداخت‌ها" src="/payments.svg" />
               <p className="text-lg font-medium">پرداخت‌ها</p>
             </button>
           </div>
@@ -507,9 +515,7 @@ export function Calendar() {
                 </p>
               </div>
             }
-            topBarTitle={
-              <h2 className="text-xl font-bold">منوی سرویس‌ها</h2>
-            }
+            topBarTitle={<h2 className="text-xl font-bold">منوی سرویس‌ها</h2>}
             leftBtn={
               <button
                 className="bg-black px-3 py-2 text-white text-lg rounded-lg font-bold flex flex-row gap-2 items-center justify-center"
@@ -525,7 +531,7 @@ export function Calendar() {
                 <ServicesSection
                   location={location}
                   serviceOnClick={(svc) => {
-                    setEditingServiceInServicesPage(svc)
+                    setEditingServiceInServicesPage(svc);
                   }}
                 />
                 <BottomSheet
@@ -538,8 +544,7 @@ export function Calendar() {
                       <li>
                         <button
                           className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                          onClick={() => {
-                          }}
+                          onClick={() => {}}
                         >
                           <p className="text-lg font-medium">ویرایش</p>
                         </button>
@@ -548,8 +553,7 @@ export function Calendar() {
                         <button
                           type="button"
                           className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                          onClick={() => {
-                          }}
+                          onClick={() => {}}
                         >
                           <p className="text-lg text-red-600 font-medium">حذف دائمی (غیر قابل بازگشت)</p>
                         </button>
@@ -563,7 +567,7 @@ export function Calendar() {
           <Modal
             isOpen={addNewServicesModalIsOpen}
             onClose={() => {
-              setIsConfirmCloseAddNewServiceBSOpen(true)
+              setIsConfirmCloseAddNewServiceBSOpen(true);
             }}
             title="افزودن سرویس"
           >
@@ -584,7 +588,7 @@ export function Calendar() {
                   <input
                     className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
                     placeholder="نوع سرویس را انتخاب کنید"
-                    value={newServiceMainCategory?.name || ''}
+                    value={newServiceMainCategory?.name || ""}
                     readOnly
                   />
                   <div className="left-1 top-1/2 -translate-y-1/2 absolute text-purple-600 text-xl font-medium">
@@ -607,8 +611,8 @@ export function Calendar() {
                             key={category.id}
                             className={`relative border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5 ${newServiceMainCategory?.id === category.id ? "shadow-[inset_0_0_0_2px] shadow-purple-500" : ""}`}
                             onClick={() => {
-                              setNewServiceMainCategory(category)
-                              setNewServiceSelectMainCategoryBSIsOpen(false)
+                              setNewServiceMainCategory(category);
+                              setNewServiceSelectMainCategoryBSIsOpen(false);
                             }}
                           >
                             <NextImage
@@ -616,7 +620,7 @@ export function Calendar() {
                               height={32}
                               alt={category.name}
                               src={category.icon}
-                              style={{filter: "saturate(0) brightness(0)"}}
+                              style={{ filter: "saturate(0) brightness(0)" }}
                             />
                             <p className="text-lg font-bold">{category.name}</p>
                           </button>
@@ -626,8 +630,8 @@ export function Calendar() {
                   </BottomSheet>
                 </div>
                 <p className="text-gray-500 text-sm font-light">
-                  انتخاب درست این فیلد، برای پیدا کردن شما در پلتفرم بیرون توسط مشتریان، تأثیر مهمی دارد. این گزینه فقط
-                  در موتور جستجوی بیرون اثرگذاری دارد و به کاربران نمایش داده نمی‌شود.
+                  انتخاب درست این فیلد، برای پیدا کردن شما در پلتفرم بیرون توسط مشتریان، تأثیر مهمی دارد. این
+                  گزینه فقط در موتور جستجوی بیرون اثرگذاری دارد و به کاربران نمایش داده نمی‌شود.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
@@ -636,7 +640,7 @@ export function Calendar() {
                   <input
                     className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
                     placeholder="در کدام منو قرار بگیرد؟"
-                    value={newServiceCategory?.name || ''}
+                    value={newServiceCategory?.name || ""}
                     readOnly
                   />
                   <div className="left-1 top-1/2 -translate-y-1/2 absolute text-purple-600 text-xl font-medium">
@@ -658,13 +662,19 @@ export function Calendar() {
                           key={svcCategory.id}
                           className="w-full flex flex-row justify-between items-center text-xl font-normal"
                           onClick={() => {
-                            setNewServiceCategory(svcCategory)
-                            setNewServiceSelectServiceCategoryBSIsOpen(false)
+                            setNewServiceCategory(svcCategory);
+                            setNewServiceSelectServiceCategoryBSIsOpen(false);
                           }}
                         >
                           {svcCategory.name}
                           {newServiceCategory?.id === svcCategory.id && (
-                            <NextImage className="invert" src="/check.svg" alt="انتخاب شده" width={18} height={18}/>
+                            <NextImage
+                              className="invert"
+                              src="/check.svg"
+                              alt="انتخاب شده"
+                              width={18}
+                              height={18}
+                            />
                           )}
                         </button>
                       ))}
@@ -685,14 +695,14 @@ export function Calendar() {
                   onChange={(e) => setNewServiceDescription(e.target.value)}
                 />
               </div>
-              <hr className="my-4"/>
+              <hr className="my-4" />
               <h2 className="text-2xl font-bold">هزینه و زمان</h2>
               <div className="flex flex-col gap-2">
                 <label className="font-bold text-md">مدت‌زمان سرویس</label>
                 <select
                   value={newServiceDuration}
                   onChange={(e) => {
-                    setNewServiceDuration(+e.target.value)
+                    setNewServiceDuration(+e.target.value);
                   }}
                   className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
                   style={{
@@ -715,36 +725,44 @@ export function Calendar() {
                 <div className="relative">
                   <input
                     className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
-                    style={{direction: "ltr"}}
+                    style={{ direction: "ltr" }}
                     placeholder="۵۰۰٫۰۰۰"
-                    value={newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice))) : ""}
+                    value={
+                      newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice))) : ""
+                    }
                     onChange={(e) => {
-                      const val = toEnglishDigits(e.target.value).replaceAll('٫', '')
-                      if (!isNaN(Number(val)) && +val < 100000000) {
-                        setNewServicePrice(+val)
-                        setNewServiceUpfrontPrice(newServiceUpfrontPrice ? Math.min(+val, newServiceUpfrontPrice) : newServiceUpfrontPrice)
+                      const val = toEnglishDigits(e.target.value).replaceAll("٫", "");
+                      if (!Number.isNaN(Number(val)) && +val < 100000000) {
+                        setNewServicePrice(+val);
+                        setNewServiceUpfrontPrice(
+                          newServiceUpfrontPrice
+                            ? Math.min(+val, newServiceUpfrontPrice)
+                            : newServiceUpfrontPrice,
+                        );
                         setNewServiceAdvancedPerEmployeeSettings((prevSettings) => {
-                          return Object.keys(prevSettings).reduce((acc, employeeId) => {
-                            const employeeSettings = prevSettings[employeeId];
+                          return Object.keys(prevSettings).reduce(
+                            (acc, employeeId) => {
+                              const employeeSettings = prevSettings[employeeId];
 
-                            const updatedUpfrontPrice =
-                              employeeSettings.upfrontPrice !== undefined
-                                ? Math.min(+val, employeeSettings.upfrontPrice)
-                                : employeeSettings.upfrontPrice;
+                              const updatedUpfrontPrice =
+                                employeeSettings.upfrontPrice !== undefined
+                                  ? Math.min(+val, employeeSettings.upfrontPrice)
+                                  : employeeSettings.upfrontPrice;
 
-                            acc[employeeId] = {
-                              ...employeeSettings,
-                              upfrontPrice: updatedUpfrontPrice,
-                            };
+                              acc[employeeId] = {
+                                ...employeeSettings,
+                                upfrontPrice: updatedUpfrontPrice,
+                              };
 
-                            return acc;
-                          }, {} as Record<Employee['id'], NewServicePerEmployee>);
+                              return acc;
+                            },
+                            {} as Record<Employee["id"], NewServicePerEmployee>,
+                          );
                         });
                       }
                     }}
                   />
-                  <div
-                    className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
+                  <div className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
                     تومــان
                   </div>
                 </div>
@@ -753,56 +771,63 @@ export function Calendar() {
                 <label className="font-bold text-md">پیش‌بها</label>
                 <div className="relative">
                   <input
-                    className={`w-full border text-lg rounded-lg py-3 px-5 outline-0`}
-                    style={{direction: "ltr"}}
+                    className={"w-full border text-lg rounded-lg py-3 px-5 outline-0"}
+                    style={{ direction: "ltr" }}
                     disabled={!newServicePrice}
-                    placeholder={newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Math.ceil(newServicePrice / 2))) : "۲۵۰٫۰۰۰"}
-                    value={newServiceUpfrontPrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServiceUpfrontPrice))) : ""}
+                    placeholder={
+                      newServicePrice
+                        ? toFarsiDigits(formatPriceWithSeparator(Math.ceil(newServicePrice / 2)))
+                        : "۲۵۰٫۰۰۰"
+                    }
+                    value={
+                      newServiceUpfrontPrice
+                        ? toFarsiDigits(formatPriceWithSeparator(Number(newServiceUpfrontPrice)))
+                        : ""
+                    }
                     onChange={(e) => {
-                      const val = toEnglishDigits(e.target.value).replaceAll('٫', '')
-                      if (newServicePrice && !isNaN(Number(val)) && +val <= newServicePrice)
-                        setNewServiceUpfrontPrice(+val)
+                      const val = toEnglishDigits(e.target.value).replaceAll("٫", "");
+                      if (newServicePrice && !Number.isNaN(Number(val)) && +val <= newServicePrice)
+                        setNewServiceUpfrontPrice(+val);
                     }}
                   />
-                  <div
-                    className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium"
-                  >
+                  <div className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
                     تومــان
                   </div>
                 </div>
               </div>
               <button
                 disabled={!newServicePrice}
-                className={`mt-3 text-xl font-medium text-purple-600 flex flex-row gap-3 ${newServicePrice ? "" : "opacity-30" }`}
+                className={`mt-3 text-xl font-medium text-purple-600 flex flex-row gap-3 ${newServicePrice ? "" : "opacity-30"}`}
                 onClick={() => setNewServiceAdvancedSettingsModalIsOpen(true)}
               >
                 <span>تنظیمات پیشرفته‌ی هزینه و زمان</span>
                 {Object.keys(newServiceAdvancedPerEmployeeSettings).length > 0 && (
-                  <div
-                    className="w-6 h-6 flex items-center justify-center text-md bg-purple-500 border text-white rounded-full font-bold"
-                  >
-                  <span
-                    className="translate-y-[2px] text-sm font-normal"
-                  >
-                    {toFarsiDigits(Object.keys(newServiceAdvancedPerEmployeeSettings).length)}
-                  </span>
+                  <div className="w-6 h-6 flex items-center justify-center text-md bg-purple-500 border text-white rounded-full font-bold">
+                    <span className="translate-y-[2px] text-sm font-normal">
+                      {toFarsiDigits(Object.keys(newServiceAdvancedPerEmployeeSettings).length)}
+                    </span>
                   </div>
                 )}
               </button>
-              {newServicePrice ? <Modal
+              {newServicePrice ? (
+                <Modal
                   isOpen={newServiceAdvancedSettingsModalIsOpen}
                   onClose={() => setNewServiceAdvancedSettingsModalIsOpen(false)}
                   title="تنظیمات پیشرفته‌ی هزینه و زمان"
-              >
+                >
                   <p className="text-lg text-gray-500">
-                      به‌ازای هر متخصص، می‌توانید هزینه و مدت‌زمان این سرویس را به‌طور مجزا تنظیم کنید.
+                    به‌ازای هر متخصص، می‌توانید هزینه و مدت‌زمان این سرویس را به‌طور مجزا تنظیم کنید.
                   </p>
                   <div className="flex flex-col gap-4 mt-12 pb-28">
                     {allEmployees.map((emp) => (
                       <div key={emp.id} className="flex flex-row items-center gap-4">
                         <input
                           type="checkbox"
-                          checked={newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== undefined ? newServiceAdvancedPerEmployeeSettings[emp.id].isOperator : true}
+                          checked={
+                            newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== undefined
+                              ? newServiceAdvancedPerEmployeeSettings[emp.id].isOperator
+                              : true
+                          }
                           onChange={(e) => {
                             setNewServiceAdvancedPerEmployeeSettings({
                               ...newServiceAdvancedPerEmployeeSettings,
@@ -810,8 +835,8 @@ export function Calendar() {
                                 ...newServiceAdvancedPerEmployeeSettings[emp.id],
                                 id: emp.id,
                                 isOperator: e.target.checked,
-                              }
-                            })
+                              },
+                            });
                           }}
                           className="form-checkbox h-8 w-8 text-blue-600 rounded accent-purple-500"
                         />
@@ -830,21 +855,20 @@ export function Calendar() {
                                 className="rounded-lg"
                               />
                             ) : (
-                              <div
-                                className="w-[45px] h-[45px] rounded-full flex items-center justify-center text-md font-bold bg-purple-100 text-purple-700"
-                              >
+                              <div className="w-[45px] h-[45px] rounded-full flex items-center justify-center text-md font-bold bg-purple-100 text-purple-700">
                                 {emp.nickname.slice(0, 2)}
                               </div>
                             )}
                             <div className="flex flex-col items-start">
                               <span className="font-medium text-lg">{emp.nickname}</span>
-                              <span
-                                className="font-normal text-gray-500"
-                              >
-                            {newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== false ? (
-                              formatDurationInFarsi(newServiceAdvancedPerEmployeeSettings[emp.id]?.durationInMins || newServiceDuration)
-                            ) : '-'}
-                          </span>
+                              <span className="font-normal text-gray-500">
+                                {newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== false
+                                  ? formatDurationInFarsi(
+                                      newServiceAdvancedPerEmployeeSettings[emp.id]?.durationInMins ||
+                                        newServiceDuration,
+                                    )
+                                  : "-"}
+                              </span>
                             </div>
                           </div>
                           {newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== false && (
@@ -852,13 +876,25 @@ export function Calendar() {
                               <div
                                 className={`font-normal text-lg ${newServiceAdvancedPerEmployeeSettings[emp.id]?.price ? "" : "text-gray-500"}`}
                               >
-                                {toFarsiDigits(formatPriceWithSeparator(newServiceAdvancedPerEmployeeSettings[emp.id]?.price || newServicePrice || 0))}
+                                {toFarsiDigits(
+                                  formatPriceWithSeparator(
+                                    newServiceAdvancedPerEmployeeSettings[emp.id]?.price ||
+                                      newServicePrice ||
+                                      0,
+                                  ),
+                                )}
                                 <span className="text-xs font-light text-gray-500"> تومان</span>
                               </div>
                               <div
                                 className={`font-normal text-sm ${newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice ? "" : "text-gray-500"}`}
                               >
-                                {toFarsiDigits(formatPriceWithSeparator(newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice || newServiceUpfrontPrice || Math.ceil(newServicePrice / 2)))}
+                                {toFarsiDigits(
+                                  formatPriceWithSeparator(
+                                    newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice ||
+                                      newServiceUpfrontPrice ||
+                                      Math.ceil(newServicePrice / 2),
+                                  ),
+                                )}
                                 <span className="text-xs font-light text-gray-500"> تومان</span>
                               </div>
                             </div>
@@ -868,27 +904,33 @@ export function Calendar() {
                     ))}
                   </div>
                   <BottomSheet
-                      isOpen={!!newServiceAdvancedPerEmployeeSettingsIsEditingEmployee?.id}
-                      onClose={() => {
-                        setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined)
-                      }}
-                      title={`تنظیم هزینه و مدت‌زمان برای ${newServiceAdvancedPerEmployeeSettingsIsEditingEmployee?.nickname}`}
+                    isOpen={!!newServiceAdvancedPerEmployeeSettingsIsEditingEmployee?.id}
+                    onClose={() => {
+                      setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined);
+                    }}
+                    title={`تنظیم هزینه و مدت‌زمان برای ${newServiceAdvancedPerEmployeeSettingsIsEditingEmployee?.nickname}`}
                   >
                     {newServiceAdvancedPerEmployeeSettingsIsEditingEmployee && (
                       <div className="flex flex-col gap-6 pb-8">
                         <div className="flex flex-col gap-2">
                           <label className="font-bold text-md">مدت‌زمان سرویس</label>
                           <select
-                            value={newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.durationInMins || newServiceDuration}
+                            value={
+                              newServiceAdvancedPerEmployeeSettings[
+                                newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                              ]?.durationInMins || newServiceDuration
+                            }
                             onChange={(e) => {
                               setNewServiceAdvancedPerEmployeeSettings({
                                 ...newServiceAdvancedPerEmployeeSettings,
                                 [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
-                                  ...newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id],
+                                  ...newServiceAdvancedPerEmployeeSettings[
+                                    newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                  ],
                                   id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
                                   durationInMins: +e.target.value,
-                                }
-                              })
+                                },
+                              });
                             }}
                             className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
                             style={{
@@ -911,28 +953,52 @@ export function Calendar() {
                           <div className="relative">
                             <input
                               className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
-                              style={{direction: "ltr"}}
-                              placeholder={newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice))) : "۵۰۰٫۰۰۰"}
-                              value={newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.price ? toFarsiDigits(formatPriceWithSeparator(Number(newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.price))) : ""}
+                              style={{ direction: "ltr" }}
+                              placeholder={
+                                newServicePrice
+                                  ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice)))
+                                  : "۵۰۰٫۰۰۰"
+                              }
+                              value={
+                                newServiceAdvancedPerEmployeeSettings[
+                                  newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                ]?.price
+                                  ? toFarsiDigits(
+                                      formatPriceWithSeparator(
+                                        Number(
+                                          newServiceAdvancedPerEmployeeSettings[
+                                            newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                          ]?.price,
+                                        ),
+                                      ),
+                                    )
+                                  : ""
+                              }
                               onChange={(e) => {
-                                const val = toEnglishDigits(e.target.value).replaceAll('٫', '')
-                                const prevUpfrontPrice = newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.upfrontPrice
-                                const upfrontPrice = prevUpfrontPrice ? Math.min(+val, prevUpfrontPrice) : prevUpfrontPrice
-                                if (!isNaN(Number(val)) && +val < 100000000) {
+                                const val = toEnglishDigits(e.target.value).replaceAll("٫", "");
+                                const prevUpfrontPrice =
+                                  newServiceAdvancedPerEmployeeSettings[
+                                    newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                  ]?.upfrontPrice;
+                                const upfrontPrice = prevUpfrontPrice
+                                  ? Math.min(+val, prevUpfrontPrice)
+                                  : prevUpfrontPrice;
+                                if (!Number.isNaN(Number(val)) && +val < 100000000) {
                                   setNewServiceAdvancedPerEmployeeSettings({
                                     ...newServiceAdvancedPerEmployeeSettings,
                                     [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
-                                      ...newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id],
+                                      ...newServiceAdvancedPerEmployeeSettings[
+                                        newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                      ],
                                       id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
                                       price: val ? +val : undefined,
                                       upfrontPrice,
-                                    }
-                                  })
+                                    },
+                                  });
                                 }
                               }}
                             />
-                            <div
-                              className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
+                            <div className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
                               تومــان
                             </div>
                           </div>
@@ -942,75 +1008,103 @@ export function Calendar() {
                           <div className="relative">
                             <input
                               className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
-                              style={{direction: "ltr"}}
-                              placeholder={newServiceUpfrontPrice ? toFarsiDigits(formatPriceWithSeparator(newServiceUpfrontPrice)) : newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Math.ceil(newServicePrice / 2))) : "۲۵۰٫۰۰۰"}
-                              value={newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.upfrontPrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.upfrontPrice))) : ""}
+                              style={{ direction: "ltr" }}
+                              placeholder={
+                                newServiceUpfrontPrice
+                                  ? toFarsiDigits(formatPriceWithSeparator(newServiceUpfrontPrice))
+                                  : newServicePrice
+                                    ? toFarsiDigits(formatPriceWithSeparator(Math.ceil(newServicePrice / 2)))
+                                    : "۲۵۰٫۰۰۰"
+                              }
+                              value={
+                                newServiceAdvancedPerEmployeeSettings[
+                                  newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                ]?.upfrontPrice
+                                  ? toFarsiDigits(
+                                      formatPriceWithSeparator(
+                                        Number(
+                                          newServiceAdvancedPerEmployeeSettings[
+                                            newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                          ]?.upfrontPrice,
+                                        ),
+                                      ),
+                                    )
+                                  : ""
+                              }
                               onChange={(e) => {
-                                const val = toEnglishDigits(e.target.value).replaceAll('٫', '')
-                                const maxUpfront = newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]?.price || newServicePrice
-                                if (maxUpfront && !isNaN(Number(val)) && +val <= maxUpfront) {
+                                const val = toEnglishDigits(e.target.value).replaceAll("٫", "");
+                                const maxUpfront =
+                                  newServiceAdvancedPerEmployeeSettings[
+                                    newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                  ]?.price || newServicePrice;
+                                if (maxUpfront && !Number.isNaN(Number(val)) && +val <= maxUpfront) {
                                   setNewServiceAdvancedPerEmployeeSettings({
                                     ...newServiceAdvancedPerEmployeeSettings,
                                     [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
-                                      ...newServiceAdvancedPerEmployeeSettings[newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id],
+                                      ...newServiceAdvancedPerEmployeeSettings[
+                                        newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                      ],
                                       id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
                                       upfrontPrice: val ? +val : undefined,
-                                    }
-                                  })
+                                    },
+                                  });
                                 }
                               }}
                             />
-                            <div
-                              className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
+                            <div className="bg-white py-2 px-3 rounded-xl right-1 top-1/2 -translate-y-1/2 absolute text-gray-500 text-xl font-medium">
                               تومــان
                             </div>
                           </div>
                         </div>
                       </div>
                     )}
-                      <div className="fixed bottom-0 w-full -mx-5 px-4 py-4 bg-white border-t">
-                          <button
-                              className="w-full bg-black text-white font-bold rounded-lg text-xl py-3"
-                              onClick={() => {
-                                setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined)
-                              }}
-                          >
-                              ذخیره
-                          </button>
-                      </div>
+                    <div className="fixed bottom-0 w-full -mx-5 px-4 py-4 bg-white border-t">
+                      <button
+                        className="w-full bg-black text-white font-bold rounded-lg text-xl py-3"
+                        onClick={() => {
+                          setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined);
+                        }}
+                      >
+                        ذخیره
+                      </button>
+                    </div>
                   </BottomSheet>
 
                   <div className="fixed bottom-0 w-full -mx-5 px-4 py-4 bg-white border-t">
-                      <button
-                          className="w-full bg-black text-white font-bold rounded-lg text-xl py-3"
-                          onClick={() => {
-                            setNewServiceAdvancedSettingsModalIsOpen(false)
-                            setNewServiceAdvancedPerEmployeeSettings(prev => {
-                              const cleaned: typeof prev = {}
-                              for (const k of Object.keys(prev))
-                                if (
-                                  (prev[k]?.price !== undefined && prev[k]?.price !== newServicePrice)
-                                  || (prev[k]?.durationInMins !== undefined && prev[k]?.durationInMins !== newServiceDuration)
-                                  || (prev[k]?.isOperator !== undefined && prev[k]?.isOperator !== true)
-                                  || (prev[k]?.upfrontPrice !== undefined && prev[k]?.upfrontPrice !== (newServiceUpfrontPrice || Math.ceil(newServicePrice / 2)))
-                                )
-                                  cleaned[k] = prev[k]
-                              return cleaned
-                            })
-                          }}
-                      >
-                          ذخیره
-                      </button>
+                    <button
+                      className="w-full bg-black text-white font-bold rounded-lg text-xl py-3"
+                      onClick={() => {
+                        setNewServiceAdvancedSettingsModalIsOpen(false);
+                        setNewServiceAdvancedPerEmployeeSettings((prev) => {
+                          const cleaned: typeof prev = {};
+                          for (const k of Object.keys(prev))
+                            if (
+                              (prev[k]?.price !== undefined && prev[k]?.price !== newServicePrice) ||
+                              (prev[k]?.durationInMins !== undefined &&
+                                prev[k]?.durationInMins !== newServiceDuration) ||
+                              (prev[k]?.isOperator !== undefined && prev[k]?.isOperator !== true) ||
+                              (prev[k]?.upfrontPrice !== undefined &&
+                                prev[k]?.upfrontPrice !==
+                                  (newServiceUpfrontPrice || Math.ceil(newServicePrice / 2)))
+                            )
+                              cleaned[k] = prev[k];
+                          return cleaned;
+                        });
+                      }}
+                    >
+                      ذخیره
+                    </button>
                   </div>
-              </Modal> : null}
-              <hr className="my-4"/>
+                </Modal>
+              ) : null}
+              <hr className="my-4" />
               <h2 className="text-2xl font-bold">تنظیمات عمومی</h2>
               <div className="flex flex-col gap-2">
                 <label className="font-bold text-md">محدودیت جنسیت</label>
                 <select
                   value={newServiceGender}
                   onChange={(e) => {
-                    setNewServiceGender(e.target.value === 'f' ? 'f' : e.target.value === 'm' ? 'm' : '')
+                    setNewServiceGender(e.target.value === "f" ? "f" : e.target.value === "m" ? "m" : "");
                   }}
                   className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
                   style={{
@@ -1021,15 +1115,9 @@ export function Calendar() {
                     paddingRight: "1.5rem",
                   }}
                 >
-                  <option value='f'>
-                    فقط زنانه
-                  </option>
-                  <option value='m'>
-                    فقط مردانه
-                  </option>
-                  <option value=''>
-                    فرقی ندارد
-                  </option>
+                  <option value="f">فقط زنانه</option>
+                  <option value="m">فقط مردانه</option>
+                  <option value="">فرقی ندارد</option>
                 </select>
               </div>
               <label className="flex flex-row gap-2 font-bold text-md items-center">
@@ -1038,7 +1126,7 @@ export function Calendar() {
                   className="w-5 h-5"
                   checked={newServiceIsRecommendedByLocation}
                   onChange={(e) => {
-                    setNewServiceIsRecommendedByLocation(e.target.checked)
+                    setNewServiceIsRecommendedByLocation(e.target.checked);
                   }}
                 />
                 به دسته‌بندی ویژه اضافه شود (حداکثر ۴ سرویس)
@@ -1084,7 +1172,7 @@ export function Calendar() {
                       upfrontPrice: newServiceUpfrontPrice,
                       isRecommendedByLocation: newServiceIsRecommendedByLocation,
                       perEmployeeSettings: Object.values(newServiceAdvancedPerEmployeeSettings),
-                    }).then(({response}) => {
+                    }).then(({ response }) => {
                       if (response.status === 201) {
                         toast.success(`سرویس جدید ${newServiceName} با موفقیت ایجاد شد`, {
                           duration: 5000,
@@ -1092,10 +1180,10 @@ export function Calendar() {
                           className: "w-full font-medium",
                         });
                         fetchLocation().then(({ data, response }) => {
-                          if (response.status !== 200) router.push("/")
+                          if (response.status !== 200) router.push("/");
                           else {
-                            setLocation(data)
-                            setAddNewServicesModalIsOpen(false)
+                            setLocation(data);
+                            setAddNewServicesModalIsOpen(false);
                           }
                         });
                       } else {
@@ -1105,7 +1193,7 @@ export function Calendar() {
                           className: "w-full font-medium",
                         });
                       }
-                    })
+                    });
                   }
                 }}
               >
@@ -1116,7 +1204,7 @@ export function Calendar() {
               className="h-[90dvh]"
               isOpen={isConfirmCloseAddNewServiceBSOpen}
               onClose={() => {
-                setIsConfirmCloseAddNewServiceBSOpen(false)
+                setIsConfirmCloseAddNewServiceBSOpen(false);
               }}
             >
               <div>
@@ -1125,23 +1213,23 @@ export function Calendar() {
               </div>
               <BottomSheetFooter
                 onClose={() => {
-                  setIsConfirmCloseAddNewServiceBSOpen(false)
+                  setIsConfirmCloseAddNewServiceBSOpen(false);
                 }}
                 onSelect={() => {
-                  setIsConfirmCloseAddNewServiceBSOpen(false)
+                  setIsConfirmCloseAddNewServiceBSOpen(false);
                   setAddNewServicesModalIsOpen(false);
 
-                  setNewServiceName('')
-                  setNewServiceMainCategory(undefined)
-                  setNewServiceCategory(undefined)
-                  setNewServiceDescription(undefined)
-                  setNewServiceDuration(60)
-                  setNewServicePrice(undefined)
-                  setNewServiceUpfrontPrice(undefined)
-                  setNewServiceGender('f')
-                  setNewServiceIsRecommendedByLocation(false)
-                  setNewServiceAdvancedPerEmployeeSettings({})
-                  setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined)
+                  setNewServiceName("");
+                  setNewServiceMainCategory(undefined);
+                  setNewServiceCategory(undefined);
+                  setNewServiceDescription(undefined);
+                  setNewServiceDuration(60);
+                  setNewServicePrice(undefined);
+                  setNewServiceUpfrontPrice(undefined);
+                  setNewServiceGender("f");
+                  setNewServiceIsRecommendedByLocation(false);
+                  setNewServiceAdvancedPerEmployeeSettings({});
+                  setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined);
                 }}
                 selectText="بله، خارج شو"
                 closeText="بمان!"
@@ -1159,21 +1247,18 @@ export function Calendar() {
               <button
                 className="relative bg-white rounded-full p-3"
                 onClick={() => {
-                  setPage(0)
+                  setPage(0);
                   if (calendarRef.current) {
                     goToNow();
                   }
                 }}
               >
-                <img src="/calendar.svg" className="w-7 h-7"/>
+                <img src="/calendar.svg" className="w-7 h-7" />
               </button>
             </Tooltip>
             <Tooltip text="فروش">
-              <button
-                className="bg-white rounded-full p-3"
-                onClick={() => setPage(1)}
-              >
-                <img src="/sales.svg" className="w-7 h-7"/>
+              <button className="bg-white rounded-full p-3" onClick={() => setPage(1)}>
+                <img src="/sales.svg" className="w-7 h-7" />
               </button>
             </Tooltip>
             <button
@@ -1183,7 +1268,7 @@ export function Calendar() {
                 setActionsBSIsOpen(true);
               }}
             >
-              <img src="/plus-white.svg" className="w-7 h-7"/>
+              <img src="/plus-white.svg" className="w-7 h-7" />
             </button>
             <BottomSheet
               title="افزودن"
@@ -1203,7 +1288,7 @@ export function Calendar() {
                       }}
                     >
                       <div className="bg-purple-100 rounded-full p-3">
-                        <img src="/add-appointment.svg" className="w-6 h-6"/>
+                        <img src="/add-appointment.svg" className="w-6 h-6" />
                       </div>
                       <p className="text-xl font-normal">نوبت</p>
                     </button>
@@ -1217,7 +1302,7 @@ export function Calendar() {
                       }}
                     >
                       <div className="bg-purple-100 rounded-full p-3">
-                        <img src="/add-blocked-time.svg" className="w-6 h-6"/>
+                        <img src="/add-blocked-time.svg" className="w-6 h-6" />
                       </div>
                       <p className="text-xl font-normal">زمان بلوکه شده</p>
                     </button>
@@ -1226,19 +1311,13 @@ export function Calendar() {
               </div>
             </BottomSheet>
             <Tooltip text="مشتریان">
-              <button
-                className="bg-white rounded-full p-3"
-                onClick={() => setPage(2)}
-              >
-                <img src="/client.svg" className="w-7 h-7"/>
+              <button className="bg-white rounded-full p-3" onClick={() => setPage(2)}>
+                <img src="/client.svg" className="w-7 h-7" />
               </button>
             </Tooltip>
             <Tooltip text="تنظیمات" place="right">
-              <button
-                className="bg-white rounded-full p-3"
-                onClick={() => setPage(3)}
-              >
-                <img src="/more.svg" className="w-7 h-7"/>
+              <button className="bg-white rounded-full p-3" onClick={() => setPage(3)}>
+                <img src="/more.svg" className="w-7 h-7" />
               </button>
             </Tooltip>
           </div>
@@ -1247,8 +1326,7 @@ export function Calendar() {
 
       {/* Editing Indicator */}
       {editingEvents.length > 0 && (
-        <div
-          className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
+        <div className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
           <h2 className="z-50 text-2xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
           <h2 className="animate-pulse">حالت ویرایش</h2>
         </div>
@@ -1288,7 +1366,7 @@ export function Calendar() {
                     ...(uniqueEventsMap.get(e.event.id) || {}),
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    ...(e.newResource ? {employeeId: e.newResource.id} : {}),
+                    ...(e.newResource ? { employeeId: e.newResource.id } : {}),
                     startDateTime: e.event.startStr,
                     endDateTime: e.event.endStr,
                   });
@@ -1302,7 +1380,7 @@ export function Calendar() {
                 // Use Promise.all to handle all promises together
                 Promise.all(
                   updatePromises.map(([id, p]) =>
-                    p.then(({data, response}) => {
+                    p.then(({ data, response }) => {
                       if (response.status === 200) {
                         if (calendarRef.current) {
                           const event = calendarRef.current.getApi().getEventById(id);
@@ -1744,9 +1822,7 @@ export function Calendar() {
                               <span className="text-xs font-light text-gray-500"> تومان</span>
                             </h3>
                           </div>
-                          <p className="font-normal text-gray-500 text-start">
-                            {svc.formattedDuration}
-                          </p>
+                          <p className="font-normal text-gray-500 text-start">{svc.formattedDuration}</p>
                         </div>
                       </button>
                     ))}

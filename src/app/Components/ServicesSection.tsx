@@ -1,46 +1,44 @@
-import {type Location, LocationServiceCatalogCategory, type Service} from "@/app/api";
-import {formatPriceWithSeparator, toFarsiDigits} from "@/app/utils";
+import type { Location, LocationServiceCatalogCategory, Service } from "@/app/api";
+import { formatPriceWithSeparator, toFarsiDigits } from "@/app/utils";
 import NextImage from "next/image";
-import {useState} from "react";
-import {Tabs} from "./Tabs";
+import { useState } from "react";
+import { Tabs } from "./Tabs";
 
 interface ServicesProps {
   location: Location;
-  serviceOnClick?: (service: Service) => void
+  serviceOnClick?: (service: Service) => void;
 }
 
 export const ServicesSection = ({ location, serviceOnClick = () => {} }: ServicesProps) => {
   const catalog = location.serviceCatalog;
-  const tabs = [{
-    id: 'all', label: (
-      <div className="flex flex-row gap-2 items-center justify-between">
-        <h2 className="text-lg font-medium">همه‌ی دسته‌بندی‌ها</h2>
-        <div
-          className="w-6 h-6 flex items-center justify-center text-md bg-gray-50 border text-gray-500 rounded-full font-bold"
-        >
-          <span
-            className="translate-y-[2px] text-sm font-normal"
-          >
-            {toFarsiDigits(location.serviceCatalog.reduce((acc, {items}) => acc + items.length, 0))}
-          </span>
+  const tabs = [
+    {
+      id: "all",
+      label: (
+        <div className="flex flex-row gap-2 items-center justify-between">
+          <h2 className="text-lg font-medium">همه‌ی دسته‌بندی‌ها</h2>
+          <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-50 border text-gray-500 rounded-full font-bold">
+            <span className="translate-y-[2px] text-sm font-normal">
+              {toFarsiDigits(location.serviceCatalog.reduce((acc, { items }) => acc + items.length, 0))}
+            </span>
+          </div>
         </div>
-      </div>
-    )
-  }].concat(catalog.map(({id, name, items}) => ({id, label: (
-      <div className="flex flex-row gap-2 items-center justify-between">
-        <h2 className="text-lg font-medium">{name}</h2>
-        <div
-          className="w-6 h-6 flex items-center justify-center text-md bg-gray-50 border text-gray-500 rounded-full font-bold"
-        >
-          <span
-            className="translate-y-[2px] text-sm font-normal"
-          >
-            {toFarsiDigits(items.length)}
-          </span>
+      ),
+    },
+  ].concat(
+    catalog.map(({ id, name, items }) => ({
+      id,
+      label: (
+        <div className="flex flex-row gap-2 items-center justify-between">
+          <h2 className="text-lg font-medium">{name}</h2>
+          <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-50 border text-gray-500 rounded-full font-bold">
+            <span className="translate-y-[2px] text-sm font-normal">{toFarsiDigits(items.length)}</span>
+          </div>
         </div>
-      </div>
-    )})))
-  const [activeTab, setActiveTab] = useState<'all' | LocationServiceCatalogCategory['id']>('all');
+      ),
+    })),
+  );
+  const [activeTab, setActiveTab] = useState<"all" | LocationServiceCatalogCategory["id"]>("all");
 
   const handleTabClick = (index: number, id: string) => {
     setActiveTab(id);
@@ -48,11 +46,14 @@ export const ServicesSection = ({ location, serviceOnClick = () => {} }: Service
 
   return (
     <div className="w-full pb-[70px]">
-      <div className={`w-full py-5 bg-white`}>
+      <div className={"w-full py-5 bg-white"}>
         <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabClick} />
       </div>
       <div>
-        {(activeTab === 'all' ? location.serviceCatalog : location.serviceCatalog.filter(({id}) => id === activeTab)).map((category) => (
+        {(activeTab === "all"
+          ? location.serviceCatalog
+          : location.serviceCatalog.filter(({ id }) => id === activeTab)
+        ).map((category) => (
           <div key={category.id}>
             <div className="flex flex-row justify-between items-center pt-5 pb-3">
               <div className="flex flex-row gap-3 items-center">
@@ -72,7 +73,7 @@ export const ServicesSection = ({ location, serviceOnClick = () => {} }: Service
                   type="button"
                   className="-mx-2 flex flex-row gap-4 items-center bg-white p-2 rounded-xl active:inner-w-8"
                   onClick={() => {
-                    serviceOnClick(svc)
+                    serviceOnClick(svc);
                   }}
                 >
                   <div className="h-[70px] w-[4px] bg-purple-300 rounded-full" />
@@ -84,9 +85,7 @@ export const ServicesSection = ({ location, serviceOnClick = () => {} }: Service
                         <span className="text-xs font-light text-gray-500"> تومان</span>
                       </div>
                     </div>
-                    <p className="font-normal text-gray-500 text-start">
-                      {svc.formattedDuration}
-                    </p>
+                    <p className="font-normal text-gray-500 text-start">{svc.formattedDuration}</p>
                   </div>
                 </button>
               ))}
