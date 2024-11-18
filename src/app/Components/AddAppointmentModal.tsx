@@ -12,8 +12,9 @@ import {
   fetchAvailableEmployeesByService,
 } from "@/app/api";
 import { formatPriceInFarsi, toFarsiDigits } from "@/app/utils";
-import { addDays, addMinutes, format, setHours, setMinutes, startOfDay } from "date-fns-jalali";
+import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
 import type React from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface AddAppointmentModalProps {
@@ -21,31 +22,9 @@ interface AddAppointmentModalProps {
   onClose: () => void;
   currentDate: Date;
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
-  selectDateInAddAppointmentModalBSIsOpen: boolean;
-  setSelectDateInAddAppointmentModalBSIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  selectTimeInAddAppointmentModalBSIsOpen: boolean;
-  setSelectTimeInAddAppointmentModalBSIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  newAppointmentTime: Date;
-  setNewAppointmentTime: React.Dispatch<React.SetStateAction<Date>>;
-  newAppointmentCustomer: Customer | null;
-  setNewAppointmentCustomer: React.Dispatch<React.SetStateAction<Customer | null>>;
   clients: Customer[];
-  createCustomerModalIsOpen: boolean;
-  setCreateCustomerModalIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedServiceToAddInNewAppointment: Service | undefined;
-  setSelectedServiceToAddInNewAppointment: React.Dispatch<React.SetStateAction<Service | undefined>>;
-  selectedEmployeeForNewAppointment: AvailableEmployee | undefined;
-  setSelectedEmployeeForNewAppointment: React.Dispatch<React.SetStateAction<AvailableEmployee | undefined>>;
-  setAddServiceInNewAppointmentIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  addServiceInNewAppointmentIsOpen: boolean;
-  calendarRef: React.RefObject<any>;
   location: Location | undefined;
-  setAvailableEmployeesByService: React.Dispatch<
-    React.SetStateAction<AvailableEmployeesByService | undefined>
-  >;
-  availableEmployeesByService: AvailableEmployeesByService | undefined;
-  selectEmployeeBSIsOpen: boolean;
-  setSelectEmployeeBSIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  calendarRef: React.RefObject<any>;
 }
 
 export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
@@ -53,30 +32,31 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
   onClose,
   currentDate,
   setCurrentDate,
-  selectDateInAddAppointmentModalBSIsOpen,
-  setSelectDateInAddAppointmentModalBSIsOpen,
-  selectTimeInAddAppointmentModalBSIsOpen,
-  setSelectTimeInAddAppointmentModalBSIsOpen,
-  newAppointmentTime,
-  setNewAppointmentTime,
-  newAppointmentCustomer,
-  setNewAppointmentCustomer,
   clients,
-  createCustomerModalIsOpen,
-  setCreateCustomerModalIsOpen,
-  selectedServiceToAddInNewAppointment,
-  setSelectedServiceToAddInNewAppointment,
-  selectedEmployeeForNewAppointment,
-  setSelectedEmployeeForNewAppointment,
-  setAddServiceInNewAppointmentIsOpen,
-  addServiceInNewAppointmentIsOpen,
   calendarRef,
   location,
-  setAvailableEmployeesByService,
-  availableEmployeesByService,
-  selectEmployeeBSIsOpen,
-  setSelectEmployeeBSIsOpen,
 }) => {
+  const [selectDateInAddAppointmentModalBSIsOpen, setSelectDateInAddAppointmentModalBSIsOpen] =
+    useState(false);
+  const [selectTimeInAddAppointmentModalBSIsOpen, setSelectTimeInAddAppointmentModalBSIsOpen] =
+    useState(false);
+  const [newAppointmentTime, setNewAppointmentTime] = useState<Date>(
+    setMinutes(setSeconds(new Date(), 0), 0),
+  );
+  const [addServiceInNewAppointmentIsOpen, setAddServiceInNewAppointmentIsOpen] = useState(false);
+  const [createCustomerModalIsOpen, setCreateCustomerModalIsOpen] = useState(false);
+  const [newAppointmentCustomer, setNewAppointmentCustomer] = useState<Customer | null>(null);
+  const [selectedServiceToAddInNewAppointment, setSelectedServiceToAddInNewAppointment] = useState<
+    Service | undefined
+  >();
+  const [availableEmployeesByService, setAvailableEmployeesByService] = useState<
+    AvailableEmployeesByService | undefined
+  >();
+  const [selectedEmployeeForNewAppointment, setSelectedEmployeeForNewAppointment] = useState<
+    AvailableEmployee | undefined
+  >();
+  const [selectEmployeeBSIsOpen, setSelectEmployeeBSIsOpen] = useState<boolean>(false);
+
   return (
     <Modal
       isOpen={isOpen}

@@ -8,8 +8,6 @@ import { ServicesSection } from "@/app/Components/ServicesSection";
 import type { CanSwipeDirection } from "@/app/Components/SwipeComponent";
 import { SwipeComponent } from "@/app/Components/SwipeComponent";
 import type {
-  AvailableEmployee,
-  AvailableEmployeesByService,
   CalendarEvent,
   CalendarEventPatchRequest,
   Category,
@@ -36,7 +34,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
-import { addDays, format, setMinutes, setSeconds } from "date-fns-jalali";
+import { addDays, format } from "date-fns-jalali";
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -84,28 +82,8 @@ export function Calendar() {
 
   const [actionsBSIsOpen, setActionsBSIsOpen] = useState(false);
   const [addAppointmentModalIsOpen, setAddAppointmentModalIsOpen] = useState(false);
-  const [selectDateInAddAppointmentModalBSIsOpen, setSelectDateInAddAppointmentModalBSIsOpen] =
-    useState(false);
-  const [selectTimeInAddAppointmentModalBSIsOpen, setSelectTimeInAddAppointmentModalBSIsOpen] =
-    useState(false);
-  const [newAppointmentTime, setNewAppointmentTime] = useState<Date>(
-    setMinutes(setSeconds(new Date(), 0), 0),
-  );
-  const [addServiceInNewAppointmentIsOpen, setAddServiceInNewAppointmentIsOpen] = useState(false);
-  const [createCustomerModalIsOpen, setCreateCustomerModalIsOpen] = useState(false);
   const [clients, setClients] = useState<Customer[]>([]);
-  const [newAppointmentCustomer, setNewAppointmentCustomer] = useState<Customer | null>(null);
   const [location, setLocation] = useState<Location | undefined>();
-  const [selectedServiceToAddInNewAppointment, setSelectedServiceToAddInNewAppointment] = useState<
-    Service | undefined
-  >();
-  const [availableEmployeesByService, setAvailableEmployeesByService] = useState<
-    AvailableEmployeesByService | undefined
-  >();
-  const [selectedEmployeeForNewAppointment, setSelectedEmployeeForNewAppointment] = useState<
-    AvailableEmployee | undefined
-  >();
-  const [selectEmployeeBSIsOpen, setSelectEmployeeBSIsOpen] = useState<boolean>(false);
   const [selectDateInCalendarBSIsOpen, setSelectDateInCalendarBSIsOpen] = useState<boolean>(false);
   const [servicesModalIsOpen, setServicesModalIsOpen] = useState(false);
   const [addNewServicesModalIsOpen, setAddNewServicesModalIsOpen] = useState(false);
@@ -1419,29 +1397,9 @@ export function Calendar() {
         onClose={() => setAddAppointmentModalIsOpen(false)}
         currentDate={currentDate}
         setCurrentDate={setCurrentDate}
-        selectDateInAddAppointmentModalBSIsOpen={selectDateInAddAppointmentModalBSIsOpen}
-        setSelectDateInAddAppointmentModalBSIsOpen={setSelectDateInAddAppointmentModalBSIsOpen}
-        selectTimeInAddAppointmentModalBSIsOpen={selectTimeInAddAppointmentModalBSIsOpen}
-        setSelectTimeInAddAppointmentModalBSIsOpen={setSelectTimeInAddAppointmentModalBSIsOpen}
-        newAppointmentTime={newAppointmentTime}
-        setNewAppointmentTime={setNewAppointmentTime}
-        newAppointmentCustomer={newAppointmentCustomer}
-        setNewAppointmentCustomer={setNewAppointmentCustomer}
         clients={clients}
-        createCustomerModalIsOpen={createCustomerModalIsOpen}
-        setCreateCustomerModalIsOpen={setCreateCustomerModalIsOpen}
-        selectedServiceToAddInNewAppointment={selectedServiceToAddInNewAppointment}
-        setSelectedServiceToAddInNewAppointment={setSelectedServiceToAddInNewAppointment}
-        selectedEmployeeForNewAppointment={selectedEmployeeForNewAppointment}
-        setSelectedEmployeeForNewAppointment={setSelectedEmployeeForNewAppointment}
-        setAddServiceInNewAppointmentIsOpen={setAddServiceInNewAppointmentIsOpen}
-        addServiceInNewAppointmentIsOpen={addServiceInNewAppointmentIsOpen}
         calendarRef={calendarRef}
         location={location}
-        setAvailableEmployeesByService={setAvailableEmployeesByService}
-        availableEmployeesByService={availableEmployeesByService}
-        selectEmployeeBSIsOpen={selectEmployeeBSIsOpen}
-        setSelectEmployeeBSIsOpen={setSelectEmployeeBSIsOpen}
       />
     </div>
   ) : (
