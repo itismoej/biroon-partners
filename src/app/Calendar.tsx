@@ -13,7 +13,8 @@ import type {
   Category,
   Customer,
   Employee,
-  Location, Service,
+  Location,
+  Service,
   ServiceCategory,
 } from "@/app/api";
 import {
@@ -34,14 +35,15 @@ import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { addDays, format } from "date-fns-jalali";
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import type React from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
 import "./calendar.css";
+import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
-import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
 
 const generateDurations = () => {
   const durations = [];
@@ -63,6 +65,175 @@ const generateDurations = () => {
 };
 
 const durations = generateDurations();
+
+function renderEventContent(eventInfo: EventContentArg) {
+  return (
+    <div>
+      <div style={{ direction: "ltr" }}>
+        <b>{eventInfo.timeText}</b>
+      </div>
+      <div>
+        <i>{eventInfo.event.title}</i>
+      </div>
+    </div>
+  );
+}
+
+const LoadingSpinner: React.FC = () => (
+  <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">
+    <svg
+      aria-hidden="true"
+      className="w-20 h-20 text-gray-200 animate-spin fill-black"
+      viewBox="0 0 100 101"
+      fill="none"
+    >
+      <path
+        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+        fill="currentColor"
+      />
+      <path
+        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.0830 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+        fill="currentFill"
+      />
+    </svg>
+  </div>
+);
+
+interface EditingIndicatorProps {
+  editingEvents: Array<EventDropArg | EventResizeDoneArg>;
+  currentDate: Date;
+}
+
+const EditingIndicator: React.FC<EditingIndicatorProps> = ({ editingEvents, currentDate }) => {
+  if (editingEvents.length === 0) return null;
+
+  return (
+    <div className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
+      <h2 className="z-50 text-2xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
+      <h2 className="animate-pulse">حالت ویرایش</h2>
+    </div>
+  );
+};
+
+interface SaveCancelButtonsProps {
+  isVisible: boolean;
+  editingEvents: Array<EventDropArg | EventResizeDoneArg>;
+  setEditingEvents: React.Dispatch<React.SetStateAction<Array<EventDropArg | EventResizeDoneArg>>>;
+  calendarRef: React.RefObject<FullCalendar>;
+}
+
+const SaveCancelButtons: React.FC<SaveCancelButtonsProps> = ({
+  isVisible,
+  editingEvents,
+  setEditingEvents,
+  calendarRef,
+}) => {
+  if (!isVisible) return null;
+
+  return (
+    <div
+      className={`fixed z-50 bottom-0 bg-white flex items-center px-4 h-[70px] w-full p-4 shadow-t-lg font-bold ${
+        editingEvents.length > 0 ? "animate-slideInBottom" : "animate-slideOutBottom"
+      }`}
+    >
+      <div className="relative w-full me-2.5">
+        <button
+          type="button"
+          onClick={() => {
+            editingEvents.reverse().forEach((e) => {
+              e.revert();
+            });
+            setEditingEvents([]);
+          }}
+          className="w-full p-3 bg-white text-black border rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
+        >
+          لغو و بازگشت
+        </button>
+      </div>
+      <div className="relative w-full">
+        <button
+          type="button"
+          onClick={() => {
+            const uniqueEventsMap = new Map<string, CalendarEventPatchRequest>();
+
+            editingEvents.forEach((e) => {
+              uniqueEventsMap.set(e.event.id, {
+                ...(uniqueEventsMap.get(e.event.id) || {}),
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                ...(e.newResource ? { employeeId: e.newResource.id } : {}),
+                startDateTime: e.event.startStr,
+                endDateTime: e.event.endStr,
+              });
+            });
+
+            const updatePromises: [string, ReturnType<typeof updateEvent>][] = Array.from(
+              uniqueEventsMap.entries(),
+            ).map(([id, updateData]) => [id, updateEvent(id, updateData)]);
+
+            Promise.all(
+              updatePromises.map(([id, p]) =>
+                p.then(({ data, response }) => {
+                  if (response.status === 200) {
+                    if (calendarRef.current) {
+                      const event = calendarRef.current.getApi().getEventById(id);
+                      if (!event) {
+                        return;
+                      }
+                      toast.success(`نوبت ${data.service.name} با موفقیت تغییر یافت`, {
+                        duration: 5000,
+                        position: "top-center",
+                        className: "w-full font-medium",
+                      });
+                      setTimeout(() => {
+                        event.setProp("backgroundColor", "green");
+                      }, 10);
+                      setTimeout(() => {
+                        event.setProp("backgroundColor", "");
+                      }, 3000);
+                    }
+                  }
+                  if (response.status === 400) {
+                    if (calendarRef.current) {
+                      const event = calendarRef.current.getApi().getEventById(id);
+                      if (!event) {
+                        return;
+                      }
+                      toast.error(`ویرایش ناموفق بود. ${data.error}`, {
+                        duration: 5000,
+                        position: "top-center",
+                        className: "w-full font-medium",
+                      });
+                      setTimeout(() => {
+                        event.setProp("backgroundColor", "red");
+                        event.setProp("borderColor", "red");
+                      }, 10);
+                      setTimeout(() => {
+                        event.setProp("backgroundColor", "");
+                        event.setProp("borderColor", "");
+                      }, 3000);
+                    }
+                    editingEvents
+                      .filter((e) => e.event.id === id)
+                      .reverse()
+                      .forEach((e) => {
+                        e.revert();
+                      });
+                  }
+                }),
+              ),
+            ).finally(() => {
+              setEditingEvents([]);
+            });
+          }}
+          className="w-full p-3 bg-black text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
+        >
+          ذخیره
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export function Calendar() {
   const canSwipeDirectionRef = useRef<CanSwipeDirection>("Left");
@@ -195,7 +366,7 @@ export function Calendar() {
 
   const goToNow = (behavior: ScrollBehavior = "smooth") => {
     const nowLine = document.querySelector(".fc-timegrid-now-indicator-line");
-    nowLine?.scrollIntoView({ behavior, block: "center" });
+    (nowLine as HTMLElement)?.scrollIntoView({ behavior, block: "center" });
   };
 
   return resources.length > 0 ? (
@@ -538,121 +709,15 @@ export function Calendar() {
       </BottomSheet>
 
       {/* Editing Indicator */}
-      {editingEvents.length > 0 && (
-        <div className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
-          <h2 className="z-50 text-2xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
-          <h2 className="animate-pulse">حالت ویرایش</h2>
-        </div>
-      )}
+      <EditingIndicator editingEvents={editingEvents} currentDate={currentDate} />
 
       {/* Save/Cancel Editing Buttons */}
-      {isVisible && (
-        <div
-          className={`fixed z-50 bottom-0 bg-white flex items-center px-4 h-[70px] w-full p-4 shadow-t-lg font-bold ${
-            editingEvents.length > 0 ? "animate-slideInBottom" : "animate-slideOutBottom"
-          }`}
-        >
-          <div className="relative w-full me-2.5">
-            <button
-              type="button"
-              onClick={() => {
-                editingEvents.reverse().forEach((e) => {
-                  e.revert();
-                });
-                setEditingEvents([]);
-              }}
-              className="w-full p-3 bg-white text-black border rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
-            >
-              لغو و بازگشت
-            </button>
-          </div>
-          <div className="relative w-full">
-            <button
-              type="button"
-              onClick={() => {
-                // Create a Map to store the latest edit per event id
-                const uniqueEventsMap = new Map<string, CalendarEventPatchRequest>();
-
-                // Iterate over editingEvents and update the map with the latest changes for each event id
-                editingEvents.forEach((e) => {
-                  uniqueEventsMap.set(e.event.id, {
-                    ...(uniqueEventsMap.get(e.event.id) || {}),
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
-                    ...(e.newResource ? { employeeId: e.newResource.id } : {}),
-                    startDateTime: e.event.startStr,
-                    endDateTime: e.event.endStr,
-                  });
-                });
-
-                // Convert the map values into an array of update promises
-                const updatePromises: [string, ReturnType<typeof updateEvent>][] = Array.from(
-                  uniqueEventsMap.entries(),
-                ).map(([id, updateData]) => [id, updateEvent(id, updateData)]);
-
-                // Use Promise.all to handle all promises together
-                Promise.all(
-                  updatePromises.map(([id, p]) =>
-                    p.then(({ data, response }) => {
-                      if (response.status === 200) {
-                        if (calendarRef.current) {
-                          const event = calendarRef.current.getApi().getEventById(id);
-                          if (!event) {
-                            return;
-                          }
-                          toast.success(`نوبت ${data.service.name} با موفقیت تغییر یافت`, {
-                            duration: 5000,
-                            position: "top-center",
-                            className: "w-full font-medium",
-                          });
-                          setTimeout(() => {
-                            event.setProp("backgroundColor", "green");
-                          }, 10);
-                          setTimeout(() => {
-                            event.setProp("backgroundColor", "");
-                          }, 3000);
-                        }
-                      }
-                      if (response.status === 400) {
-                        if (calendarRef.current) {
-                          const event = calendarRef.current.getApi().getEventById(id);
-                          if (!event) {
-                            return;
-                          }
-                          toast.error(`ویرایش ناموفق بود. ${data.error}`, {
-                            duration: 5000,
-                            position: "top-center",
-                            className: "w-full font-medium",
-                          });
-                          setTimeout(() => {
-                            event.setProp("backgroundColor", "red");
-                            event.setProp("borderColor", "red");
-                          }, 10);
-                          setTimeout(() => {
-                            event.setProp("backgroundColor", "");
-                            event.setProp("borderColor", "");
-                          }, 3000);
-                        }
-                        editingEvents
-                          .filter((e) => e.event.id === id)
-                          .reverse()
-                          .forEach((e) => {
-                            e.revert();
-                          });
-                      }
-                    }),
-                  ),
-                ).finally(() => {
-                  setEditingEvents([]);
-                });
-              }}
-              className="w-full p-3 bg-black text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
-            >
-              ذخیره
-            </button>
-          </div>
-        </div>
-      )}
+      <SaveCancelButtons
+        isVisible={isVisible}
+        editingEvents={editingEvents}
+        setEditingEvents={setEditingEvents}
+        calendarRef={calendarRef}
+      />
 
       <BottomSheet
         isOpen={selectDateInCalendarBSIsOpen}
@@ -714,36 +779,6 @@ export function Calendar() {
       />
     </div>
   ) : (
-    <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">
-      <svg
-        aria-hidden="true"
-        className="w-20 h-20 text-gray-200 animate-spin fill-black"
-        viewBox="0 0 100 101"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-          fill="currentColor"
-        />
-        <path
-          d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.0830 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-          fill="currentFill"
-        />
-      </svg>
-    </div>
-  );
-}
-
-function renderEventContent(eventInfo: EventContentArg) {
-  return (
-    <div>
-      <div style={{ direction: "ltr" }}>
-        <b>{eventInfo.timeText}</b>
-      </div>
-      <div>
-        <i>{eventInfo.event.title}</i>
-      </div>
-    </div>
+    <LoadingSpinner />
   );
 }
