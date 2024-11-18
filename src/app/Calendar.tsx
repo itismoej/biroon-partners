@@ -1,55 +1,51 @@
 "use client";
 
+import { AddAppointmentModal } from "@/app/Components/AddAppointmentModal";
+import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
+import { CalendarFooter } from "@/app/Components/CalendarFooter";
+import { CalendarHeader } from "@/app/Components/CalendarHeader";
+import { ServicesSection } from "@/app/Components/ServicesSection";
+import type { CanSwipeDirection } from "@/app/Components/SwipeComponent";
+import { SwipeComponent } from "@/app/Components/SwipeComponent";
+import type {
+  AvailableEmployee,
+  AvailableEmployeesByService,
+  CalendarEvent,
+  CalendarEventPatchRequest,
+  Category,
+  Customer,
+  Employee,
+  Location,
+  NewServicePerEmployee,
+  Service,
+  ServiceCategory,
+} from "@/app/api";
 import {
-  type AvailableEmployee,
-  type AvailableEmployeesByService,
-  type CalendarEvent,
-  type CalendarEventPatchRequest,
-  type Category,
-  type Customer,
-  type Employee,
-  type Location,
-  type NewServicePerEmployee,
-  type Service,
-  type ServiceCategory,
   createNewService,
-  createReservation,
   fetchAllEmployees,
   fetchAllEvents,
-  fetchAvailableEmployeesByService,
   fetchCategories,
   fetchCustomers,
   fetchLocation,
   fetchServiceCategories,
   updateEvent,
 } from "@/app/api";
-import {
-  formatDurationInFarsi,
-  formatPriceInFarsi,
-  formatPriceWithSeparator,
-  toEnglishDigits,
-  toFarsiDigits,
-} from "@/app/utils";
-import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
-import interactionPlugin, { type EventResizeDoneArg } from "@fullcalendar/interaction";
+import { formatDurationInFarsi, formatPriceWithSeparator, toEnglishDigits, toFarsiDigits } from "@/app/utils";
+import type { EventResizeDoneArg } from "@fullcalendar/interaction";
+import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
-import type { ResourceApi } from "@fullcalendar/resource";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
-import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
+import { addDays, format, setMinutes, setSeconds } from "date-fns-jalali";
+import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import "./calendar.css";
-import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
-import { ServicesSection } from "@/app/Components/ServicesSection";
-import { type CanSwipeDirection, SwipeComponent } from "@/app/Components/SwipeComponent";
-import { Tile } from "@/app/Components/Tile";
-import { Tooltip } from "@/app/Components/Tooltip";
-import { useUserData } from "@/context/UserContext";
-import NextImage from "next/image";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
+import "./calendar.css";
+import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
+import type { ResourceApi } from "@fullcalendar/resource";
 
 const generateDurations = () => {
   const durations = [];
@@ -111,7 +107,6 @@ export function Calendar() {
   >();
   const [selectEmployeeBSIsOpen, setSelectEmployeeBSIsOpen] = useState<boolean>(false);
   const [selectDateInCalendarBSIsOpen, setSelectDateInCalendarBSIsOpen] = useState<boolean>(false);
-  const { userData } = useUserData();
   const [servicesModalIsOpen, setServicesModalIsOpen] = useState(false);
   const [addNewServicesModalIsOpen, setAddNewServicesModalIsOpen] = useState(false);
   const [editingServiceInServicesPage, setEditingServiceInServicesPage] = useState<Service>();
@@ -140,6 +135,8 @@ export function Calendar() {
     setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee,
   ] = useState<Employee>();
   const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] = useState<boolean>(false);
+
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -249,53 +246,14 @@ export function Calendar() {
     nowLine?.scrollIntoView({ behavior, block: "center" });
   };
 
-  const [page, setPage] = useState(0);
-
   return resources.length > 0 ? (
     <div className="relative overflow-x-clip">
       {/* Header */}
-      <div className="sticky top-0 ps-2 pe-5 z-50 h-[59px] bg-white shadow flex flex-row gap-5 items-center justify-between">
-        {page === 0 ? (
-          <div className="flex flex-row gap-2 items-center">
-            <button className="bg-white p-3 rounded-xl">
-              <NextImage
-                width={24}
-                height={24}
-                alt="منو"
-                src="/hamburger.svg"
-                className="w-[24px] h-[24px]"
-              />
-            </button>
-            <button
-              className="flex flex-row gap-1"
-              type="button"
-              onClick={() => {
-                setSelectDateInCalendarBSIsOpen(true);
-              }}
-            >
-              <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM"))}</h2>
-              <NextImage width={24} height={24} alt="باز کردن تقویم" src="/dropdown.svg" />
-            </button>
-          </div>
-        ) : (
-          <div />
-        )}
-        <button>
-          {userData?.user?.avatar.url ? (
-            <NextImage
-              width={30}
-              height={30}
-              alt="پروفایل"
-              src={userData.user.avatar.url}
-              className="w-[30px] h-[30px] rounded-full"
-            />
-          ) : userData?.user ? (
-            <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold bg-purple-200">
-              {userData.user.name.slice(0, 2)}
-            </div>
-          ) : null}
-        </button>
-      </div>
+      <CalendarHeader
+        page={page}
+        currentDate={currentDate}
+        setSelectDateInCalendarBSIsOpen={setSelectDateInCalendarBSIsOpen}
+      />
 
       {page === 0 ? (
         // Calendar Container
@@ -1240,89 +1198,55 @@ export function Calendar() {
       ) : null}
 
       {/* Footer */}
-      {!addNewServicesModalIsOpen && (
-        <div className="fixed bottom-0 z-50 bg-white pb-3 pt-1 px-3 w-full shadow h-[60px]">
-          <div className="flex flex-row-reverse gap-4 items-center justify-between max-w-[400px] mx-auto">
-            <Tooltip text="تقویم" place="left">
+      <CalendarFooter
+        page={page}
+        setPage={setPage}
+        addNewServicesModalIsOpen={addNewServicesModalIsOpen}
+        calendarRef={calendarRef}
+        setActionsBSIsOpen={setActionsBSIsOpen}
+        goToNow={goToNow}
+      />
+
+      <BottomSheet
+        title="افزودن"
+        isOpen={actionsBSIsOpen}
+        onClose={() => {
+          setActionsBSIsOpen(false);
+        }}
+      >
+        <div className="-mx-3">
+          <ul className="flex flex-col">
+            <li>
               <button
-                className="relative bg-white rounded-full p-3"
+                className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
                 onClick={() => {
-                  setPage(0);
-                  if (calendarRef.current) {
-                    goToNow();
-                  }
+                  setAddAppointmentModalIsOpen(true);
+                  setActionsBSIsOpen(false);
                 }}
               >
-                <img src="/calendar.svg" className="w-7 h-7" />
+                <div className="bg-purple-100 rounded-full p-3">
+                  <img src="/add-appointment.svg" className="w-6 h-6" />
+                </div>
+                <p className="text-xl font-normal">نوبت</p>
               </button>
-            </Tooltip>
-            <Tooltip text="فروش">
-              <button className="bg-white rounded-full p-3" onClick={() => setPage(1)}>
-                <img src="/sales.svg" className="w-7 h-7" />
+            </li>
+            <li>
+              <button
+                type="button"
+                className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
+                onClick={() => {
+                  setActionsBSIsOpen(false);
+                }}
+              >
+                <div className="bg-purple-100 rounded-full p-3">
+                  <img src="/add-blocked-time.svg" className="w-6 h-6" />
+                </div>
+                <p className="text-xl font-normal">زمان بلوکه شده</p>
               </button>
-            </Tooltip>
-            <button
-              type="button"
-              className="bg-purple-600 rounded-full p-2"
-              onClick={() => {
-                setActionsBSIsOpen(true);
-              }}
-            >
-              <img src="/plus-white.svg" className="w-7 h-7" />
-            </button>
-            <BottomSheet
-              title="افزودن"
-              isOpen={actionsBSIsOpen}
-              onClose={() => {
-                setActionsBSIsOpen(false);
-              }}
-            >
-              <div className="-mx-3">
-                <ul className="flex flex-col">
-                  <li>
-                    <button
-                      className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                      onClick={() => {
-                        setAddAppointmentModalIsOpen(true);
-                        setActionsBSIsOpen(false);
-                      }}
-                    >
-                      <div className="bg-purple-100 rounded-full p-3">
-                        <img src="/add-appointment.svg" className="w-6 h-6" />
-                      </div>
-                      <p className="text-xl font-normal">نوبت</p>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                      onClick={() => {
-                        setActionsBSIsOpen(false);
-                      }}
-                    >
-                      <div className="bg-purple-100 rounded-full p-3">
-                        <img src="/add-blocked-time.svg" className="w-6 h-6" />
-                      </div>
-                      <p className="text-xl font-normal">زمان بلوکه شده</p>
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </BottomSheet>
-            <Tooltip text="مشتریان">
-              <button className="bg-white rounded-full p-3" onClick={() => setPage(2)}>
-                <img src="/client.svg" className="w-7 h-7" />
-              </button>
-            </Tooltip>
-            <Tooltip text="تنظیمات" place="right">
-              <button className="bg-white rounded-full p-3" onClick={() => setPage(3)}>
-                <img src="/more.svg" className="w-7 h-7" />
-              </button>
-            </Tooltip>
-          </div>
+            </li>
+          </ul>
         </div>
-      )}
+      </BottomSheet>
 
       {/* Editing Indicator */}
       {editingEvents.length > 0 && (
@@ -1462,9 +1386,12 @@ export function Calendar() {
             type="button"
             className={"px-5 py-2 text-xl border rounded-full me-1"}
             onClick={() => {
-              const today = new Date();
-              setCurrentDate(today);
-              setSelectDateInCalendarBSIsOpen(false);
+              if (calendarRef.current) {
+                const today = new Date();
+                calendarRef.current.getApi().gotoDate(today);
+                setCurrentDate(today);
+                setSelectDateInCalendarBSIsOpen(false);
+              }
             }}
           >
             امروز
@@ -1473,9 +1400,12 @@ export function Calendar() {
             type="button"
             className={"px-5 py-2 text-xl border rounded-full me-1"}
             onClick={() => {
-              const tomorrow = addDays(new Date(), 1);
-              setCurrentDate(tomorrow);
-              setSelectDateInCalendarBSIsOpen(false);
+              if (calendarRef.current) {
+                const tomorrow = addDays(new Date(), 1);
+                calendarRef.current.getApi().gotoDate(tomorrow);
+                setCurrentDate(tomorrow);
+                setSelectDateInCalendarBSIsOpen(false);
+              }
             }}
           >
             فردا
@@ -1483,485 +1413,36 @@ export function Calendar() {
         </div>
       </BottomSheet>
 
-      <Modal
+      {/* Add Appointment Modal */}
+      <AddAppointmentModal
         isOpen={addAppointmentModalIsOpen}
-        onClose={() => {
-          setAddAppointmentModalIsOpen(false);
-        }}
-        title={
-          <button
-            className="flex flex-row gap-2"
-            type="button"
-            onClick={() => {
-              setSelectDateInAddAppointmentModalBSIsOpen(true);
-            }}
-          >
-            <h1 className="text-3xl font-bold">{toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}</h1>
-            <img src="/dropdown.svg" />
-          </button>
-        }
-        topBarTitle={
-          <button
-            className="flex flex-row gap-2"
-            type="button"
-            onClick={() => {
-              setSelectDateInAddAppointmentModalBSIsOpen(true);
-            }}
-          >
-            <h1 className="text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}</h1>
-            <img src="/dropdown.svg" />
-          </button>
-        }
-      >
-        <div className="pb-12">
-          <div className="-mx-5 mt-2 mb-6">
-            <hr />
-          </div>
-          {/* TODO: fix this UI for the selected customer */}
-          {newAppointmentCustomer ? (
-            <button
-              type="button"
-              className="flex w-full flex-row justify-between items-center rounded-lg border border-gray-200 py-6 px-6 border-l-4 border-l-purple-400"
-              onClick={() => setCreateCustomerModalIsOpen(true)}
-            >
-              <img src="/right.svg" className="w-6 h-6" />
-              <div className="text-left">
-                <p className="text-xl font-medium" style={{ direction: "ltr" }}>
-                  {toFarsiDigits(
-                    `${newAppointmentCustomer.user.username.slice(0, 3)} ${newAppointmentCustomer.user.username.slice(3, 6)} ${newAppointmentCustomer.user.username.slice(6, 9)} ${newAppointmentCustomer.user.username.slice(9)}`,
-                  )}
-                </p>
-              </div>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="flex w-full flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7"
-              onClick={() => setCreateCustomerModalIsOpen(true)}
-            >
-              <div className="text-right">
-                <p className="text-xl font-normal">افزودن مشتری</p>
-                <p className="text-md text-gray-500">برای مشتری حضوری خالی بگذارید</p>
-              </div>
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                <img src="/person-plus.svg" className="w-7 h-7" />
-              </div>
-            </button>
-          )}
-          <div className="mt-7 flex flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7">
-            <button
-              className="flex flex-row gap-2"
-              type="button"
-              onClick={() => {
-                setSelectDateInAddAppointmentModalBSIsOpen(true);
-              }}
-            >
-              <img src="/calendar.svg" className="w-6 h-6" />
-              <span className="text-lg font-normal">
-                {toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}
-              </span>
-            </button>
-            <button
-              className="flex flex-row gap-2"
-              type="button"
-              onClick={() => {
-                setSelectTimeInAddAppointmentModalBSIsOpen(true);
-              }}
-            >
-              <img src="/time.svg" className="w-6 h-6" />
-              <span className="text-lg font-normal">
-                {toFarsiDigits(format(newAppointmentTime, "HH:mm"))}
-              </span>
-            </button>
-          </div>
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold">سرویس</h2>
-            {selectedServiceToAddInNewAppointment ? (
-              <button
-                type="button"
-                className="w-full -mx-2 flex flex-row gap-4 items-center bg-white p-2 rounded-xl active:inner-w-8"
-                onClick={() => {
-                  setAddServiceInNewAppointmentIsOpen(true);
-                  // setEditSelectedNewServiceIsOpen(true);
-                }}
-              >
-                <div className="h-[70px] w-[4px] bg-purple-300 rounded-full" />
-                <div className="flex flex-col w-full">
-                  <div className="flex flex-row gap-4 justify-between">
-                    <h3 className="text-xl font-normal">{selectedServiceToAddInNewAppointment.name}</h3>
-                    <h3 className="text-xl font-normal">
-                      {formatPriceInFarsi(selectedServiceToAddInNewAppointment.price)}
-                    </h3>
-                  </div>
-                  <p className="text-lg font-normal text-gray-500 text-start">
-                    <span>{toFarsiDigits(format(newAppointmentTime, "HH:mm"))}</span>
-                    <span className="text-xl mx-2 inline-block translate-y-[1px]">•</span>
-                    <span>{selectedServiceToAddInNewAppointment.formattedDuration}</span>
-                    {selectedEmployeeForNewAppointment && (
-                      <>
-                        <span className="text-xl mx-2 inline-block translate-y-[1px]">•</span>
-                        <span>{selectedEmployeeForNewAppointment.nickname}</span>
-                      </>
-                    )}
-                  </p>
-                </div>
-              </button>
-            ) : (
-              <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
-                <img src="/service.png" className="w-16 h-16" />
-                <p className="text-lg text-gray-500 text-center mt-4">
-                  برای ذخیره‌ی این نوبت یک سرویس اضافه کنید
-                </p>
-                <button
-                  className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
-                  type="button"
-                  onClick={() => setAddServiceInNewAppointmentIsOpen(true)}
-                >
-                  <img src="/circular-plus.svg" className="w-6 h-6" />
-                  <span className="text-lg font-normal">افزودن سرویس</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex sticky w-[100vw] -mx-5 bottom-0 bg-white border-t py-5 px-5">
-          <div className="relative w-full me-2.5">
-            <button
-              type="button"
-              onClick={() => {
-                setAddAppointmentModalIsOpen(false);
-              }}
-              className="w-full p-3 bg-white text-black border rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
-            >
-              بستن
-            </button>
-          </div>
-          <div className="relative w-full">
-            <button
-              type="button"
-              disabled={!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment}
-              onClick={() => {
-                if (!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment) {
-                  toast.error("ابتدا یک سرویس انتخاب کنید", {
-                    duration: 5000,
-                    position: "top-center",
-                    className: "w-full font-medium",
-                  });
-                  return;
-                }
-
-                createReservation({
-                  customerId: newAppointmentCustomer ? newAppointmentCustomer.id : undefined,
-                  startDateTime: setMinutes(
-                    setHours(currentDate, newAppointmentTime.getHours()),
-                    newAppointmentTime.getMinutes(),
-                  ).toISOString(),
-                  cartInput: [
-                    {
-                      serviceId: selectedServiceToAddInNewAppointment.id,
-                      employeeAssociations: [selectedEmployeeForNewAppointment.id],
-                    },
-                  ],
-                }).then(({ data, response }) => {
-                  if (response.status === 201 && calendarRef.current) {
-                    calendarRef.current.getApi().addEvent({
-                      id: data.id,
-                      title: selectedServiceToAddInNewAppointment.name,
-                      start: data.startDateTime,
-                      end: data.endDateTime,
-                      editable: true,
-                      resourceId: selectedEmployeeForNewAppointment.id,
-                    });
-                    toast.success(
-                      `نوبت «${selectedServiceToAddInNewAppointment.name}» با متخصص «${selectedEmployeeForNewAppointment.nickname}» در «${toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}» اضافه شد.`,
-                      {
-                        duration: 5000,
-                        position: "top-center",
-                        className: "w-full font-medium",
-                      },
-                    );
-                    setAddAppointmentModalIsOpen(false);
-                    calendarRef.current.getApi().gotoDate(currentDate);
-                  } else {
-                    response.text().then((error) => {
-                      console.log(error);
-                    });
-                    console.log(response.status);
-                  }
-                });
-              }}
-              className={`w-full p-3 text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300 ${selectedServiceToAddInNewAppointment ? "bg-black" : "bg-gray-300 active:transform-none active:filter-none"}`}
-            >
-              ذخیره
-            </button>
-          </div>
-        </div>
-
-        <BottomSheet
-          isOpen={selectDateInAddAppointmentModalBSIsOpen}
-          onClose={() => {
-            setSelectDateInAddAppointmentModalBSIsOpen(false);
-          }}
-        >
-          <DatePicker
-            selectedDate={currentDate}
-            onDateSelect={(date) => {
-              if (calendarRef.current) {
-                calendarRef.current.getApi().gotoDate(date);
-                setCurrentDate(date);
-                setSelectDateInAddAppointmentModalBSIsOpen(false);
-              }
-            }}
-          />
-          <div className="mt-9">
-            <button
-              type="button"
-              className={"px-5 py-2 text-xl border rounded-full me-1"}
-              onClick={() => {
-                const today = new Date();
-                setCurrentDate(today);
-                setSelectDateInAddAppointmentModalBSIsOpen(false);
-              }}
-            >
-              امروز
-            </button>
-            <button
-              type="button"
-              className={"px-5 py-2 text-xl border rounded-full me-1"}
-              onClick={() => {
-                const tomorrow = addDays(new Date(), 1);
-                setCurrentDate(tomorrow);
-                setSelectDateInAddAppointmentModalBSIsOpen(false);
-              }}
-            >
-              فردا
-            </button>
-          </div>
-        </BottomSheet>
-
-        <BottomSheet
-          isOpen={selectTimeInAddAppointmentModalBSIsOpen}
-          onClose={() => {
-            setSelectTimeInAddAppointmentModalBSIsOpen(false);
-          }}
-          title="زمان شروع"
-        >
-          <ul>
-            {Array.from({ length: 24 * 4 }, (_, i) => addMinutes(startOfDay(new Date()), i * 15)).map(
-              (time) =>
-                format(time, "HH:mm") === format(newAppointmentTime, "HH:mm") ? (
-                  <li
-                    key={time.toISOString()}
-                    className="flex flex-row content-start px-2 justify-between items-center text-2xl py-4 text-left"
-                    onClick={() => {
-                      setNewAppointmentTime(time);
-                      setSelectTimeInAddAppointmentModalBSIsOpen(false);
-                    }}
-                  >
-                    <img src="/check.svg" className="invert" />
-                    <p>{toFarsiDigits(format(time, "HH:mm"))}</p>
-                  </li>
-                ) : (
-                  <li
-                    key={time.toISOString()}
-                    className="flex flex-row content-start px-2 justify-end items-center text-2xl py-4 text-left"
-                    onClick={() => {
-                      setNewAppointmentTime(time);
-                      setSelectTimeInAddAppointmentModalBSIsOpen(false);
-                    }}
-                  >
-                    <p>{toFarsiDigits(format(time, "HH:mm"))}</p>
-                  </li>
-                ),
-            )}
-          </ul>
-        </BottomSheet>
-      </Modal>
-
-      {location && (
-        <Modal
-          isOpen={addServiceInNewAppointmentIsOpen}
-          onClose={() => setAddServiceInNewAppointmentIsOpen(false)}
-          title={<span className="text-3xl font-bold">انتخاب سرویس</span>}
-          topBarTitle={<span className="text-xl font-bold">انتخاب سرویس</span>}
-        >
-          <div className="pb-12">
-            <div className="-mx-5 mt-2 mb-6">
-              <hr />
-            </div>
-            <div className="flex flex-col gap-8">
-              {location.serviceCatalog.map((category) => (
-                <div key={category.id}>
-                  <div className="flex flex-row gap-3">
-                    <h2 className="text-2xl font-medium mb-4">{category.name}</h2>
-                    <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-200 text-gray-500 rounded-full font-bold">
-                      <span className="translate-y-[2px]">{toFarsiDigits(category.items.length)}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    {category.items.map((svc) => (
-                      <button
-                        key={svc.id}
-                        type="button"
-                        className="-mx-2 flex flex-row gap-4 items-center bg-white p-2 rounded-xl active:inner-w-8"
-                        onClick={() => {
-                          setSelectedServiceToAddInNewAppointment(svc);
-                          setSelectEmployeeBSIsOpen(true);
-                          fetchAvailableEmployeesByService(svc.id).then(({ data }) => {
-                            setAvailableEmployeesByService(data);
-                          });
-                        }}
-                      >
-                        <div className="h-[70px] w-[4px] bg-purple-300 rounded-full" />
-                        <div className="flex flex-col w-full">
-                          <div className="flex flex-row gap-4 justify-between">
-                            <h3 className="text-lg font-normal">{svc.name}</h3>
-                            <h3 className="font-normal text-lg">
-                              {toFarsiDigits(formatPriceWithSeparator(svc.price))}
-                              <span className="text-xs font-light text-gray-500"> تومان</span>
-                            </h3>
-                          </div>
-                          <p className="font-normal text-gray-500 text-start">{svc.formattedDuration}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      <Modal
-        isOpen={createCustomerModalIsOpen}
-        onClose={() => setCreateCustomerModalIsOpen(false)}
-        title="انتخاب مشتری"
-      >
-        <hr className="-mx-5" />
-        <ul className="-mx-5">
-          <li>
-            <button className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5">
-              <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-                <img src="/plus-purple.svg" className="w-7 h-7" />
-              </div>
-              <p className="font-medium text-lg">افزودن مشتری جدید</p>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
-              onClick={() => {
-                setNewAppointmentCustomer(null);
-                setCreateCustomerModalIsOpen(false);
-              }}
-            >
-              <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-                <img src="/walk-in.svg" className="w-8 h-8" />
-              </div>
-              <p className="font-medium text-lg">مراجعه‌‌کننده‌ی حضوری</p>
-            </button>
-          </li>
-        </ul>
-        {clients.length > 0 && (
-          <>
-            <hr />
-            <ul className="-mx-5">
-              {clients.map((customer) => (
-                <li key={customer.id}>
-                  <button
-                    type="button"
-                    className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
-                    onClick={() => {
-                      setNewAppointmentCustomer(customer);
-                      setCreateCustomerModalIsOpen(false);
-                    }}
-                  >
-                    <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-                      <img src="/person-purple.svg" className="w-7 h-7" />
-                    </div>
-                    <p className="font-medium text-lg" style={{ direction: "ltr" }}>
-                      {toFarsiDigits(
-                        `${customer.user.username.slice(0, 3)} ${customer.user.username.slice(3, 6)} ${customer.user.username.slice(6, 9)} ${customer.user.username.slice(9)}`,
-                      )}
-                    </p>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </Modal>
-
-      <BottomSheet
-        isOpen={selectEmployeeBSIsOpen}
-        onClose={() => {
-          setSelectEmployeeBSIsOpen(false);
-          setAvailableEmployeesByService(undefined);
-        }}
-        title="انتخاب متخصص"
-      >
-        <div
-          className={`flex gap-4 overflow-x-auto -mx-5 px-5${availableEmployeesByService ? "" : " animate-pulse"}`}
-          style={{ scrollbarWidth: "none" }}
-        >
-          {availableEmployeesByService ? (
-            availableEmployeesByService.employees.map((employee) => (
-              <Tile
-                key={employee.id}
-                employee={employee}
-                selectedEmployeeId={"none"}
-                onTileChange={(employee) => {
-                  setSelectedEmployeeForNewAppointment(employee);
-                  setSelectEmployeeBSIsOpen(false);
-                  setAddServiceInNewAppointmentIsOpen(false);
-                }}
-              />
-            ))
-          ) : (
-            <>
-              <div
-                className={
-                  "flex justify-center h-[196px] pt-12 pb-7 px-9 min-w-[168px] cursor-pointer border-2 rounded-lg border-gray-200"
-                }
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-[60px] h-[60px] rounded-full mb-6 bg-gray-200" />
-                  <div className="w-[100px] h-[14px] rounded-full bg-gray-200" />
-                  <div className="w-[40px] h-[14px] rounded-full mt-2 bg-gray-200" />
-                  <div className="w-[40px] h-[14px] rounded-full mt-4 bg-gray-200" />
-                </div>
-              </div>
-              <div
-                className={
-                  "flex justify-center h-[196px] pt-12 pb-7 px-9 min-w-[168px] cursor-pointer border-2 rounded-lg border-gray-200"
-                }
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-[60px] h-[60px] rounded-full mb-6 bg-gray-200" />
-                  <div className="w-[100px] h-[14px] rounded-full bg-gray-200" />
-                  <div className="w-[40px] h-[14px] rounded-full mt-2 bg-gray-200" />
-                  <div className="w-[40px] h-[14px] rounded-full mt-4 bg-gray-200" />
-                </div>
-              </div>
-              <div
-                className={
-                  "flex justify-center h-[196px] pt-12 pb-7 px-9 min-w-[168px] cursor-pointer border-2 rounded-lg border-gray-200"
-                }
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-[60px] h-[60px] rounded-full mb-6 bg-gray-200" />
-                  <div className="w-[100px] h-[14px] rounded-full bg-gray-200" />
-                  <div className="w-[40px] h-[14px] rounded-full mt-2 bg-gray-200" />
-                  <div className="w-[40px] h-[14px] rounded-full mt-4 bg-gray-200" />
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </BottomSheet>
+        onClose={() => setAddAppointmentModalIsOpen(false)}
+        currentDate={currentDate}
+        setCurrentDate={setCurrentDate}
+        selectDateInAddAppointmentModalBSIsOpen={selectDateInAddAppointmentModalBSIsOpen}
+        setSelectDateInAddAppointmentModalBSIsOpen={setSelectDateInAddAppointmentModalBSIsOpen}
+        selectTimeInAddAppointmentModalBSIsOpen={selectTimeInAddAppointmentModalBSIsOpen}
+        setSelectTimeInAddAppointmentModalBSIsOpen={setSelectTimeInAddAppointmentModalBSIsOpen}
+        newAppointmentTime={newAppointmentTime}
+        setNewAppointmentTime={setNewAppointmentTime}
+        newAppointmentCustomer={newAppointmentCustomer}
+        setNewAppointmentCustomer={setNewAppointmentCustomer}
+        clients={clients}
+        createCustomerModalIsOpen={createCustomerModalIsOpen}
+        setCreateCustomerModalIsOpen={setCreateCustomerModalIsOpen}
+        selectedServiceToAddInNewAppointment={selectedServiceToAddInNewAppointment}
+        setSelectedServiceToAddInNewAppointment={setSelectedServiceToAddInNewAppointment}
+        selectedEmployeeForNewAppointment={selectedEmployeeForNewAppointment}
+        setSelectedEmployeeForNewAppointment={setSelectedEmployeeForNewAppointment}
+        setAddServiceInNewAppointmentIsOpen={setAddServiceInNewAppointmentIsOpen}
+        addServiceInNewAppointmentIsOpen={addServiceInNewAppointmentIsOpen}
+        calendarRef={calendarRef}
+        location={location}
+        setAvailableEmployeesByService={setAvailableEmployeesByService}
+        availableEmployeesByService={availableEmployeesByService}
+        selectEmployeeBSIsOpen={selectEmployeeBSIsOpen}
+        setSelectEmployeeBSIsOpen={setSelectEmployeeBSIsOpen}
+      />
     </div>
   ) : (
     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">
