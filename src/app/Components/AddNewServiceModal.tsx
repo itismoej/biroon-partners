@@ -1,43 +1,146 @@
-import React, { useState } from "react";
-import { Modal } from "./Modal";
-import { BottomSheet, BottomSheetFooter } from "./BottomSheet";
-import NextImage from "next/image";
-import {
-  formatDurationInFarsi,
-  formatPriceWithSeparator,
-  toEnglishDigits,
-  toFarsiDigits,
-} from "@/app/utils";
-import toast from "react-hot-toast";
 import { createNewService, fetchLocation } from "@/app/api";
 import type {
   Category,
   Employee,
   Location,
   NewServicePerEmployee,
-  ServiceCategory,
   Service,
+  ServiceCategory,
 } from "@/app/api";
+import { formatDurationInFarsi, formatPriceWithSeparator, toEnglishDigits, toFarsiDigits } from "@/app/utils";
+import NextImage from "next/image";
 import { useRouter } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { BottomSheet, BottomSheetFooter } from "./BottomSheet";
+import { Modal } from "./Modal";
 
+// Reusable components
+type InputFieldProps = {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  type?: string;
+  readOnly?: boolean;
+  className?: string;
+};
+
+const InputField: React.FC<InputFieldProps> = ({
+  label,
+  value,
+  onChange,
+  placeholder = "",
+  type = "text",
+  readOnly = false,
+  className = "",
+}) => (
+  <div className="flex flex-col gap-2">
+    <label className="font-bold text-md">{label}</label>
+    <input
+      type={type}
+      className={`border text-lg rounded-lg py-3 px-5 outline-0 ${className}`}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      readOnly={readOnly}
+    />
+  </div>
+);
+
+type TextAreaFieldProps = {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder?: string;
+  className?: string;
+  maxLength?: number;
+};
+
+const TextAreaField: React.FC<TextAreaFieldProps> = ({
+  label,
+  value,
+  onChange,
+  placeholder = "",
+  className = "",
+  maxLength,
+}) => (
+  <div className="flex flex-col gap-2">
+    <label className="font-bold text-md">{label}</label>
+    <textarea
+      className={`border text-lg rounded-lg py-3 px-5 outline-0 min-h-[120px] ${className}`}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      maxLength={maxLength}
+    />
+  </div>
+);
+
+type SelectOption = {
+  value: string | number;
+  label: string;
+};
+
+type SelectFieldProps = {
+  label: string;
+  value: string | number;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  options: SelectOption[];
+  className?: string;
+};
+
+const SelectField: React.FC<SelectFieldProps> = ({ label, value, onChange, options, className = "" }) => (
+  <div className="flex flex-col gap-2">
+    <label className="font-bold text-md">{label}</label>
+    <select
+      value={value}
+      onChange={onChange}
+      className={`w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none ${className}`}
+      style={{
+        backgroundImage: `url('/dropdown.svg')`,
+        backgroundPosition: "left 1rem center",
+        backgroundSize: "1.5rem 1.5rem",
+        backgroundRepeat: "no-repeat",
+        paddingRight: "1.5rem",
+      }}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+type CheckboxFieldProps = {
+  label: string;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+};
+
+const CheckboxField: React.FC<CheckboxFieldProps> = ({ label, checked, onChange, className = "" }) => (
+  <label className={`flex flex-row gap-2 font-bold text-md items-center ${className}`}>
+    <input type="checkbox" className="w-5 h-5" checked={checked} onChange={onChange} />
+    {label}
+  </label>
+);
+
+// Main component
 export function AddNewServiceModal(props: {
   isOpen: boolean;
   onClose: () => void;
   allEmployees: Employee[];
-  setLocation: React.Dispatch<React.SetStateAction<Location | undefined>>,
+  setLocation: React.Dispatch<React.SetStateAction<Location | undefined>>;
   availableCategories: Category[];
   serviceCategories: ServiceCategory[];
   durations: { value: number; label: string }[];
 }) {
-  const {
-    isOpen,
-    onClose,
-    allEmployees,
-    setLocation,
-    availableCategories,
-    serviceCategories,
-    durations,
-  } = props;
+  const { isOpen, onClose, allEmployees, setLocation, availableCategories, serviceCategories, durations } =
+    props;
   const router = useRouter();
 
   const [newServiceName, setNewServiceName] = useState<Service["name"]>("");
@@ -47,14 +150,12 @@ export function AddNewServiceModal(props: {
   const [newServiceCategory, setNewServiceCategory] = useState<ServiceCategory>();
   const [newServiceSelectServiceCategoryBSIsOpen, setNewServiceSelectServiceCategoryBSIsOpen] =
     useState<boolean>(false);
-  const [newServiceDescription, setNewServiceDescription] = useState<Service["description"]>("");
+  const [newServiceDescription, setNewServiceDescription] = useState<string>("");
   const [newServiceDuration, setNewServiceDuration] = useState<Service["durationInMins"]>(60);
   const [newServicePrice, setNewServicePrice] = useState<Service["price"]>();
   const [newServiceUpfrontPrice, setNewServiceUpfrontPrice] = useState<Service["upfrontPrice"]>();
   const [newServiceGender, setNewServiceGender] = useState<"f" | "m" | "">("f");
-  const [newServiceIsRecommendedByLocation, setNewServiceIsRecommendedByLocation] = useState<boolean>(
-    false,
-  );
+  const [newServiceIsRecommendedByLocation, setNewServiceIsRecommendedByLocation] = useState<boolean>(false);
   const [newServiceAdvancedSettingsModalIsOpen, setNewServiceAdvancedSettingsModalIsOpen] =
     useState<boolean>(false);
   const [newServiceAdvancedPerEmployeeSettings, setNewServiceAdvancedPerEmployeeSettings] = useState<
@@ -64,8 +165,7 @@ export function AddNewServiceModal(props: {
     newServiceAdvancedPerEmployeeSettingsIsEditingEmployee,
     setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee,
   ] = useState<Employee>();
-  const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] =
-    useState<boolean>(false);
+  const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] = useState<boolean>(false);
 
   return (
     <Modal
@@ -77,15 +177,12 @@ export function AddNewServiceModal(props: {
     >
       <div className="flex flex-col gap-6 pb-28">
         <h2 className="text-2xl font-bold">اطلاعات کلی</h2>
-        <div className="flex flex-col gap-2">
-          <label className="font-bold text-md">نام سرویس</label>
-          <input
-            className="border text-lg rounded-lg py-3 px-5 outline-0"
-            placeholder="نام سرویس؛ مثلاً مانیکور"
-            value={newServiceName}
-            onChange={(e) => setNewServiceName(e.target.value)}
-          />
-        </div>
+        <InputField
+          label="نام سرویس"
+          placeholder="نام سرویس؛ مثلاً مانیکور"
+          value={newServiceName}
+          onChange={(e) => setNewServiceName(e.target.value)}
+        />
         <div className="flex flex-col gap-2">
           <label className="font-bold text-md">نوع سرویس</label>
           <div className="relative">
@@ -138,8 +235,8 @@ export function AddNewServiceModal(props: {
             </BottomSheet>
           </div>
           <p className="text-gray-500 text-sm font-light">
-            انتخاب درست این فیلد، برای پیدا کردن شما در پلتفرم بیرون توسط مشتریان، تأثیر مهمی دارد. این
-            گزینه فقط در موتور جستجوی بیرون اثرگذاری دارد و به کاربران نمایش داده نمی‌شود.
+            انتخاب درست این فیلد، برای پیدا کردن شما در پلتفرم بیرون توسط مشتریان، تأثیر مهمی دارد. این گزینه
+            فقط در موتور جستجوی بیرون اثرگذاری دارد و به کاربران نمایش داده نمی‌شود.
           </p>
         </div>
         <div className="flex flex-col gap-2">
@@ -193,41 +290,26 @@ export function AddNewServiceModal(props: {
             همان دسته‌بندی که به مشتریان شما در صفحه‌ی کسب‌و‌کارتان نمایش داده می‌شود.
           </p>
         </div>
-        <div className="flex flex-col gap-2">
-          <label className="font-bold text-md">توضیحات</label>
-          <textarea
-            className="border text-lg rounded-lg py-3 px-5 outline-0 min-h-[120px]"
-            placeholder="می‌توانید توضیح کوتاهی اضافه کنید"
-            value={newServiceDescription}
-            maxLength={1000}
-            onChange={(e) => setNewServiceDescription(e.target.value)}
-          />
-        </div>
+        <TextAreaField
+          label="توضیحات"
+          placeholder="می‌توانید توضیح کوتاهی اضافه کنید"
+          value={newServiceDescription}
+          maxLength={1000}
+          onChange={(e) => setNewServiceDescription(e.target.value)}
+        />
         <hr className="my-4" />
         <h2 className="text-2xl font-bold">هزینه و زمان</h2>
-        <div className="flex flex-col gap-2">
-          <label className="font-bold text-md">مدت‌زمان سرویس</label>
-          <select
-            value={newServiceDuration}
-            onChange={(e) => {
-              setNewServiceDuration(+e.target.value);
-            }}
-            className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
-            style={{
-              backgroundImage: `url('/dropdown.svg')`,
-              backgroundPosition: "left 1rem center",
-              backgroundSize: "1.5rem 1.5rem",
-              backgroundRepeat: "no-repeat",
-              paddingRight: "1.5rem",
-            }}
-          >
-            {durations.map((duration) => (
-              <option key={duration.value} value={duration.value}>
-                {duration.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SelectField
+          label="مدت‌زمان سرویس"
+          value={newServiceDuration}
+          onChange={(e) => {
+            setNewServiceDuration(+e.target.value);
+          }}
+          options={durations.map((duration) => ({
+            value: duration.value,
+            label: duration.label,
+          }))}
+        />
         <div className="flex flex-col gap-2">
           <label className="font-bold text-md">هزینه</label>
           <div className="relative">
@@ -235,17 +317,13 @@ export function AddNewServiceModal(props: {
               className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
               style={{ direction: "ltr" }}
               placeholder="۵۰۰٫۰۰۰"
-              value={
-                newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice))) : ""
-              }
+              value={newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice))) : ""}
               onChange={(e) => {
                 const val = toEnglishDigits(e.target.value).replaceAll("٫", "");
                 if (!Number.isNaN(Number(val)) && +val < 100000000) {
                   setNewServicePrice(+val);
                   setNewServiceUpfrontPrice(
-                    newServiceUpfrontPrice
-                      ? Math.min(+val, newServiceUpfrontPrice)
-                      : newServiceUpfrontPrice,
+                    newServiceUpfrontPrice ? Math.min(+val, newServiceUpfrontPrice) : newServiceUpfrontPrice,
                   );
                   setNewServiceAdvancedPerEmployeeSettings((prevSettings) => {
                     return Object.keys(prevSettings).reduce(
@@ -378,9 +456,9 @@ export function AddNewServiceModal(props: {
                         <span className="font-normal text-gray-500">
                           {newServiceAdvancedPerEmployeeSettings[emp.id]?.isOperator !== false
                             ? formatDurationInFarsi(
-                              newServiceAdvancedPerEmployeeSettings[emp.id]?.durationInMins ||
-                              newServiceDuration,
-                            )
+                                newServiceAdvancedPerEmployeeSettings[emp.id]?.durationInMins ||
+                                  newServiceDuration,
+                              )
                             : "-"}
                         </span>
                       </div>
@@ -394,25 +472,21 @@ export function AddNewServiceModal(props: {
                         >
                           {toFarsiDigits(
                             formatPriceWithSeparator(
-                              newServiceAdvancedPerEmployeeSettings[emp.id]?.price ||
-                              newServicePrice ||
-                              0,
+                              newServiceAdvancedPerEmployeeSettings[emp.id]?.price || newServicePrice || 0,
                             ),
                           )}
                           <span className="text-xs font-light text-gray-500"> تومان</span>
                         </div>
                         <div
                           className={`font-normal text-sm ${
-                            newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice
-                              ? ""
-                              : "text-gray-500"
+                            newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice ? "" : "text-gray-500"
                           }`}
                         >
                           {toFarsiDigits(
                             formatPriceWithSeparator(
                               newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice ||
-                              newServiceUpfrontPrice ||
-                              Math.ceil(newServicePrice / 2),
+                                newServiceUpfrontPrice ||
+                                Math.ceil(newServicePrice / 2),
                             ),
                           )}
                           <span className="text-xs font-light text-gray-500"> تومان</span>
@@ -432,42 +506,30 @@ export function AddNewServiceModal(props: {
             >
               {newServiceAdvancedPerEmployeeSettingsIsEditingEmployee && (
                 <div className="flex flex-col gap-6 pb-8">
-                  <div className="flex flex-col gap-2">
-                    <label className="font-bold text-md">مدت‌زمان سرویس</label>
-                    <select
-                      value={
-                        newServiceAdvancedPerEmployeeSettings[
-                          newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                          ]?.durationInMins || newServiceDuration
-                      }
-                      onChange={(e) => {
-                        setNewServiceAdvancedPerEmployeeSettings({
-                          ...newServiceAdvancedPerEmployeeSettings,
-                          [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
-                            ...newServiceAdvancedPerEmployeeSettings[
-                              newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                              ],
-                            id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
-                            durationInMins: +e.target.value,
-                          },
-                        });
-                      }}
-                      className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
-                      style={{
-                        backgroundImage: `url('/dropdown.svg')`,
-                        backgroundPosition: "left 1rem center",
-                        backgroundSize: "1.5rem 1.5rem",
-                        backgroundRepeat: "no-repeat",
-                        paddingRight: "1.5rem",
-                      }}
-                    >
-                      {durations.map((duration) => (
-                        <option key={duration.value} value={duration.value}>
-                          {duration.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <SelectField
+                    label="مدت‌زمان سرویس"
+                    value={
+                      newServiceAdvancedPerEmployeeSettings[
+                        newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                      ]?.durationInMins || newServiceDuration
+                    }
+                    onChange={(e) => {
+                      setNewServiceAdvancedPerEmployeeSettings({
+                        ...newServiceAdvancedPerEmployeeSettings,
+                        [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
+                          ...newServiceAdvancedPerEmployeeSettings[
+                            newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                          ],
+                          id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
+                          durationInMins: +e.target.value,
+                        },
+                      });
+                    }}
+                    options={durations.map((duration) => ({
+                      value: duration.value,
+                      label: duration.label,
+                    }))}
+                  />
                   <div className="flex flex-col gap-2">
                     <label className="font-bold text-md">هزینه</label>
                     <div className="relative">
@@ -482,16 +544,16 @@ export function AddNewServiceModal(props: {
                         value={
                           newServiceAdvancedPerEmployeeSettings[
                             newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                            ]?.price
+                          ]?.price
                             ? toFarsiDigits(
-                              formatPriceWithSeparator(
-                                Number(
-                                  newServiceAdvancedPerEmployeeSettings[
-                                    newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                formatPriceWithSeparator(
+                                  Number(
+                                    newServiceAdvancedPerEmployeeSettings[
+                                      newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
                                     ]?.price,
+                                  ),
                                 ),
-                              ),
-                            )
+                              )
                             : ""
                         }
                         onChange={(e) => {
@@ -499,7 +561,7 @@ export function AddNewServiceModal(props: {
                           const prevUpfrontPrice =
                             newServiceAdvancedPerEmployeeSettings[
                               newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                              ]?.upfrontPrice;
+                            ]?.upfrontPrice;
                           const upfrontPrice = prevUpfrontPrice
                             ? Math.min(+val, prevUpfrontPrice)
                             : prevUpfrontPrice;
@@ -509,7 +571,7 @@ export function AddNewServiceModal(props: {
                               [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
                                 ...newServiceAdvancedPerEmployeeSettings[
                                   newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                                  ],
+                                ],
                                 id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
                                 price: val ? +val : undefined,
                                 upfrontPrice,
@@ -539,16 +601,16 @@ export function AddNewServiceModal(props: {
                         value={
                           newServiceAdvancedPerEmployeeSettings[
                             newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                            ]?.upfrontPrice
+                          ]?.upfrontPrice
                             ? toFarsiDigits(
-                              formatPriceWithSeparator(
-                                Number(
-                                  newServiceAdvancedPerEmployeeSettings[
-                                    newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
+                                formatPriceWithSeparator(
+                                  Number(
+                                    newServiceAdvancedPerEmployeeSettings[
+                                      newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
                                     ]?.upfrontPrice,
+                                  ),
                                 ),
-                              ),
-                            )
+                              )
                             : ""
                         }
                         onChange={(e) => {
@@ -556,14 +618,14 @@ export function AddNewServiceModal(props: {
                           const maxUpfront =
                             newServiceAdvancedPerEmployeeSettings[
                               newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                              ]?.price || newServicePrice;
+                            ]?.price || newServicePrice;
                           if (maxUpfront && !Number.isNaN(Number(val)) && +val <= maxUpfront) {
                             setNewServiceAdvancedPerEmployeeSettings({
                               ...newServiceAdvancedPerEmployeeSettings,
                               [newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id]: {
                                 ...newServiceAdvancedPerEmployeeSettings[
                                   newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                                  ],
+                                ],
                                 id: newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id,
                                 upfrontPrice: val ? +val : undefined,
                               },
@@ -605,7 +667,7 @@ export function AddNewServiceModal(props: {
                         (prev[k]?.isOperator !== undefined && prev[k]?.isOperator !== true) ||
                         (prev[k]?.upfrontPrice !== undefined &&
                           prev[k]?.upfrontPrice !==
-                          (newServiceUpfrontPrice || Math.ceil(newServicePrice / 2)))
+                            (newServiceUpfrontPrice || Math.ceil(newServicePrice / 2)))
                       )
                         cleaned[k] = prev[k];
                     return cleaned;
@@ -619,38 +681,23 @@ export function AddNewServiceModal(props: {
         ) : null}
         <hr className="my-4" />
         <h2 className="text-2xl font-bold">تنظیمات عمومی</h2>
-        <div className="flex flex-col gap-2">
-          <label className="font-bold text-md">محدودیت جنسیت</label>
-          <select
-            value={newServiceGender}
-            onChange={(e) => {
-              setNewServiceGender(e.target.value === "f" ? "f" : e.target.value === "m" ? "m" : "");
-            }}
-            className="w-full p-3 bg-white rounded-md border border-gray-200 text-lg text-right appearance-none"
-            style={{
-              backgroundImage: `url('/dropdown.svg')`,
-              backgroundPosition: "left 1rem center",
-              backgroundSize: "1.5rem 1.5rem",
-              backgroundRepeat: "no-repeat",
-              paddingRight: "1.5rem",
-            }}
-          >
-            <option value="f">فقط زنانه</option>
-            <option value="m">فقط مردانه</option>
-            <option value="">فرقی ندارد</option>
-          </select>
-        </div>
-        <label className="flex flex-row gap-2 font-bold text-md items-center">
-          <input
-            type="checkbox"
-            className="w-5 h-5"
-            checked={newServiceIsRecommendedByLocation}
-            onChange={(e) => {
-              setNewServiceIsRecommendedByLocation(e.target.checked);
-            }}
-          />
-          به دسته‌بندی ویژه اضافه شود (حداکثر ۴ سرویس)
-        </label>
+        <SelectField
+          label="محدودیت جنسیت"
+          value={newServiceGender}
+          onChange={(e) => {
+            setNewServiceGender(e.target.value === "f" ? "f" : e.target.value === "m" ? "m" : "");
+          }}
+          options={[
+            { value: "f", label: "فقط زنانه" },
+            { value: "m", label: "فقط مردانه" },
+            { value: "", label: "فرقی ندارد" },
+          ]}
+        />
+        <CheckboxField
+          label="به دسته‌بندی ویژه اضافه شود (حداکثر ۴ سرویس)"
+          checked={newServiceIsRecommendedByLocation}
+          onChange={(e) => setNewServiceIsRecommendedByLocation(e.target.checked)}
+        />
       </div>
       <div className="fixed bottom-0 w-full -mx-5 px-4 py-4 bg-white border-t">
         <button
@@ -702,7 +749,7 @@ export function AddNewServiceModal(props: {
                   fetchLocation().then(({ data, response }) => {
                     if (response.status !== 200) router.push("/");
                     else {
-                      setLocation(data)
+                      setLocation(data);
                       onClose();
                     }
                   });
@@ -742,7 +789,7 @@ export function AddNewServiceModal(props: {
             setNewServiceName("");
             setNewServiceMainCategory(undefined);
             setNewServiceCategory(undefined);
-            setNewServiceDescription(undefined);
+            setNewServiceDescription("");
             setNewServiceDuration(60);
             setNewServicePrice(undefined);
             setNewServiceUpfrontPrice(undefined);

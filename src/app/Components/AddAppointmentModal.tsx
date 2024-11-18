@@ -16,6 +16,7 @@ import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfD
 import type React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import type FullCalendar from "@fullcalendar/react";
 
 interface AddAppointmentModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ interface AddAppointmentModalProps {
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
   clients: Customer[];
   location: Location | undefined;
-  calendarRef: React.RefObject<any>;
+  calendarRef: React.RefObject<FullCalendar>;
 }
 
 export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
@@ -300,10 +301,12 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
             type="button"
             className={"px-5 py-2 text-xl border rounded-full me-1"}
             onClick={() => {
-              const today = new Date();
-              calendarRef.current.getApi().gotoDate(today);
-              setCurrentDate(today);
-              setSelectDateInAddAppointmentModalBSIsOpen(false);
+              if (calendarRef.current) {
+                const today = new Date();
+                calendarRef.current.getApi().gotoDate(today);
+                setCurrentDate(today);
+                setSelectDateInAddAppointmentModalBSIsOpen(false);
+              }
             }}
           >
             امروز
@@ -312,10 +315,12 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
             type="button"
             className={"px-5 py-2 text-xl border rounded-full me-1"}
             onClick={() => {
-              const tomorrow = addDays(new Date(), 1);
-              calendarRef.current.getApi().gotoDate(tomorrow);
-              setCurrentDate(tomorrow);
-              setSelectDateInAddAppointmentModalBSIsOpen(false);
+              if (calendarRef.current) {
+                const tomorrow = addDays(new Date(), 1);
+                calendarRef.current.getApi().gotoDate(tomorrow);
+                setCurrentDate(tomorrow);
+                setSelectDateInAddAppointmentModalBSIsOpen(false);
+              }
             }}
           >
             فردا
