@@ -41,6 +41,7 @@ import toast from "react-hot-toast";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
 import "./calendar.css";
+import { AddNewServiceCategoryBottomSheet } from "@/app/Components/AddNewServiceCategoryBottomSheet";
 import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
 import { goToNow } from "@/app/calendarUtils";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
@@ -257,6 +258,8 @@ export function Calendar() {
   const [selectDateInCalendarBSIsOpen, setSelectDateInCalendarBSIsOpen] = useState<boolean>(false);
   const [servicesModalIsOpen, setServicesModalIsOpen] = useState(false);
   const [addNewServicesModalIsOpen, setAddNewServicesModalIsOpen] = useState(false);
+  const [addNewServiceCategoryBSIsOpen, setAddNewServiceCategoryBSIsOpen] = useState(false);
+  const [addNewServiceOrServiceCategoryBSIsOpen, setAddNewServiceOrServiceCategoryBSIsOpen] = useState(false);
   const [editingServiceInServicesPage, setEditingServiceInServicesPage] = useState<Service>();
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
@@ -596,7 +599,9 @@ export function Calendar() {
             leftBtn={
               <button
                 className="bg-black px-3 py-2 text-white text-lg rounded-lg font-bold flex flex-row gap-2 items-center justify-center"
-                onClick={() => setAddNewServicesModalIsOpen(true)}
+                onClick={() => {
+                  setAddNewServiceOrServiceCategoryBSIsOpen(true);
+                }}
               >
                 <NextImage src="/plus-white.svg" alt="افزودن سرویس" width={20} height={20} />
                 افزودن
@@ -641,6 +646,31 @@ export function Calendar() {
               </>
             )}
           </Modal>
+          <BottomSheet
+            isOpen={addNewServiceOrServiceCategoryBSIsOpen}
+            onClose={() => setAddNewServiceOrServiceCategoryBSIsOpen(false)}
+          >
+            <div className="flex flex-col items-start gap-8">
+              <button
+                className="flex flex-row justify-between items-center text-xl font-normal"
+                onClick={() => {
+                  setAddNewServiceOrServiceCategoryBSIsOpen(false);
+                  setAddNewServicesModalIsOpen(true);
+                }}
+              >
+                افزودن سرویس جدید
+              </button>
+              <button
+                className="flex flex-row justify-between items-center text-xl font-normal"
+                onClick={() => {
+                  setAddNewServiceOrServiceCategoryBSIsOpen(false);
+                  setAddNewServiceCategoryBSIsOpen(true);
+                }}
+              >
+                افزودن دسته‌بندی جدید در منو
+              </button>
+            </div>
+          </BottomSheet>
           <AddNewServiceModal
             isOpen={addNewServicesModalIsOpen}
             onClose={() => setAddNewServicesModalIsOpen(false)}
@@ -649,6 +679,10 @@ export function Calendar() {
             availableCategories={availableCategories}
             serviceCategories={serviceCategories}
             durations={durations}
+          />
+          <AddNewServiceCategoryBottomSheet
+            isOpen={addNewServiceCategoryBSIsOpen}
+            onClose={() => setAddNewServiceCategoryBSIsOpen(false)}
           />
         </div>
       ) : null}
