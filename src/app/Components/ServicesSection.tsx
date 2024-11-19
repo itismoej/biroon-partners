@@ -1,6 +1,6 @@
 import type { Location, LocationServiceCatalogCategory, Service } from "@/app/api";
 import { formatPriceWithSeparator, toFarsiDigits } from "@/app/utils";
-import NextImage from "next/image";
+// import NextImage from "next/image";
 import { useState } from "react";
 import { Tabs } from "./Tabs";
 
@@ -62,9 +62,9 @@ export const ServicesSection = ({ location, serviceOnClick = () => {} }: Service
                   <span className="translate-y-[2px]">{toFarsiDigits(category.items.length)}</span>
                 </div>
               </div>
-              <button className="bg-white p-3 rounded-xl">
-                <NextImage src="/3dots.svg" alt="تنظیمات دسته‌بندی" width={20} height={20} />
-              </button>
+              {/*<button className="bg-white p-3 rounded-xl">*/}
+              {/*  <NextImage src="/3dots.svg" alt="تنظیمات دسته‌بندی" width={20} height={20} />*/}
+              {/*</button>*/}
             </div>
             <div className="flex flex-col">
               {category.items.map((svc) => (
