@@ -1,7 +1,7 @@
 import { useOnTopWithRef } from "@/app/utils";
 import { type FC, type ReactNode, useEffect } from "react";
 
-interface BottomSheetProps {
+export interface BottomSheetProps {
   title?: string;
   isOpen: boolean;
   onClose?: () => void;

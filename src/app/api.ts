@@ -422,6 +422,20 @@ export async function fetchServiceCategories(): Promise<{ data: ServiceCategory[
   return { data: await response.json(), response };
 }
 
+export async function createServiceCategory(
+  name: string,
+): Promise<{ data: ServiceCategory; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/service-categories/`, {
+    credentials: "include",
+    method: "POST",
+    body: JSON.stringify({ name }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return { data: await response.json(), response };
+}
+
 export interface NewServicePerEmployee {
   id: string;
   isOperator: boolean;

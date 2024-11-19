@@ -27,7 +27,7 @@ type InputFieldProps = {
   className?: string;
 };
 
-const InputField: React.FC<InputFieldProps> = ({
+export const InputField: React.FC<InputFieldProps> = ({
   label,
   value,
   onChange,
@@ -36,7 +36,7 @@ const InputField: React.FC<InputFieldProps> = ({
   readOnly = false,
   className = "",
 }) => (
-  <div className="flex flex-col gap-2">
+  <div className="flex w-full flex-col gap-2">
     <label className="font-bold text-md">{label}</label>
     <input
       type={type}
@@ -58,7 +58,7 @@ type TextAreaFieldProps = {
   maxLength?: number;
 };
 
-const TextAreaField: React.FC<TextAreaFieldProps> = ({
+export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   label,
   value,
   onChange,
@@ -66,7 +66,7 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
   className = "",
   maxLength,
 }) => (
-  <div className="flex flex-col gap-2">
+  <div className="flex flex-col w-full gap-2">
     <label className="font-bold text-md">{label}</label>
     <textarea
       className={`border text-lg rounded-lg py-3 px-5 outline-0 min-h-[120px] ${className}`}
@@ -129,7 +129,6 @@ const CheckboxField: React.FC<CheckboxFieldProps> = ({ label, checked, onChange,
   </label>
 );
 
-// Main component
 export function AddNewServiceModal(props: {
   isOpen: boolean;
   onClose: () => void;
@@ -166,6 +165,20 @@ export function AddNewServiceModal(props: {
     setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee,
   ] = useState<Employee>();
   const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] = useState<boolean>(false);
+
+  function makeAllFieldsEmpty() {
+    setNewServiceName("");
+    setNewServiceMainCategory(undefined);
+    setNewServiceCategory(undefined);
+    setNewServiceDescription("");
+    setNewServiceDuration(60);
+    setNewServicePrice(undefined);
+    setNewServiceUpfrontPrice(undefined);
+    setNewServiceGender("f");
+    setNewServiceIsRecommendedByLocation(false);
+    setNewServiceAdvancedPerEmployeeSettings({});
+    setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined);
+  }
 
   return (
     <Modal
@@ -751,6 +764,7 @@ export function AddNewServiceModal(props: {
                     else {
                       setLocation(data);
                       onClose();
+                      makeAllFieldsEmpty();
                     }
                   });
                 } else {
@@ -785,18 +799,7 @@ export function AddNewServiceModal(props: {
           onSelect={() => {
             setIsConfirmCloseAddNewServiceBSOpen(false);
             onClose();
-
-            setNewServiceName("");
-            setNewServiceMainCategory(undefined);
-            setNewServiceCategory(undefined);
-            setNewServiceDescription("");
-            setNewServiceDuration(60);
-            setNewServicePrice(undefined);
-            setNewServiceUpfrontPrice(undefined);
-            setNewServiceGender("f");
-            setNewServiceIsRecommendedByLocation(false);
-            setNewServiceAdvancedPerEmployeeSettings({});
-            setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined);
+            makeAllFieldsEmpty();
           }}
           selectText="بله، خارج شو"
           closeText="بمان!"
