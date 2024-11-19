@@ -44,6 +44,7 @@ import { Modal } from "./Components/Modal";
 import "./calendar.css";
 import { AddNewServiceCategoryBottomSheet } from "@/app/Components/AddNewServiceCategoryBottomSheet";
 import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
+import { TeamModal } from "@/app/Components/TeamModal";
 import { goToNow } from "@/app/calendarUtils";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
@@ -265,6 +266,7 @@ export function Calendar() {
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
   const [page, setPage] = useState(0);
+  const [teamModalIsOpen, setTeamModalIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -570,6 +572,9 @@ export function Calendar() {
               className={
                 "relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5"
               }
+              onClick={() => {
+                setTeamModalIsOpen(true);
+              }}
             >
               <NextImage width={24} height={24} alt="تیم متخصصان" src="/team.svg" />
               <p className="text-lg font-medium">تیم متخصصان</p>
@@ -830,6 +835,7 @@ export function Calendar() {
         calendarRef={calendarRef}
         location={location}
       />
+      <TeamModal isOpen={teamModalIsOpen} onClose={() => setTeamModalIsOpen(false)} />
     </div>
   );
 }
