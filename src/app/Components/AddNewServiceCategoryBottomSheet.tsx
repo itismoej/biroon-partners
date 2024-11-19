@@ -1,11 +1,26 @@
 import { InputField } from "@/app/Components/AddNewServiceModal";
 import { BottomSheet, BottomSheetFooter, type BottomSheetProps } from "@/app/Components/BottomSheet";
-import { createServiceCategory } from "@/app/api";
-import React, { useState } from "react";
+import {
+  type Location,
+  type ServiceCategory,
+  createServiceCategory,
+  fetchLocation,
+  fetchServiceCategories,
+} from "@/app/api";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 
-export const AddNewServiceCategoryBottomSheet = (props: BottomSheetProps) => {
+export const AddNewServiceCategoryBottomSheet = (
+  props: BottomSheetProps & {
+    setLocation: React.Dispatch<React.SetStateAction<Location | undefined>>;
+    setServiceCategories: React.Dispatch<React.SetStateAction<ServiceCategory[]>>;
+  },
+) => {
   const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const router = useRouter();
+
   return (
     <BottomSheet {...props} title="افزودن دسته‌بندی">
       <div className="flex flex-col items-start gap-8">
@@ -38,10 +53,28 @@ export const AddNewServiceCategoryBottomSheet = (props: BottomSheetProps) => {
                 position: "top-center",
                 className: "w-full font-medium",
               });
+              fetchLocation().then(({ data, response }) => {
+                if (response.status !== 200) router.push("/");
+                else {
+                  fetchServiceCategories().then(({ data: svcCategoriesData, response }) => {
+                    if (response.status !== 200)
+                      toast.error("دریافت منوی کاتالوگ شما با خطا مواجه شد", {
+                        duration: 5000,
+                        position: "bottom-center",
+                        className: "w-full font-medium",
+                      });
+                    else {
+                      props.setServiceCategories(svcCategoriesData);
+                      props.setLocation(data);
+                      setNewCategoryName("");
+                    }
+                  });
+                }
+
+                if (props.onClose) props.onClose();
+              });
             }
-            if (props.onClose) props.onClose();
           });
-          setNewCategoryName("");
         }}
         selectText="اضافه کردن"
         closeText="لغو"

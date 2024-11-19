@@ -1,15 +1,33 @@
-import type { Location, LocationServiceCatalogCategory, Service } from "@/app/api";
+import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
+import {
+  type Location,
+  type LocationServiceCatalogCategory,
+  type Service,
+  type ServiceCategory,
+  deleteServiceCategory,
+  fetchLocation,
+  fetchServiceCategories,
+} from "@/app/api";
 import { formatPriceWithSeparator, toFarsiDigits } from "@/app/utils";
-// import NextImage from "next/image";
+import NextImage from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { Tabs } from "./Tabs";
 
 interface ServicesProps {
   location: Location;
+  setLocation: React.Dispatch<React.SetStateAction<Location | undefined>>;
   serviceOnClick?: (service: Service) => void;
+  setServiceCategories: React.Dispatch<React.SetStateAction<ServiceCategory[]>>;
 }
 
-export const ServicesSection = ({ location, serviceOnClick = () => {} }: ServicesProps) => {
+export const ServicesSection = ({
+  location,
+  serviceOnClick = () => {},
+  setLocation,
+  setServiceCategories,
+}: ServicesProps) => {
   const catalog = location.serviceCatalog;
   const tabs = [
     {
@@ -44,6 +62,11 @@ export const ServicesSection = ({ location, serviceOnClick = () => {} }: Service
     setActiveTab(id);
   };
 
+  const router = useRouter();
+  const [deletingServiceCategory, setDeletingServiceCategory] = useState<ServiceCategory | undefined>(
+    undefined,
+  );
+
   return (
     <div className="w-full pb-[70px]">
       <div className={"w-full py-5 bg-white"}>
@@ -62,9 +85,14 @@ export const ServicesSection = ({ location, serviceOnClick = () => {} }: Service
                   <span className="translate-y-[2px]">{toFarsiDigits(category.items.length)}</span>
                 </div>
               </div>
-              {/*<button className="bg-white p-3 rounded-xl">*/}
-              {/*  <NextImage src="/3dots.svg" alt="تنظیمات دسته‌بندی" width={20} height={20} />*/}
-              {/*</button>*/}
+              <button
+                className="bg-white p-3 rounded-xl"
+                onClick={() => {
+                  setDeletingServiceCategory(category);
+                }}
+              >
+                <NextImage src="/3dots.svg" alt="تنظیمات دسته‌بندی" width={20} height={20} />
+              </button>
             </div>
             <div className="flex flex-col">
               {category.items.map((svc) => (
@@ -93,6 +121,62 @@ export const ServicesSection = ({ location, serviceOnClick = () => {} }: Service
           </div>
         ))}
       </div>
+      <BottomSheet
+        isOpen={deletingServiceCategory !== undefined}
+        onClose={() => setDeletingServiceCategory(undefined)}
+      >
+        {deletingServiceCategory && (
+          <div className="space-y-8 pb-12">
+            <h2 className="text-3xl font-bold -mt-6">حذف دائمی دسته‌بندی {deletingServiceCategory.name}</h2>
+            <p className="text-lg font-normal">
+              همه‌ی سرویس‌های موجود در این دسته‌بندی نیز حذف خواهند شد! آیا اطمینان دارید؟
+            </p>
+            <BottomSheetFooter
+              selectText="حذف"
+              closeText="لغو"
+              onClose={() => {
+                setDeletingServiceCategory(undefined);
+              }}
+              onSelect={() => {
+                deleteServiceCategory(deletingServiceCategory.id).then(({ response }) => {
+                  if (response.status !== 204) {
+                    toast.error("حذف سرویس با مشکل مواجه شد", {
+                      duration: 5000,
+                      position: "top-center",
+                      className: "w-full font-medium",
+                    });
+                  } else {
+                    fetchLocation().then(({ data: locationData, response }) => {
+                      toast.success(`سرویس «${deletingServiceCategory.name}» با موفقیت حذف شد`, {
+                        duration: 5000,
+                        position: "top-center",
+                        className: "w-full font-medium",
+                      });
+
+                      if (response.status !== 200) router.push("/");
+                      else {
+                        fetchServiceCategories().then(({ data: svcCategoriesData, response }) => {
+                          if (response.status !== 200)
+                            toast.error("دریافت منوی کاتالوگ شما با خطا مواجه شد", {
+                              duration: 5000,
+                              position: "bottom-center",
+                              className: "w-full font-medium",
+                            });
+                          else {
+                            setLocation(locationData);
+                            setDeletingServiceCategory(undefined);
+                            setServiceCategories(svcCategoriesData);
+                          }
+                        });
+                      }
+                    });
+                  }
+                });
+              }}
+            />
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 };

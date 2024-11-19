@@ -457,9 +457,7 @@ export interface CreateNewService {
   perEmployeeSettings: NewServicePerEmployee[];
 }
 
-export async function createNewService(
-  newService: CreateNewService,
-): Promise<{ response: Response }> {
+export async function createNewService(newService: CreateNewService): Promise<{ response: Response }> {
   const response = await fetch(`${apiUrl}/partners/services/`, {
     method: "POST",
     body: JSON.stringify(newService),
@@ -471,10 +469,18 @@ export async function createNewService(
   return { response };
 }
 
-export async function deleteService(
-  serviceId: Service['id'],
-): Promise<{ response: Response }> {
+export async function deleteService(serviceId: Service["id"]): Promise<{ response: Response }> {
   const response = await fetch(`${apiUrl}/partners/services/${serviceId}/`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return { response };
+}
+
+export async function deleteServiceCategory(
+  serviceCategoryId: ServiceCategory["id"],
+): Promise<{ response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/service-categories/${serviceCategoryId}/`, {
     method: "DELETE",
     credentials: "include",
   });

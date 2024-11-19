@@ -8,14 +8,15 @@ import { ServicesSection } from "@/app/Components/ServicesSection";
 import type { CanSwipeDirection } from "@/app/Components/SwipeComponent";
 import { SwipeComponent } from "@/app/Components/SwipeComponent";
 import {
-  CalendarEvent,
-  CalendarEventPatchRequest,
-  Category,
-  Customer, deleteService,
-  Employee,
-  Location,
-  Service,
-  ServiceCategory,
+  type CalendarEvent,
+  type CalendarEventPatchRequest,
+  type Category,
+  type Customer,
+  type Employee,
+  type Location,
+  type Service,
+  type ServiceCategory,
+  deleteService,
 } from "@/app/api";
 import {
   fetchAllEmployees,
@@ -612,6 +613,8 @@ export function Calendar() {
               <>
                 <ServicesSection
                   location={location}
+                  setLocation={setLocation}
+                  setServiceCategories={setServiceCategories}
                   serviceOnClick={(svc) => {
                     setEditingServiceInServicesPage(svc);
                   }}
@@ -637,29 +640,32 @@ export function Calendar() {
                           className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
                           onClick={() => {
                             if (editingServiceInServicesPage) {
-                              deleteService(editingServiceInServicesPage.id).then(({response}) => {
+                              deleteService(editingServiceInServicesPage.id).then(({ response }) => {
                                 if (response.status !== 204) {
-                                  toast.error(`حذف سرویس با مشکل مواجه شد`, {
+                                  toast.error("حذف سرویس با مشکل مواجه شد", {
                                     duration: 5000,
                                     position: "top-center",
                                     className: "w-full font-medium",
                                   });
                                 } else {
                                   fetchLocation().then(({ data, response }) => {
-                                    toast.success(`سرویس «${editingServiceInServicesPage.name}» با موفقیت حذف شد`, {
-                                      duration: 5000,
-                                      position: "top-center",
-                                      className: "w-full font-medium",
-                                    });
+                                    toast.success(
+                                      `سرویس «${editingServiceInServicesPage.name}» با موفقیت حذف شد`,
+                                      {
+                                        duration: 5000,
+                                        position: "top-center",
+                                        className: "w-full font-medium",
+                                      },
+                                    );
 
-                                    if (response.status !== 200) router.push("/")
+                                    if (response.status !== 200) router.push("/");
                                     else {
                                       setLocation(data);
-                                      setEditingServiceInServicesPage(undefined)
+                                      setEditingServiceInServicesPage(undefined);
                                     }
                                   });
                                 }
-                              })
+                              });
                             }
                           }}
                         >
@@ -707,6 +713,8 @@ export function Calendar() {
             durations={durations}
           />
           <AddNewServiceCategoryBottomSheet
+            setLocation={setLocation}
+            setServiceCategories={setServiceCategories}
             isOpen={addNewServiceCategoryBSIsOpen}
             onClose={() => setAddNewServiceCategoryBSIsOpen(false)}
           />
