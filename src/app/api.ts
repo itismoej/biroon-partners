@@ -459,7 +459,7 @@ export interface CreateNewService {
 
 export async function createNewService(
   newService: CreateNewService,
-): Promise<{ data: unknown; response: Response }> {
+): Promise<{ response: Response }> {
   const response = await fetch(`${apiUrl}/partners/services/`, {
     method: "POST",
     body: JSON.stringify(newService),
@@ -468,6 +468,15 @@ export async function createNewService(
     },
     credentials: "include",
   });
-  const data = await response.json();
-  return { data, response };
+  return { response };
+}
+
+export async function deleteService(
+  serviceId: Service['id'],
+): Promise<{ response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/services/${serviceId}/`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return { response };
 }

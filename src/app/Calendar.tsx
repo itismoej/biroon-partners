@@ -7,11 +7,11 @@ import { CalendarHeader } from "@/app/Components/CalendarHeader";
 import { ServicesSection } from "@/app/Components/ServicesSection";
 import type { CanSwipeDirection } from "@/app/Components/SwipeComponent";
 import { SwipeComponent } from "@/app/Components/SwipeComponent";
-import type {
+import {
   CalendarEvent,
   CalendarEventPatchRequest,
   Category,
-  Customer,
+  Customer, deleteService,
   Employee,
   Location,
   Service,
@@ -635,7 +635,33 @@ export function Calendar() {
                         <button
                           type="button"
                           className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                          onClick={() => {}}
+                          onClick={() => {
+                            if (editingServiceInServicesPage) {
+                              deleteService(editingServiceInServicesPage.id).then(({response}) => {
+                                if (response.status !== 204) {
+                                  toast.error(`حذف سرویس با مشکل مواجه شد`, {
+                                    duration: 5000,
+                                    position: "top-center",
+                                    className: "w-full font-medium",
+                                  });
+                                } else {
+                                  fetchLocation().then(({ data, response }) => {
+                                    toast.success(`سرویس «${editingServiceInServicesPage.name}» با موفقیت حذف شد`, {
+                                      duration: 5000,
+                                      position: "top-center",
+                                      className: "w-full font-medium",
+                                    });
+
+                                    if (response.status !== 200) router.push("/")
+                                    else {
+                                      setLocation(data);
+                                      setEditingServiceInServicesPage(undefined)
+                                    }
+                                  });
+                                }
+                              })
+                            }
+                          }}
                         >
                           <p className="text-lg text-red-600 font-medium">حذف دائمی (غیر قابل بازگشت)</p>
                         </button>
