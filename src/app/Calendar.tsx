@@ -42,6 +42,7 @@ import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
 import "./calendar.css";
 import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
+import { goToNow } from "@/app/calendarUtils";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
 
@@ -319,6 +320,21 @@ export function Calendar() {
     });
   }, []);
 
+  useEffect(() => {
+    const stickyHeaders = document.querySelectorAll(".fc .fc-scrollgrid-section-sticky > *");
+    if (stickyHeaders.length > 0) {
+      stickyHeaders.forEach((stickyHeader) => {
+        if (!isAnimating) {
+          stickyHeader.classList.add("!top-[59px]");
+          stickyHeader.classList.remove("!top-[0px]");
+        } else {
+          stickyHeader.classList.add("!top-[0px]");
+          stickyHeader.classList.remove("!top-[59px]");
+        }
+      });
+    }
+  }, [isAnimating, currentDate]);
+
   const resources = useMemo(
     () =>
       allEmployees.map((employee) => ({
@@ -347,31 +363,12 @@ export function Calendar() {
     [allEvents],
   );
 
-  useEffect(() => {
-    const stickyHeaders = document.querySelectorAll(".fc .fc-scrollgrid-section-sticky > *");
-    if (stickyHeaders.length > 0) {
-      stickyHeaders.forEach((stickyHeader) => {
-        if (!isAnimating) {
-          stickyHeader.classList.add("!top-[59px]");
-          stickyHeader.classList.remove("!top-[0px]");
-        } else {
-          stickyHeader.classList.add("!top-[0px]");
-          stickyHeader.classList.remove("!top-[59px]");
-        }
-      });
-    }
-  }, [isAnimating, currentDate]);
-
   const ANIMATION_DURATION = 300;
 
-  const goToNow = (behavior: ScrollBehavior = "smooth") => {
-    const nowLine = document.querySelector(".fc-timegrid-now-indicator-line");
-    (nowLine as HTMLElement)?.scrollIntoView({ behavior, block: "center" });
-  };
+  if (resources.length <= 0) return <LoadingSpinner />;
 
-  return resources.length > 0 ? (
+  return (
     <div className="relative overflow-x-clip">
-      {/* Header */}
       <CalendarHeader
         page={page}
         currentDate={currentDate}
@@ -379,7 +376,6 @@ export function Calendar() {
       />
 
       {page === 0 ? (
-        // Calendar Container
         <div
           className={`pb-[60px] relative calendar-container ${isAnimating ? "animating" : ""}`}
           style={{
@@ -657,15 +653,7 @@ export function Calendar() {
         </div>
       ) : null}
 
-      {/* Footer */}
-      <CalendarFooter
-        page={page}
-        setPage={setPage}
-        addNewServicesModalIsOpen={addNewServicesModalIsOpen}
-        calendarRef={calendarRef}
-        setActionsBSIsOpen={setActionsBSIsOpen}
-        goToNow={goToNow}
-      />
+      <CalendarFooter setPage={setPage} calendarRef={calendarRef} setActionsBSIsOpen={setActionsBSIsOpen} />
 
       <BottomSheet
         title="افزودن"
@@ -708,10 +696,8 @@ export function Calendar() {
         </div>
       </BottomSheet>
 
-      {/* Editing Indicator */}
       <EditingIndicator editingEvents={editingEvents} currentDate={currentDate} />
 
-      {/* Save/Cancel Editing Buttons */}
       <SaveCancelButtons
         isVisible={isVisible}
         editingEvents={editingEvents}
@@ -767,7 +753,6 @@ export function Calendar() {
         </div>
       </BottomSheet>
 
-      {/* Add Appointment Modal */}
       <AddAppointmentModal
         isOpen={addAppointmentModalIsOpen}
         onClose={() => setAddAppointmentModalIsOpen(false)}
@@ -778,7 +763,5 @@ export function Calendar() {
         location={location}
       />
     </div>
-  ) : (
-    <LoadingSpinner />
   );
 }
