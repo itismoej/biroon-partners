@@ -199,8 +199,8 @@ export function useShallowRouter() {
     },
     back: () => {
       if (window) {
-        window.history.back()
+        window.history.back();
       }
-    }
-  }
+    },
+  };
 }

@@ -1,21 +1,18 @@
-import {toFarsiDigits, useShallowRouter} from "@/app/utils";
+import { toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { useUserData } from "@/context/UserContext";
 import { format } from "date-fns-jalali";
 import NextImage from "next/image";
+import { usePathname } from "next/navigation";
 import type React from "react";
-import {usePathname} from "next/navigation";
 
 interface CalendarHeaderProps {
   page: number;
   currentDate: Date;
 }
 
-export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
-  page,
-  currentDate,
-}) => {
+export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDate }) => {
   const { userData } = useUserData();
-  const shallowRouter = useShallowRouter()
+  const shallowRouter = useShallowRouter();
   const pathname = usePathname();
   return (
     <div className="sticky top-0 ps-2 pe-5 z-50 h-[59px] bg-white shadow flex flex-row gap-5 items-center justify-between">
@@ -28,7 +25,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             className="flex flex-row gap-1"
             type="button"
             onClick={() => {
-              shallowRouter.push(pathname + '/select-date')
+              shallowRouter.push(`${pathname}/select-date`);
             }}
           >
             <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM"))}</h2>

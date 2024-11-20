@@ -11,9 +11,10 @@ import {
   createReservation,
   fetchAvailableEmployeesByService,
 } from "@/app/api";
-import { formatPriceInFarsi, toFarsiDigits } from "@/app/utils";
+import { formatPriceWithSeparator, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import type FullCalendar from "@fullcalendar/react";
 import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
+import { usePathname } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -135,30 +136,27 @@ const ServiceSelectionButton: React.FC<ServiceSelectionButtonProps> = ({
   selectedEmployeeForNewAppointment,
   onClick,
 }) =>
-  selectedServiceToAddInNewAppointment ? (
+  selectedServiceToAddInNewAppointment && selectedEmployeeForNewAppointment ? (
     <button
       type="button"
-      className="w-full -mx-2 flex flex-row gap-4 items-center bg-white p-2 rounded-xl active:inner-w-8"
+      className="w-full flex flex-row gap-4 items-center bg-white py-2 rounded-xl active:inner-w-8"
       onClick={onClick}
     >
       <div className="h-[70px] w-[4px] bg-purple-300 rounded-full" />
       <div className="flex flex-col w-full">
         <div className="flex flex-row gap-4 justify-between">
-          <h3 className="text-xl font-normal">{selectedServiceToAddInNewAppointment.name}</h3>
-          <h3 className="text-xl font-normal">
-            {formatPriceInFarsi(selectedServiceToAddInNewAppointment.price)}
+          <h3 className="text-lg font-normal">{selectedServiceToAddInNewAppointment.name}</h3>
+          <h3 className="text-lg font-normal text-nowrap">
+            {toFarsiDigits(formatPriceWithSeparator(selectedEmployeeForNewAppointment.price))}
+            <span className="text-xs font-light text-gray-500"> تومان</span>
           </h3>
         </div>
-        <p className="text-lg font-normal text-gray-500 text-start">
+        <p className="font-normal text-gray-500 text-start">
           <span>{toFarsiDigits(format(newAppointmentTime, "HH:mm"))}</span>
-          <span className="text-xl mx-2 inline-block translate-y-[1px]">•</span>
-          <span>{selectedServiceToAddInNewAppointment.formattedDuration}</span>
-          {selectedEmployeeForNewAppointment && (
-            <>
-              <span className="text-xl mx-2 inline-block translate-y-[1px]">•</span>
-              <span>{selectedEmployeeForNewAppointment.nickname}</span>
-            </>
-          )}
+          <span className="mx-2 inline-block translate-y-[1px]">•</span>
+          <span>{selectedEmployeeForNewAppointment.formattedDuration}</span>
+          <span className="mx-2 inline-block translate-y-[1px]">•</span>
+          <span>{selectedEmployeeForNewAppointment.nickname}</span>
         </p>
       </div>
     </button>
@@ -184,7 +182,7 @@ interface ActionButtonsProps {
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ onClose, onSave, saveDisabled }) => (
-  <div className="flex sticky w-[100vw] -mx-5 bottom-0 bg-white border-t py-5 px-5">
+  <div className="flex fixed bottom-0 w-[100vw] -mx-5 bottom-0 bg-white border-t py-5 px-5">
     <div className="relative w-full me-2.5">
       <button
         type="button"
@@ -293,6 +291,8 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
   location,
   calendarRef,
 }) => {
+  const pathname = usePathname();
+  const shallowRouter = useShallowRouter();
   const [selectDateInAddAppointmentModalBSIsOpen, setSelectDateInAddAppointmentModalBSIsOpen] =
     useState(false);
   const [selectTimeInAddAppointmentModalBSIsOpen, setSelectTimeInAddAppointmentModalBSIsOpen] =
@@ -300,10 +300,13 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
   const [newAppointmentTime, setNewAppointmentTime] = useState<Date>(
     setMinutes(setSeconds(new Date(), 0), 0),
   );
-  const [addServiceInNewAppointmentIsOpen, setAddServiceInNewAppointmentIsOpen] = useState(false);
+  const addServiceInNewAppointmentIsOpen = pathname.endsWith("/select-service");
   const [createCustomerModalIsOpen, setCreateCustomerModalIsOpen] = useState(false);
   const [newAppointmentCustomer, setNewAppointmentCustomer] = useState<Customer | null>(null);
   const [selectedServiceToAddInNewAppointment, setSelectedServiceToAddInNewAppointment] = useState<
+    Service | undefined
+  >();
+  const [tempSelectedServiceToAddInNewAppointment, setTempSelectedServiceToAddInNewAppointment] = useState<
     Service | undefined
   >();
   const [availableEmployeesByService, setAvailableEmployeesByService] = useState<
@@ -331,7 +334,7 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
         />
       }
     >
-      <div className="pb-12">
+      <div className="pb-32">
         <div className="-mx-5 mt-2 mb-6">
           <hr />
         </div>
@@ -354,7 +357,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
             selectedServiceToAddInNewAppointment={selectedServiceToAddInNewAppointment}
             newAppointmentTime={newAppointmentTime}
             selectedEmployeeForNewAppointment={selectedEmployeeForNewAppointment}
-            onClick={() => setAddServiceInNewAppointmentIsOpen(true)}
+            onClick={() => {
+              shallowRouter.push(`${pathname}/select-service`);
+            }}
           />
         </div>
       </div>
@@ -404,7 +409,7 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
                   className: "w-full font-medium",
                 },
               );
-              onClose();
+              shallowRouter.push("/calendar");
               calendarRef.current.getApi().gotoDate(currentDate);
             } else {
               response.text().then((error) => {
@@ -491,7 +496,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
       {location && (
         <Modal
           isOpen={addServiceInNewAppointmentIsOpen}
-          onClose={() => setAddServiceInNewAppointmentIsOpen(false)}
+          onClose={() => {
+            shallowRouter.push(pathname.slice(0, -"/select-service".length));
+          }}
           title={<span className="text-3xl font-bold">انتخاب سرویس</span>}
           topBarTitle={<span className="text-xl font-bold">انتخاب سرویس</span>}
         >
@@ -515,7 +522,7 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
                         type="button"
                         className="-mx-2 flex flex-row gap-4 items-center bg-white p-2 rounded-xl active:inner-w-8"
                         onClick={() => {
-                          setSelectedServiceToAddInNewAppointment(svc);
+                          setTempSelectedServiceToAddInNewAppointment(svc);
                           setSelectEmployeeBSIsOpen(true);
 
                           fetchAvailableEmployeesByService(svc.id).then(({ data }) => {
@@ -527,8 +534,10 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
                         <div className="flex flex-col w-full">
                           <div className="flex flex-row gap-4 justify-between">
                             <h3 className="text-lg font-normal">{svc.name}</h3>
-                            <h3 className="font-normal text-lg">
-                              {toFarsiDigits(formatPriceInFarsi(svc.price))}
+                            <h3 className="text-lg font-normal text-nowrap">
+                              {svc.priceType === "STARTS_AT" && <span className="text-base">از </span>}
+                              {toFarsiDigits(formatPriceWithSeparator(svc.price))}
+                              <span className="text-xs font-light text-gray-500"> تومان</span>
                             </h3>
                           </div>
                           <p className="font-normal text-gray-500 text-start">{svc.formattedDuration}</p>
@@ -610,17 +619,26 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
           style={{ scrollbarWidth: "none" }}
         >
           {availableEmployeesByService ? (
-            availableEmployeesByService.employees.map((employee) => (
-              <EmployeeTileComponent
-                key={employee.id}
-                employee={employee}
-                onSelect={(selectedEmployee) => {
-                  setSelectedEmployeeForNewAppointment(selectedEmployee);
-                  setSelectEmployeeBSIsOpen(false);
-                  setAddServiceInNewAppointmentIsOpen(false);
-                }}
-              />
-            ))
+            availableEmployeesByService.employees.length > 0 ? (
+              availableEmployeesByService.employees.map((employee) => (
+                <EmployeeTileComponent
+                  key={employee.id}
+                  employee={employee}
+                  onSelect={(selectedEmployee) => {
+                    setSelectedServiceToAddInNewAppointment(tempSelectedServiceToAddInNewAppointment);
+                    setTempSelectedServiceToAddInNewAppointment(undefined);
+                    setSelectedEmployeeForNewAppointment(selectedEmployee);
+                    setSelectEmployeeBSIsOpen(false);
+
+                    shallowRouter.push(pathname.slice(0, -"/select-service".length));
+                  }}
+                />
+              ))
+            ) : (
+              <div className="text-lg border text-center p-8 py-24 rounded-xl">
+                متأسفانه در حال حاضر هیچ متخصصی این سرویس را ارائه نمی‌کند
+              </div>
+            )
           ) : (
             <EmployeeTilesLoading />
           )}
