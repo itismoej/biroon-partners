@@ -1,7 +1,7 @@
 import { BottomSheet } from "@/app/Components/BottomSheet";
 import { CheckboxField, InputField, TextAreaField } from "@/app/Components/FormFields";
 import { Modal } from "@/app/Components/Modal";
-import { type Employee, createEmployee } from "@/app/api";
+import { type Employee, createEmployee, deleteEmployee } from "@/app/api";
 import { toEnglishDigits, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import NextImage from "next/image";
 import { usePathname } from "next/navigation";
@@ -109,32 +109,26 @@ export function TeamMembersModal({ allEmployees, setAllEmployees }: TeamMembersM
                 className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
                 onClick={() => {
                   if (editingEmployee) {
-                    // deleteEmployee(editingServiceInServicesPage.id).then(({ response }) => {
-                    //   if (response.status !== 204) {
-                    //     toast.error("حذف سرویس با مشکل مواجه شد", {
-                    //       duration: 5000,
-                    //       position: "top-center",
-                    //       className: "w-full font-medium",
-                    //     });
-                    //   } else {
-                    //     fetchLocation().then(({ data, response }) => {
-                    //       toast.success(
-                    //         `سرویس «${editingServiceInServicesPage.name}» با موفقیت حذف شد`,
-                    //         {
-                    //           duration: 5000,
-                    //           position: "top-center",
-                    //           className: "w-full font-medium",
-                    //         },
-                    //       );
-                    //
-                    //       if (response.status !== 200) router.push("/");
-                    //       else {
-                    //         setLocation(data);
-                    //         setEditingServiceInServicesPage(undefined);
-                    //       }
-                    //     });
-                    //   }
-                    // });
+                    deleteEmployee(editingEmployee.id).then(({ response }) => {
+                      if (response.status !== 204) {
+                        toast.error("حذف متخصص با مشکل مواجه شد", {
+                          duration: 5000,
+                          position: "top-center",
+                          className: "w-full font-medium",
+                        });
+                      } else {
+                        toast.success(
+                          `متخصص «${editingEmployee.nickname || editingEmployee.user.name}» با موفقیت از کسب‌و‌کار شما حذف شد`,
+                          {
+                            duration: 5000,
+                            position: "top-center",
+                            className: "w-full font-medium",
+                          },
+                        );
+                        setAllEmployees((prev) => prev.filter((emp) => emp.id !== editingEmployee.id));
+                        setEditingEmployee(undefined);
+                      }
+                    });
                   }
                 }}
               >

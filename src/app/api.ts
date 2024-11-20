@@ -509,3 +509,11 @@ export async function createEmployee(
   });
   return { data: await response.json(), response };
 }
+
+export async function deleteEmployee(employeeId: Employee["id"]): Promise<{ response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/employees/${employeeId}/`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return { response };
+}
