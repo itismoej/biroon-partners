@@ -185,3 +185,22 @@ export const useCreateQueryParams = () => {
     [searchParams],
   );
 };
+
+export function useShallowRouter() {
+  const createQueryString = useCreateQueryParams();
+
+  return {
+    push: (url: string) => {
+      if (window) {
+        const qs = createQueryString();
+        if (qs !== "") window.history.pushState(null, "", `${url}?${qs}`);
+        else window.history.pushState(null, "", `${url}`);
+      }
+    },
+    back: () => {
+      if (window) {
+        window.history.back()
+      }
+    }
+  }
+}

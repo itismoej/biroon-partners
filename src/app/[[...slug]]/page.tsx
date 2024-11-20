@@ -2,14 +2,15 @@
 
 import { Calendar } from "@/app/Calendar";
 import { fetchUserStatus } from "@/app/api";
-import { useUserData } from "@/context/UserContext";
-import { useRouter } from "next/navigation";
+import { UserProvider, useUserData } from "@/context/UserContext";
+import {redirect, usePathname, useRouter} from "next/navigation";
 import { useEffect, useState } from "react";
 
-export function ThePage() {
+function CalendarContent() {
   const [loading, setLoading] = useState(true);
   const { setUserData } = useUserData();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     fetchUserStatus().then(({ data: userStatus, response }) => {
@@ -22,6 +23,8 @@ export function ThePage() {
       }
     });
   }, []);
+
+  if (pathname === '/') return redirect('/calendar')
 
   return loading ? (
     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">
@@ -44,5 +47,13 @@ export function ThePage() {
     </div>
   ) : (
     <Calendar />
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <UserProvider>
+      <CalendarContent />
+    </UserProvider>
   );
 }

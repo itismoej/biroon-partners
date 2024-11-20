@@ -27,7 +27,7 @@ import {
   fetchServiceCategories,
   updateEvent,
 } from "@/app/api";
-import { toFarsiDigits } from "@/app/utils";
+import { toFarsiDigits, useShallowRouter } from "@/app/utils";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
@@ -35,7 +35,7 @@ import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { addDays, format } from "date-fns-jalali";
 import NextImage from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -252,21 +252,44 @@ export function Calendar() {
   >([]);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
-  const [actionsBSIsOpen, setActionsBSIsOpen] = useState(false);
-  const [addAppointmentModalIsOpen, setAddAppointmentModalIsOpen] = useState(false);
   const [clients, setClients] = useState<Customer[]>([]);
   const [location, setLocation] = useState<Location | undefined>();
-  const [selectDateInCalendarBSIsOpen, setSelectDateInCalendarBSIsOpen] = useState<boolean>(false);
-  const [servicesModalIsOpen, setServicesModalIsOpen] = useState(false);
-  const [addNewServicesModalIsOpen, setAddNewServicesModalIsOpen] = useState(false);
+
+  const actionsBSIsOpen = pathname.endsWith("/calendar-add-modal")
+  const addAppointmentModalIsOpen = pathname.endsWith("/new-appointment")
+  const selectDateInCalendarBSIsOpen = pathname.startsWith("/calendar/select-date")
+  const servicesModalIsOpen = pathname.startsWith("/services")
+  const addNewServicesModalIsOpen = pathname.startsWith("/services/add-new")
+
   const [addNewServiceCategoryBSIsOpen, setAddNewServiceCategoryBSIsOpen] = useState(false);
   const [addNewServiceOrServiceCategoryBSIsOpen, setAddNewServiceOrServiceCategoryBSIsOpen] = useState(false);
   const [editingServiceInServicesPage, setEditingServiceInServicesPage] = useState<Service>();
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
-  const [page, setPage] = useState(0);
-  const [teamModalIsOpen, setTeamModalIsOpen] = useState<boolean>(false);
+
+  const page = useMemo(() => {
+    if (pathname.startsWith('/calendar'))
+        return 0;
+    if (pathname.startsWith('/sales'))
+        return 1;
+    if (pathname.startsWith('/clients'))
+        return 2;
+    if (
+      pathname.startsWith('/more')
+      || pathname.startsWith('/services')
+      || pathname.startsWith('/team')
+      || pathname.startsWith('/payments')
+    )
+        return 3;
+
+    return 0;
+  }, [pathname]);
+
+  const teamModalIsOpen = pathname.startsWith("/team")
+
+  const shallowRouter = useShallowRouter();
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -378,7 +401,6 @@ export function Calendar() {
       <CalendarHeader
         page={page}
         currentDate={currentDate}
-        setSelectDateInCalendarBSIsOpen={setSelectDateInCalendarBSIsOpen}
       />
 
       {page === 0 ? (
@@ -432,7 +454,7 @@ export function Calendar() {
                   element.addEventListener("touchend", handleScroll);
                   element.addEventListener("mouseup", handleScroll);
                   setTimeout(handleScroll, 500);
-                  setTimeout(() => goToNow("smooth"), 100);
+                  setTimeout(() => goToNow("instant"), 100);
                 }
               }}
               ref={calendarRef}
@@ -562,7 +584,7 @@ export function Calendar() {
                 "relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5"
               }
               onClick={() => {
-                setServicesModalIsOpen(true);
+                shallowRouter.push('/services')
               }}
             >
               <NextImage width={24} height={24} alt="سرویس‌ها" src="/catalog.svg" />
@@ -573,7 +595,7 @@ export function Calendar() {
                 "relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5"
               }
               onClick={() => {
-                setTeamModalIsOpen(true);
+                shallowRouter.push('/team')
               }}
             >
               <NextImage width={24} height={24} alt="تیم متخصصان" src="/team.svg" />
@@ -590,9 +612,7 @@ export function Calendar() {
           </div>
           <Modal
             isOpen={servicesModalIsOpen}
-            onClose={() => {
-              setServicesModalIsOpen(false);
-            }}
+            onClose={() => shallowRouter.push('/more')}
             title={
               <div className="-mt-4">
                 <h1 className="text-3xl">منوی سرویس‌ها</h1>
@@ -692,7 +712,7 @@ export function Calendar() {
                 className="flex flex-row justify-between items-center text-xl font-normal"
                 onClick={() => {
                   setAddNewServiceOrServiceCategoryBSIsOpen(false);
-                  setAddNewServicesModalIsOpen(true);
+                  shallowRouter.push('/services/add-new')
                 }}
               >
                 افزودن سرویس جدید
@@ -710,7 +730,7 @@ export function Calendar() {
           </BottomSheet>
           <AddNewServiceModal
             isOpen={addNewServicesModalIsOpen}
-            onClose={() => setAddNewServicesModalIsOpen(false)}
+            onClose={() => shallowRouter.push('/services')}
             allEmployees={allEmployees}
             setLocation={setLocation}
             availableCategories={availableCategories}
@@ -726,14 +746,12 @@ export function Calendar() {
         </div>
       ) : null}
 
-      <CalendarFooter setPage={setPage} calendarRef={calendarRef} setActionsBSIsOpen={setActionsBSIsOpen} />
+      <CalendarFooter calendarRef={calendarRef} />
 
       <BottomSheet
         title="افزودن"
         isOpen={actionsBSIsOpen}
-        onClose={() => {
-          setActionsBSIsOpen(false);
-        }}
+        onClose={() => shallowRouter.push(pathname.slice(0, -'/calendar-add-modal'.length))}
       >
         <div className="-mx-3">
           <ul className="flex flex-col">
@@ -741,8 +759,7 @@ export function Calendar() {
               <button
                 className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
                 onClick={() => {
-                  setAddAppointmentModalIsOpen(true);
-                  setActionsBSIsOpen(false);
+                  shallowRouter.push(pathname + "/new-appointment");
                 }}
               >
                 <div className="bg-purple-100 rounded-full p-3">
@@ -755,9 +772,7 @@ export function Calendar() {
               <button
                 type="button"
                 className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                onClick={() => {
-                  setActionsBSIsOpen(false);
-                }}
+                onClick={router.back}
               >
                 <div className="bg-purple-100 rounded-full p-3">
                   <img src="/add-blocked-time.svg" className="w-6 h-6" />
@@ -780,9 +795,7 @@ export function Calendar() {
 
       <BottomSheet
         isOpen={selectDateInCalendarBSIsOpen}
-        onClose={() => {
-          setSelectDateInCalendarBSIsOpen(false);
-        }}
+        onClose={router.back}
       >
         <DatePicker
           selectedDate={currentDate}
@@ -790,7 +803,7 @@ export function Calendar() {
             if (calendarRef.current) {
               calendarRef.current.getApi().gotoDate(date);
               setCurrentDate(date);
-              setSelectDateInCalendarBSIsOpen(false);
+              router.back()
             }
           }}
         />
@@ -803,7 +816,7 @@ export function Calendar() {
                 const today = new Date();
                 calendarRef.current.getApi().gotoDate(today);
                 setCurrentDate(today);
-                setSelectDateInCalendarBSIsOpen(false);
+                router.back()
               }
             }}
           >
@@ -817,7 +830,7 @@ export function Calendar() {
                 const tomorrow = addDays(new Date(), 1);
                 calendarRef.current.getApi().gotoDate(tomorrow);
                 setCurrentDate(tomorrow);
-                setSelectDateInCalendarBSIsOpen(false);
+                router.back()
               }
             }}
           >
@@ -828,14 +841,17 @@ export function Calendar() {
 
       <AddAppointmentModal
         isOpen={addAppointmentModalIsOpen}
-        onClose={() => setAddAppointmentModalIsOpen(false)}
+        onClose={router.back}
         currentDate={currentDate}
         setCurrentDate={setCurrentDate}
         clients={clients}
         calendarRef={calendarRef}
         location={location}
       />
-      <TeamModal isOpen={teamModalIsOpen} onClose={() => setTeamModalIsOpen(false)} />
+      <TeamModal
+        isOpen={teamModalIsOpen}
+        onClose={() => shallowRouter.push('/more')}
+      />
     </div>
   );
 }
