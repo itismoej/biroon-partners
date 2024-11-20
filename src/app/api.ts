@@ -486,3 +486,26 @@ export async function deleteServiceCategory(
   });
   return { response };
 }
+
+interface CreateEmployee {
+  firstName: string;
+  lastName?: string;
+  nickname?: string;
+  phoneNumber: string;
+  description?: string;
+  isLocationOwner: boolean;
+}
+
+export async function createEmployee(
+  newEmployee: CreateEmployee,
+): Promise<{ data: Employee; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/employees/`, {
+    method: "POST",
+    body: JSON.stringify(newEmployee),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}

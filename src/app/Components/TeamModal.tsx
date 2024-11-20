@@ -1,17 +1,29 @@
 import { Modal } from "@/app/Components/Modal";
+import { TeamMembersModal } from "@/app/Components/TeamMembersModal";
+import type { Employee } from "@/app/api";
+import { useShallowRouter } from "@/app/utils";
 import NextImage from "next/image";
 import type React from "react";
 
 interface TeamModalProps {
   isOpen: boolean;
   onClose: () => void;
+  allEmployees: Employee[];
+  setAllEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
 }
 
-export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
+export const TeamModal: React.FC<TeamModalProps> = ({ allEmployees, setAllEmployees, isOpen, onClose }) => {
+  const shallowRouter = useShallowRouter();
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="تیم متخصصان">
       <div className="border rounded-xl p-2 flex flex-col">
-        <button className="flex flex-row rounded-lg bg-white p-4 justify-between items-center">
+        <button
+          className="flex flex-row rounded-lg bg-white p-4 justify-between items-center"
+          onClick={() => {
+            shallowRouter.push("/team/team-members");
+          }}
+        >
           <div className="flex flex-row gap-4 items-center">
             <NextImage width={24} height={24} src="/team.svg" alt="تیم متخصصان" />
             <span className="text-lg font-medium">اعضای تیم</span>
@@ -26,6 +38,7 @@ export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
           <NextImage width={24} height={24} src="/left.svg" alt="صفحه‌ی متخصصان" />
         </button>
       </div>
+      <TeamMembersModal allEmployees={allEmployees} setAllEmployees={setAllEmployees} />
     </Modal>
   );
 };

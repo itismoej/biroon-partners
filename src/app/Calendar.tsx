@@ -258,7 +258,7 @@ export function Calendar() {
   const [location, setLocation] = useState<Location | undefined>();
 
   const actionsBSIsOpen = pathname.endsWith("/calendar-add-modal");
-  const addAppointmentModalIsOpen = pathname.startsWith("/calendar/calendar-add-modal/new-appointment");
+  const addAppointmentModalIsOpen = pathname.includes("/calendar-add-modal/new-appointment");
   const selectDateInCalendarBSIsOpen = pathname.startsWith("/calendar/select-date");
   const servicesModalIsOpen = pathname.startsWith("/services");
   const addNewServicesModalIsOpen = pathname.startsWith("/services/add-new");
@@ -329,7 +329,7 @@ export function Calendar() {
       if (response.status !== 200)
         toast.error("دریافت لیست سرویس‌های قابل انتخاب", {
           duration: 5000,
-          position: "bottom-center",
+          position: "top-center",
           className: "w-full font-medium",
         });
       else setAvailableCategories(data);
@@ -339,7 +339,7 @@ export function Calendar() {
       if (response.status !== 200)
         toast.error("دریافت منوی کاتالوگ شما با خطا مواجه شد", {
           duration: 5000,
-          position: "bottom-center",
+          position: "top-center",
           className: "w-full font-medium",
         });
       else setServiceCategories(data);
@@ -841,7 +841,12 @@ export function Calendar() {
         calendarRef={calendarRef}
         location={location}
       />
-      <TeamModal isOpen={teamModalIsOpen} onClose={() => shallowRouter.push("/more")} />
+      <TeamModal
+        allEmployees={allEmployees}
+        setAllEmployees={setAllEmployees}
+        isOpen={teamModalIsOpen}
+        onClose={() => shallowRouter.push("/more")}
+      />
     </div>
   );
 }

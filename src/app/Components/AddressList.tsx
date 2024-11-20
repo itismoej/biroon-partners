@@ -56,7 +56,7 @@ export const AddressList: FC<AddressListProps> = ({ address, setAddress }) => {
     } catch {
       toast.error("جستجوی محدوده با خطا مواجه شد", {
         duration: 5000,
-        position: "bottom-center",
+        position: "top-center",
       });
     }
     setIsLoading(false);

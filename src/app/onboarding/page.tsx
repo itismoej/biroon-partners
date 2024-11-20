@@ -52,7 +52,7 @@ export default function Onboarding() {
           if (response.status !== 200)
             toast.error("دریافت لیست سرویس‌های قابل انتخاب", {
               duration: 5000,
-              position: "bottom-center",
+              position: "top-center",
               className: "w-full font-medium",
             });
           else setAvailableCategories(data);
@@ -176,7 +176,7 @@ export default function Onboarding() {
               if (!firstName) {
                 toast.error("نام اجباری است", {
                   duration: 5000,
-                  position: "bottom-center",
+                  position: "top-center",
                   className: "w-full font-medium",
                 });
                 return;
@@ -184,7 +184,7 @@ export default function Onboarding() {
               if (!lastName) {
                 toast.error("نام خانوادگی اجباری است", {
                   duration: 5000,
-                  position: "bottom-center",
+                  position: "top-center",
                   className: "w-full font-medium",
                 });
                 return;
@@ -193,7 +193,7 @@ export default function Onboarding() {
                 if (response.status !== 200)
                   toast.error("ذخیره‌ی اطلاعات با مشکل مواجه شد", {
                     duration: 5000,
-                    position: "bottom-center",
+                    position: "top-center",
                     className: "w-full font-medium",
                   });
                 else setStep((prev) => prev + 1);
@@ -287,7 +287,7 @@ export default function Onboarding() {
               if (!businessName) {
                 toast.error("نام کسب‌و‌کار اجباری است", {
                   duration: 5000,
-                  position: "bottom-center",
+                  position: "top-center",
                   className: "w-full font-medium",
                 });
                 return;
@@ -297,7 +297,7 @@ export default function Onboarding() {
                   if (response.status !== 200)
                     toast.error("ذخیره‌ی اطلاعات با مشکل مواجه شد", {
                       duration: 5000,
-                      position: "bottom-center",
+                      position: "top-center",
                       className: "w-full font-medium",
                     });
                   else setStep((prev) => prev + 1);
@@ -375,7 +375,7 @@ export default function Onboarding() {
                       if (ids.length === 4) {
                         toast.error("حداکثر ۴ سرویس قابل انتخاب است", {
                           duration: 5000,
-                          position: "bottom-center",
+                          position: "top-center",
                           className: "w-full font-medium",
                         });
                         return prev;
@@ -424,7 +424,7 @@ export default function Onboarding() {
               if (!businessName) {
                 toast.error("نام کسب‌و‌کار اجباری است", {
                   duration: 5000,
-                  position: "bottom-center",
+                  position: "top-center",
                   className: "w-full font-medium",
                 });
                 return;
@@ -433,7 +433,7 @@ export default function Onboarding() {
                 if (response.status !== 200)
                   toast.error("ذخیره‌ی اطلاعات با مشکل مواجه شد", {
                     duration: 5000,
-                    position: "bottom-center",
+                    position: "top-center",
                     className: "w-full font-medium",
                   });
                 else setStep((prev) => prev + 1);
@@ -547,7 +547,7 @@ export default function Onboarding() {
               if (((!address || !address.longitude || !address.latitude) && !searchingAddress) || !map) {
                 toast.error("انتخاب دقیق لوکیشن اجباری است", {
                   duration: 5000,
-                  position: "bottom-center",
+                  position: "top-center",
                   className: "w-full font-medium",
                 });
                 return;
@@ -566,7 +566,7 @@ export default function Onboarding() {
                   if (response.status !== 200)
                     toast.error("ذخیره‌ی لوکیشن با مشکل مواجه شد", {
                       duration: 5000,
-                      position: "bottom-center",
+                      position: "top-center",
                       className: "w-full font-medium",
                     });
                   else setStep((prev) => prev + 1);
@@ -671,7 +671,7 @@ export default function Onboarding() {
                 if (response.status !== 200) {
                   toast.error("ذخیره‌ی اطلاعات با مشکل مواجه شد", {
                     duration: 5000,
-                    position: "bottom-center",
+                    position: "top-center",
                     className: "w-full font-medium",
                   });
                 } else
@@ -679,7 +679,7 @@ export default function Onboarding() {
                     if (response.status !== 201) {
                       toast.error("تأییدیه نهایی با مشکل مواجه شد!", {
                         duration: 5000,
-                        position: "bottom-center",
+                        position: "top-center",
                         className: "w-full font-medium",
                       });
                     } else {

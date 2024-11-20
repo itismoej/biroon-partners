@@ -1,5 +1,5 @@
-import { InputField } from "@/app/Components/AddNewServiceModal";
 import { BottomSheet, BottomSheetFooter, type BottomSheetProps } from "@/app/Components/BottomSheet";
+import { InputField } from "@/app/Components/FormFields";
 import {
   type Location,
   type ServiceCategory,
@@ -60,7 +60,7 @@ export const AddNewServiceCategoryBottomSheet = (
                     if (response.status !== 200)
                       toast.error("دریافت منوی کاتالوگ شما با خطا مواجه شد", {
                         duration: 5000,
-                        position: "bottom-center",
+                        position: "top-center",
                         className: "w-full font-medium",
                       });
                     else {

@@ -44,17 +44,19 @@ export const ServicesSection = ({
       ),
     },
   ].concat(
-    catalog.map(({ id, name, items }) => ({
-      id,
-      label: (
-        <div className="flex flex-row gap-2 items-center justify-between">
-          <h2 className="text-lg font-medium">{name}</h2>
-          <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-50 border text-gray-500 rounded-full font-bold">
-            <span className="translate-y-[2px] text-sm font-normal">{toFarsiDigits(items.length)}</span>
+    catalog
+      .map(({ id, name, items }) => ({
+        id,
+        label: (
+          <div className="flex flex-row gap-2 items-center justify-between">
+            <h2 className="text-lg font-medium">{name}</h2>
+            <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-50 border text-gray-500 rounded-full font-bold">
+              <span className="translate-y-[2px] text-sm font-normal">{toFarsiDigits(items.length)}</span>
+            </div>
           </div>
-        </div>
-      ),
-    })),
+        ),
+      }))
+      .slice(1),
   );
   const [activeTab, setActiveTab] = useState<"all" | LocationServiceCatalogCategory["id"]>("all");
 
@@ -74,7 +76,7 @@ export const ServicesSection = ({
       </div>
       <div>
         {(activeTab === "all"
-          ? location.serviceCatalog
+          ? location.serviceCatalog.slice(1)
           : location.serviceCatalog.filter(({ id }) => id === activeTab)
         ).map((category) => (
           <div key={category.id}>
@@ -159,7 +161,7 @@ export const ServicesSection = ({
                           if (response.status !== 200)
                             toast.error("دریافت منوی کاتالوگ شما با خطا مواجه شد", {
                               duration: 5000,
-                              position: "bottom-center",
+                              position: "top-center",
                               className: "w-full font-medium",
                             });
                           else {

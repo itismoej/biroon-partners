@@ -58,16 +58,17 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                     className="block tracking-[4px] !tabular-nums p-2.5 w-full text-white caret-black rounded-e-lg border-s-0 border border-gray-300 focus:outline-0 focus:border-gray-400"
                     placeholder=""
                     onChange={(e) => {
-                      const val = e.target.value.replaceAll(" ", "");
-                      if (val.startsWith("0") || val.startsWith("۰"))
+                      const engValue = toEnglishDigits(e.target.value.replaceAll(" ", ""));
+                      const val = engValue[0] === "0" ? engValue.slice(1) : engValue;
+                      if (val.startsWith("0"))
                         toast.error("لطفاً در ابتدای شماره عدد ۰ قرار ندهید", {
                           duration: 3000,
-                          position: "bottom-center",
+                          position: "top-center",
                         });
                       else if (val.length > 10)
                         toast.error("طول شماره حداکثر ۱۰ رقم می‌باشد", {
                           duration: 3000,
-                          position: "bottom-center",
+                          position: "top-center",
                         });
                       else setPhoneNumber(toFarsiDigits(val));
                     }}
@@ -163,7 +164,7 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                         } else if (response.status === 403) {
                           toast.error("کد وارد شده نادرست است.", {
                             duration: 3000,
-                            position: "bottom-center",
+                            position: "top-center",
                             className: "text-xl",
                           });
                         }
