@@ -3,13 +3,14 @@
 import { Calendar } from "@/app/Calendar";
 import { fetchUserStatus } from "@/app/api";
 import { UserProvider, useUserData } from "@/context/UserContext";
-import { useRouter } from "next/navigation";
+import {redirect, usePathname, useRouter} from "next/navigation";
 import { useEffect, useState } from "react";
 
 function CalendarContent() {
   const [loading, setLoading] = useState(true);
   const { setUserData } = useUserData();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     fetchUserStatus().then(({ data: userStatus, response }) => {
@@ -22,6 +23,8 @@ function CalendarContent() {
       }
     });
   }, []);
+
+  if (pathname === '/') return redirect('/calendar')
 
   return loading ? (
     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">

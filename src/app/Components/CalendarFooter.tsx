@@ -19,7 +19,7 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) =
           <button
             className="relative bg-white rounded-full p-3"
             onClick={() => {
-              shallowRouter('/calendar')
+              shallowRouter.push('/calendar')
               if (calendarRef.current) {
                 goToNow();
               }
@@ -30,7 +30,7 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) =
         </Tooltip>
         <Tooltip text="فروش">
           <button className="bg-white rounded-full p-3" onClick={() => {
-            shallowRouter('/sales')
+            shallowRouter.push('/sales')
           }}>
             <img src="/sales.svg" className="w-7 h-7" />
           </button>
@@ -39,21 +39,21 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) =
           type="button"
           className="bg-purple-600 rounded-full p-2"
           onClick={() => {
-            shallowRouter(pathname + "/calendar-add-modal");
+            shallowRouter.push(pathname + "/calendar-add-modal");
           }}
         >
           <img src="/plus-white.svg" className="w-7 h-7" />
         </button>
         <Tooltip text="مشتریان">
           <button className="bg-white rounded-full p-3" onClick={() => {
-            shallowRouter('/clients')
+            shallowRouter.push('/clients')
           }}>
             <img src="/client.svg" className="w-7 h-7" />
           </button>
         </Tooltip>
         <Tooltip text="دیگر امکانات" place="right">
           <button className="bg-white rounded-full p-3" onClick={() => {
-            shallowRouter('/more')
+            shallowRouter.push('/more')
           }}>
             <img src="/more.svg" className="w-7 h-7" />
           </button>
