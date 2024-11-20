@@ -254,12 +254,8 @@ export function Calendar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const actionsBSIsOpen = useMemo(() => {
-    return pathname === "/calendar/add";
-  }, [pathname]);
-  const addAppointmentModalIsOpen = useMemo(() => {
-    return pathname === "/calendar/add/appointment";
-  }, [pathname]);
+  const actionsBSIsOpen = useMemo(() => pathname === "/calendar/add", [pathname]);
+  const addAppointmentModalIsOpen = useMemo(() => pathname === "/calendar/add/appointment", [pathname]);
 
   const [clients, setClients] = useState<Customer[]>([]);
   const [location, setLocation] = useState<Location | undefined>();
@@ -271,7 +267,22 @@ export function Calendar() {
   const [editingServiceInServicesPage, setEditingServiceInServicesPage] = useState<Service>();
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
-  const [page, setPage] = useState(0);
+
+  const page = useMemo(() => {
+    switch (pathname) {
+      case "/calendar":
+        return 0;
+      case "/sales":
+        return 1;
+      case "/clients":
+        return 2;
+      case "/more":
+        return 3
+      default:
+        return 0
+    }
+  }, [pathname]);
+
   const [teamModalIsOpen, setTeamModalIsOpen] = useState<boolean>(false);
   const shallowRouter = useShallowRouter();
 
@@ -733,7 +744,7 @@ export function Calendar() {
         </div>
       ) : null}
 
-      <CalendarFooter setPage={setPage} calendarRef={calendarRef} />
+      <CalendarFooter calendarRef={calendarRef} />
 
       <BottomSheet title="افزودن" isOpen={actionsBSIsOpen} onClose={router.back}>
         <div className="-mx-3">

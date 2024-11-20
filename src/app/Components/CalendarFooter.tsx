@@ -5,11 +5,10 @@ import type FullCalendar from "@fullcalendar/react";
 import type React from "react";
 
 interface CalendarFooterProps {
-  setPage: React.Dispatch<React.SetStateAction<number>>;
   calendarRef: React.RefObject<FullCalendar>;
 }
 
-export const CalendarFooter: React.FC<CalendarFooterProps> = ({ setPage, calendarRef }) => {
+export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) => {
   const shallowRouter = useShallowRouter();
   return (
     <div className="fixed bottom-0 z-20 bg-white pb-3 pt-1 px-3 w-full shadow h-[60px]">
@@ -19,7 +18,6 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ setPage, calenda
             className="relative bg-white rounded-full p-3"
             onClick={() => {
               shallowRouter('/calendar')
-              setPage(0);
               if (calendarRef.current) {
                 goToNow();
               }
@@ -29,7 +27,9 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ setPage, calenda
           </button>
         </Tooltip>
         <Tooltip text="فروش">
-          <button className="bg-white rounded-full p-3" onClick={() => setPage(1)}>
+          <button className="bg-white rounded-full p-3" onClick={() => {
+            shallowRouter('/sales')
+          }}>
             <img src="/sales.svg" className="w-7 h-7" />
           </button>
         </Tooltip>
@@ -43,13 +43,14 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ setPage, calenda
           <img src="/plus-white.svg" className="w-7 h-7" />
         </button>
         <Tooltip text="مشتریان">
-          <button className="bg-white rounded-full p-3" onClick={() => setPage(2)}>
+          <button className="bg-white rounded-full p-3" onClick={() => {
+            shallowRouter('/clients')
+          }}>
             <img src="/client.svg" className="w-7 h-7" />
           </button>
         </Tooltip>
         <Tooltip text="دیگر امکانات" place="right">
           <button className="bg-white rounded-full p-3" onClick={() => {
-            setPage(3)
             shallowRouter('/more')
           }}>
             <img src="/more.svg" className="w-7 h-7" />
