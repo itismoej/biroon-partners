@@ -1,10 +1,5 @@
-import { ThePage } from "@/app/ThePage";
-import { UserProvider } from "@/context/UserContext";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
-  return (
-    <UserProvider>
-      <ThePage />
-    </UserProvider>
-  );
+  return redirect("/calendar");
 }

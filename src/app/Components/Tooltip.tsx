@@ -41,7 +41,7 @@ export const Tooltip = ({ children, text, place = "center" }: TooltipProps) => {
         <div
           className={`absolute bottom-full flex flex-col items-center animate-fadeInUp ${place === "left" ? "left-[5px]" : place === "right" ? "right-[5px]" : ""}`}
         >
-          <div className="relative bg-gray-900 text-white text-md font-normal rounded py-2 px-3 shadow-lg">
+          <div className="relative bg-gray-900 text-white text-md font-normal rounded py-2 px-3 shadow-lg text-nowrap">
             {text}
           </div>
         </div>

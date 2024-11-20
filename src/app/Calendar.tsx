@@ -27,7 +27,7 @@ import {
   fetchServiceCategories,
   updateEvent,
 } from "@/app/api";
-import { toFarsiDigits } from "@/app/utils";
+import { toFarsiDigits, useShallowRouter } from "@/app/utils";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
@@ -35,7 +35,7 @@ import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { addDays, format } from "date-fns-jalali";
 import NextImage from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -252,9 +252,15 @@ export function Calendar() {
   >([]);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
-  const [actionsBSIsOpen, setActionsBSIsOpen] = useState(false);
-  const [addAppointmentModalIsOpen, setAddAppointmentModalIsOpen] = useState(false);
+  const actionsBSIsOpen = useMemo(() => {
+    return pathname === "/calendar/add";
+  }, [pathname]);
+  const addAppointmentModalIsOpen = useMemo(() => {
+    return pathname === "/calendar/add/appointment";
+  }, [pathname]);
+
   const [clients, setClients] = useState<Customer[]>([]);
   const [location, setLocation] = useState<Location | undefined>();
   const [selectDateInCalendarBSIsOpen, setSelectDateInCalendarBSIsOpen] = useState<boolean>(false);
@@ -267,6 +273,7 @@ export function Calendar() {
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
   const [page, setPage] = useState(0);
   const [teamModalIsOpen, setTeamModalIsOpen] = useState<boolean>(false);
+  const shallowRouter = useShallowRouter();
 
   useEffect(() => {
     if (editingEvents.length > 0) {
@@ -726,23 +733,16 @@ export function Calendar() {
         </div>
       ) : null}
 
-      <CalendarFooter setPage={setPage} calendarRef={calendarRef} setActionsBSIsOpen={setActionsBSIsOpen} />
+      <CalendarFooter setPage={setPage} calendarRef={calendarRef} />
 
-      <BottomSheet
-        title="افزودن"
-        isOpen={actionsBSIsOpen}
-        onClose={() => {
-          setActionsBSIsOpen(false);
-        }}
-      >
+      <BottomSheet title="افزودن" isOpen={actionsBSIsOpen} onClose={router.back}>
         <div className="-mx-3">
           <ul className="flex flex-col">
             <li>
               <button
                 className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
                 onClick={() => {
-                  setAddAppointmentModalIsOpen(true);
-                  setActionsBSIsOpen(false);
+                  shallowRouter("/calendar/add/appointment");
                 }}
               >
                 <div className="bg-purple-100 rounded-full p-3">
@@ -755,9 +755,7 @@ export function Calendar() {
               <button
                 type="button"
                 className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                onClick={() => {
-                  setActionsBSIsOpen(false);
-                }}
+                onClick={router.back}
               >
                 <div className="bg-purple-100 rounded-full p-3">
                   <img src="/add-blocked-time.svg" className="w-6 h-6" />
@@ -828,7 +826,7 @@ export function Calendar() {
 
       <AddAppointmentModal
         isOpen={addAppointmentModalIsOpen}
-        onClose={() => setAddAppointmentModalIsOpen(false)}
+        onClose={router.back}
         currentDate={currentDate}
         setCurrentDate={setCurrentDate}
         clients={clients}

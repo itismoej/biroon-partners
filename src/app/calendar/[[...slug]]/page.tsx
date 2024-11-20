@@ -2,11 +2,11 @@
 
 import { Calendar } from "@/app/Calendar";
 import { fetchUserStatus } from "@/app/api";
-import { useUserData } from "@/context/UserContext";
+import { UserProvider, useUserData } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export function ThePage() {
+function CalendarContent() {
   const [loading, setLoading] = useState(true);
   const { setUserData } = useUserData();
   const router = useRouter();
@@ -44,5 +44,13 @@ export function ThePage() {
     </div>
   ) : (
     <Calendar />
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <UserProvider>
+      <CalendarContent />
+    </UserProvider>
   );
 }
