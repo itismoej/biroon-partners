@@ -254,8 +254,8 @@ export function Calendar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const actionsBSIsOpen = useMemo(() => pathname === "/calendar/add", [pathname]);
-  const addAppointmentModalIsOpen = useMemo(() => pathname === "/calendar/add/appointment", [pathname]);
+  const actionsBSIsOpen = useMemo(() => pathname.endsWith("/calendar-add-modal"), [pathname]);
+  const addAppointmentModalIsOpen = useMemo(() => pathname.endsWith("/new-appointment"), [pathname]);
 
   const [clients, setClients] = useState<Customer[]>([]);
   const [location, setLocation] = useState<Location | undefined>();
@@ -269,18 +269,16 @@ export function Calendar() {
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
 
   const page = useMemo(() => {
-    switch (pathname) {
-      case "/calendar":
+    if (pathname.startsWith('/calendar'))
         return 0;
-      case "/sales":
+    if (pathname.startsWith('/sales'))
         return 1;
-      case "/clients":
+    if (pathname.startsWith('/clients'))
         return 2;
-      case "/more":
-        return 3
-      default:
-        return 0
-    }
+    if (pathname.startsWith('/more'))
+        return 3;
+
+    return 0;
   }, [pathname]);
 
   const [teamModalIsOpen, setTeamModalIsOpen] = useState<boolean>(false);
@@ -753,7 +751,7 @@ export function Calendar() {
               <button
                 className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
                 onClick={() => {
-                  shallowRouter("/calendar/add/appointment");
+                  shallowRouter(pathname + "/new-appointment");
                 }}
               >
                 <div className="bg-purple-100 rounded-full p-3">

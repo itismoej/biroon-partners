@@ -3,6 +3,7 @@ import { goToNow } from "@/app/calendarUtils";
 import { useShallowRouter } from "@/app/utils";
 import type FullCalendar from "@fullcalendar/react";
 import type React from "react";
+import {usePathname} from "next/navigation";
 
 interface CalendarFooterProps {
   calendarRef: React.RefObject<FullCalendar>;
@@ -10,6 +11,7 @@ interface CalendarFooterProps {
 
 export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) => {
   const shallowRouter = useShallowRouter();
+  const pathname = usePathname();
   return (
     <div className="fixed bottom-0 z-20 bg-white pb-3 pt-1 px-3 w-full shadow h-[60px]">
       <div className="flex flex-row-reverse gap-4 items-center justify-between max-w-[400px] mx-auto">
@@ -37,7 +39,7 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) =
           type="button"
           className="bg-purple-600 rounded-full p-2"
           onClick={() => {
-            shallowRouter("/calendar/add");
+            shallowRouter(pathname + "/calendar-add-modal");
           }}
         >
           <img src="/plus-white.svg" className="w-7 h-7" />
