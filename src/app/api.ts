@@ -48,7 +48,7 @@ export interface User {
 }
 
 export interface BusinessHour {
-  weekday: number;
+  weekday: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   startTime: string;
   endTime: string;
 }
