@@ -129,8 +129,8 @@ export const ServicesSection = ({
       >
         {deletingServiceCategory && (
           <div className="space-y-8 pb-12">
-            <h2 className="text-3xl font-bold -mt-6">حذف دائمی دسته‌بندی {deletingServiceCategory.name}</h2>
-            <p className="text-lg font-normal">
+            <h2 className="text-3xl font-bold -mt-6">حذف دائمی دسته‌بندی «{deletingServiceCategory.name}»</h2>
+            <p className="text-lg font-normal text-red-600">
               همه‌ی سرویس‌های موجود در این دسته‌بندی نیز حذف خواهند شد! آیا اطمینان دارید؟
             </p>
             <BottomSheetFooter

@@ -1,4 +1,5 @@
 import { Modal } from "@/app/Components/Modal";
+import { ScheduledShiftsModal } from "@/app/Components/ScheduledShiftsModal";
 import { TeamMembersModal } from "@/app/Components/TeamMembersModal";
 import type { Employee } from "@/app/api";
 import { useShallowRouter } from "@/app/utils";
@@ -30,7 +31,12 @@ export const TeamModal: React.FC<TeamModalProps> = ({ allEmployees, setAllEmploy
           </div>
           <NextImage width={24} height={24} src="/left.svg" alt="صفحه‌ی متخصصان" />
         </button>
-        <button className="flex flex-row rounded-lg bg-white p-4 justify-between items-center">
+        <button
+          className="flex flex-row rounded-lg bg-white p-4 justify-between items-center"
+          onClick={() => {
+            shallowRouter.push("/team/scheduled-shifts");
+          }}
+        >
           <div className="flex flex-row gap-4 items-center">
             <NextImage width={24} height={24} src="/scheduled-shifts.svg" alt="تیم متخصصان" />
             <span className="text-lg font-medium">شیفت‌های منظم هفتگی</span>
@@ -39,6 +45,7 @@ export const TeamModal: React.FC<TeamModalProps> = ({ allEmployees, setAllEmploy
         </button>
       </div>
       <TeamMembersModal allEmployees={allEmployees} setAllEmployees={setAllEmployees} />
+      <ScheduledShiftsModal allEmployees={allEmployees} setAllEmployees={setAllEmployees} />
     </Modal>
   );
 };
