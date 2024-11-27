@@ -1,23 +1,16 @@
 import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
+import { MenuPopup } from "@/app/Components/MenuPopup";
 import { Modal } from "@/app/Components/Modal";
 import { WeekPicker } from "@/app/Components/WeekPicker";
-import type { Employee } from "@/app/api";
+import {type Employee, type EmployeeWorkingDays, fetchShifts, WorkingDay} from "@/app/api";
 import { toFarsiDigits, useShallowRouter } from "@/app/utils";
-import { endOfWeek, format, startOfWeek } from "date-fns-jalali";
+import { endOfWeek, format, parseISO, startOfWeek } from "date-fns-jalali";
 import NextImage from "next/image";
 import { usePathname } from "next/navigation";
 import type React from "react";
+import { useEffect } from "react";
 import { useState } from "react";
-
-const WEEK_DAYS = {
-  0: 'یک‌شنبه',
-  1: 'دوشنبه',
-  2: 'سه‌شنبه',
-  3: 'چهارشنبه',
-  4: 'پنج‌شنبه',
-  5: 'جمعه',
-  6: 'شنبه',
-}
+import toast from "react-hot-toast";
 
 function computeWeeklyHours(emp: Employee): number {
   return emp.businessHours.reduce((total, bh) => {
@@ -31,7 +24,6 @@ function computeWeeklyHours(emp: Employee): number {
     return total + duration;
   }, 0);
 }
-
 
 interface ScheduledShiftsModalProps {
   allEmployees: Employee[];
@@ -59,6 +51,25 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
       prevState.includes(id) ? prevState.filter((empId) => empId !== id) : [...prevState, id],
     );
   };
+
+  const [shifts, setShifts] = useState<EmployeeWorkingDays[]>([]);
+  const weekStartISO = weekStart.toISOString();
+
+  useEffect(() => {
+    fetchShifts(weekStart).then(({ data, response }) => {
+      if (response.status !== 200) {
+        toast.error("دریافت لیست شیفت‌ها با خطا مواجه شد", {
+          duration: 5000,
+          position: "top-center",
+          className: "w-full font-medium",
+        });
+      } else {
+        setShifts(data.shifts);
+      }
+    });
+  }, [weekStartISO]);
+
+  const [editingWorkingDay, setEditingWorkingDay] = useState<{employeeWorkingDays: EmployeeWorkingDays, workingDay: WorkingDay}>()
 
   return (
     <Modal
@@ -110,7 +121,9 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
                 )}
                 <div className="flex flex-col items-start">
                   <span className="text-lg font-medium">{emp.nickname}</span>
-                  <span className="font-normal text-gray-500 text-sm">{toFarsiDigits(computeWeeklyHours(emp))} ساعت</span>
+                  <span className="font-normal text-gray-500 text-sm">
+                    {toFarsiDigits(computeWeeklyHours(emp))} ساعت
+                  </span>
                 </div>
               </div>
               <NextImage
@@ -124,17 +137,99 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
             {openEmployeeIds.includes(emp.id) && (
               <div className="px-4 py-2 bg-gray-50">
                 <div className="flex flex-col divide-y -mx-4">
-                  {emp.businessHours.map((businessHour) => (
-                    <p key={`${emp.id}-${businessHour.weekday}-${businessHour.startTime}`}>
-                      {WEEK_DAYS[businessHour.weekday]} {businessHour.startTime} - {businessHour.endTime}
-                    </p>
-                  ))}
+                  {shifts
+                    .filter(({ employee }) => employee.id === emp.id)
+                    .map((empWorkingDays) => {
+                      return empWorkingDays.workingDays.map((workingDay) => {
+                        return (
+                          <button
+                            key={`${workingDay.day}-${workingDay.workingHours[0]?.startTime || 1}`}
+                            className="flex flex-row justify-between items-center py-5 -mx-5 px-5 bg-white active:transform-none"
+                            onClick={() => {
+                              setEditingWorkingDay({employeeWorkingDays: empWorkingDays, workingDay})
+                            }}
+                          >
+                            <p className="text-lg font-medium">
+                              {toFarsiDigits(format(parseISO(workingDay.day), "EEEE، dd MMMM"))}
+                            </p>
+                            <div className="flex flex-col gap-2">
+                              {workingDay.workingHours.length > 0 ? (
+                                workingDay.workingHours.map(({ startTime, endTime }) => (
+                                  <div
+                                    className="border border-purple-300 text-lg py-1 px-3 bg-purple-100 rounded-full"
+                                    key={`${startTime}-${endTime}`}
+                                    style={{ direction: "ltr" }}
+                                  >
+                                    {toFarsiDigits(format(parseISO(startTime), "HH:mm"))} -{" "}
+                                    {toFarsiDigits(format(parseISO(endTime), "HH:mm"))}
+                                  </div>
+                                ))
+                              ) : (
+                                <div
+                                  className="border text-lg py-1 px-3 rounded-full"
+                                  style={{ direction: "ltr" }}
+                                >
+                                  کار نمی‌کند
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      });
+                    })}
                 </div>
               </div>
             )}
           </div>
         ))}
       </div>
+      <MenuPopup isOpen={editingWorkingDay !== undefined} onClose={() => setEditingWorkingDay(undefined)}>
+        {editingWorkingDay && (
+          <div className="flex flex-col">
+            <div className="flex flex-col gap-1 items-center justify-center my-6">
+              <NextImage
+                className="rounded-full border-2 border-gray-300"
+                src={editingWorkingDay.employeeWorkingDays.employee.user.avatar.url || ""}
+                alt={editingWorkingDay.employeeWorkingDays.employee.nickname || ""}
+                width={70}
+                height={70}
+              />
+              <h2 className="text-xl font-bold">{editingWorkingDay.employeeWorkingDays.employee.nickname}</h2>
+              <h2 className="font-normal">
+                {toFarsiDigits(format(parseISO(editingWorkingDay.workingDay.day), "EEEE، dd MMMM"))}
+              </h2>
+            </div>
+            <div className="flex flex-col divide-y">
+              {editingWorkingDay.workingDay.workingHours.length > 0 ? (
+                <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
+                  <p className="text-lg font-semibold">ویرایش این روز</p>
+                  <NextImage src="/pen.svg" alt="ویرایش این روز" width={24} height={24}/>
+                </button>
+              ) : null}
+              {editingWorkingDay.workingDay.workingHours.length === 0 ? (
+                <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
+                  <p className="text-lg font-semibold">افزودن زمان کاری</p>
+                  <NextImage src="/plus.svg" alt="افزودن زمان کاری" width={24} height={24}/>
+                </button>
+              ) : null}
+              <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
+                <p className="text-lg font-semibold">تنظیم شیفت هفتگی</p>
+                <NextImage src="/time.svg" alt="تنظیم شیفت هفتگی" width={24} height={24}/>
+              </button>
+              <button className="flex flex-row justify-between p-5 bg-white active:transform-none rounded-b-2xl">
+                <p className="text-lg font-semibold">افزودن مرخصی یا زمان غیر کاری</p>
+                <NextImage src="/calendar-cross.svg" alt="افزودن مرخصی یا زمان غیر کاری" width={24} height={24}/>
+              </button>
+              {editingWorkingDay.workingDay.workingHours.length > 0 ? (
+                <button className="flex flex-row justify-between p-5 bg-white active:transform-none rounded-b-2xl">
+                  <p className="text-lg text-red-500 font-semibold">حذف این روز</p>
+                  <NextImage src="/delete.svg" alt="حذف این روز" width={24} height={24}/>
+                </button>
+              ) : null}
+            </div>
+          </div>
+        )}
+      </MenuPopup>
       <BottomSheet
         isOpen={selectingWeekBSIsOpen}
         onClose={() => {

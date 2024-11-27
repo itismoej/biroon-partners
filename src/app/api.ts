@@ -1,3 +1,5 @@
+import { format } from "date-fns";
+
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export interface Category {
@@ -516,4 +518,30 @@ export async function deleteEmployee(employeeId: Employee["id"]): Promise<{ resp
     credentials: "include",
   });
   return { response };
+}
+
+export interface WorkingTime {
+  startTime: string;
+  endTime: string;
+}
+
+export interface WorkingDay {
+  day: string;
+  workingHours: WorkingTime[];
+}
+
+export interface EmployeeWorkingDays {
+  employee: Employee;
+  workingDays: WorkingDay[];
+}
+
+export interface EmployeesShifts {
+  shifts: EmployeeWorkingDays[];
+}
+
+export async function fetchShifts(date: Date): Promise<{ data: EmployeesShifts; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/shifts?date=${format(date, "yyyy-MM-dd")}`, {
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
 }
