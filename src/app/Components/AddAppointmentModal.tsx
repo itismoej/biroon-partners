@@ -12,6 +12,7 @@ import {
   fetchAvailableEmployeesByService,
 } from "@/app/api";
 import { formatPriceWithSeparator, toFarsiDigits, useShallowRouter } from "@/app/utils";
+import AddNewCustomerModal from "@/components/AddNewCustomerModal";
 import type FullCalendar from "@fullcalendar/react";
 import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
 import { usePathname } from "next/navigation";
@@ -163,7 +164,7 @@ const ServiceSelectionButton: React.FC<ServiceSelectionButtonProps> = ({
   ) : (
     <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
       <img src="/service.png" className="w-16 h-16" />
-      <p className="text-lg text-gray-500 text-center mt-4">برای ذخیره‌ی این نوبت یک سرویس اضافه کنید</p>
+      <p className="text-lg text-gray-500 text-center mt-4">برای ذخیرهی این نوبت یک سرویس اضافه کنید</p>
       <button
         className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
         type="button"
@@ -302,6 +303,7 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
   );
   const addServiceInNewAppointmentIsOpen = pathname.endsWith("/select-service");
   const [createCustomerModalIsOpen, setCreateCustomerModalIsOpen] = useState(false);
+  const [addNewCustomerModalIsOpen, setAddNewCustomerModalIsOpen] = useState(false);
   const [newAppointmentCustomer, setNewAppointmentCustomer] = useState<Customer | null>(null);
   const [selectedServiceToAddInNewAppointment, setSelectedServiceToAddInNewAppointment] = useState<
     Service | undefined
@@ -561,9 +563,13 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
         <hr className="-mx-5" />
         <ul className="-mx-5">
           <li>
-            <button className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5">
+            <button
+              className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
+              onClick={() => setAddNewCustomerModalIsOpen(true)}
+              type="button"
+            >
               <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-                <img src="/plus-purple.svg" className="w-7 h-7" />
+                <img src="/plus-purple.svg" alt="plus person" className="w-7 h-7" />
               </div>
               <p className="font-medium text-lg">افزودن مشتری جدید</p>
             </button>
@@ -580,7 +586,7 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
               <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
                 <img src="/walk-in.svg" className="w-8 h-8" />
               </div>
-              <p className="font-medium text-lg">مراجعه‌‌کننده‌ی حضوری</p>
+              <p className="font-medium text-lg">مراجعهکنندهی حضوری</p>
             </button>
           </li>
         </ul>
@@ -602,6 +608,11 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
           </>
         )}
       </Modal>
+
+      <AddNewCustomerModal
+        isOpen={addNewCustomerModalIsOpen}
+        onClose={() => setAddNewCustomerModalIsOpen(false)}
+      />
 
       {/* Employee Selection BottomSheet */}
       <BottomSheet
@@ -636,7 +647,7 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
               ))
             ) : (
               <div className="text-lg border text-center p-8 py-24 rounded-xl">
-                متأسفانه در حال حاضر هیچ متخصصی این سرویس را ارائه نمی‌کند
+                متأسفانه در حال حاضر هیچ متخصصی این سرویس را ارائه نمیکند
               </div>
             )
           ) : (

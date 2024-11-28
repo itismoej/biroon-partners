@@ -17,6 +17,11 @@ export function formatPriceWithSeparator(price: number): string {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "٫");
 }
 
+export function isJustDigits(str: string): boolean {
+  const p = /^\d+$/;
+  return p.test(str);
+}
+
 export function formatPriceInFarsi(price: number): string {
   const formattedPrice = formatPriceWithSeparator(price);
   return `${toFarsiDigits(formattedPrice)} تومان`;
