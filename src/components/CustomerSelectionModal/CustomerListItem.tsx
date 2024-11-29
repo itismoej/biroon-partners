@@ -1,5 +1,4 @@
 import type { Customer } from "@/app/api";
-import { toFarsiDigits } from "@/app/utils";
 import type React from "react";
 
 interface CustomerListItemProps {
@@ -19,12 +18,7 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, onSelect 
           <img src="/person-purple.svg" alt="person" className="w-7 h-7" />
         </div>
         <p className="font-medium text-lg" style={{ direction: "ltr" }}>
-          {toFarsiDigits(
-            `${customer.user.username.slice(0, 3)} ${customer.user.username.slice(
-              3,
-              6,
-            )} ${customer.user.username.slice(6, 9)} ${customer.user.username.slice(9)}`,
-          )}
+          {customer.user.fullName}
         </p>
       </button>
     </li>

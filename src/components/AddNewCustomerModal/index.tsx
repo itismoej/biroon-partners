@@ -76,7 +76,7 @@ function AddNewCustomerModal({ isOpen, customersList, setCustomersList, onClose 
                     className: "w-full font-medium",
                   });
                 } else {
-                  toast.success(`مشتری «${data?.user?.username}» با موفقیت به کسبوکار اضافه شد`, {
+                  toast.success(`مشتری «${data?.user?.fullName}» با موفقیت به کسبوکار اضافه شد`, {
                     duration: 5000,
                     position: "top-center",
                     className: "w-full font-medium",
