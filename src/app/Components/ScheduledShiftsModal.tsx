@@ -2,7 +2,7 @@ import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
 import { MenuPopup } from "@/app/Components/MenuPopup";
 import { Modal } from "@/app/Components/Modal";
 import { WeekPicker } from "@/app/Components/WeekPicker";
-import {type Employee, type EmployeeWorkingDays, fetchShifts, WorkingDay} from "@/app/api";
+import { type Employee, type EmployeeWorkingDays, type WorkingDay, fetchShifts } from "@/app/api";
 import { toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { endOfWeek, format, parseISO, startOfWeek } from "date-fns-jalali";
 import NextImage from "next/image";
@@ -69,7 +69,10 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
     });
   }, [weekStartISO]);
 
-  const [editingWorkingDay, setEditingWorkingDay] = useState<{employeeWorkingDays: EmployeeWorkingDays, workingDay: WorkingDay}>()
+  const [editingWorkingDay, setEditingWorkingDay] = useState<{
+    employeeWorkingDays: EmployeeWorkingDays;
+    workingDay: WorkingDay;
+  }>();
 
   return (
     <Modal
@@ -146,7 +149,7 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
                             key={`${workingDay.day}-${workingDay.workingHours[0]?.startTime || 1}`}
                             className="flex flex-row justify-between items-center py-5 -mx-5 px-5 bg-white active:transform-none"
                             onClick={() => {
-                              setEditingWorkingDay({employeeWorkingDays: empWorkingDays, workingDay})
+                              setEditingWorkingDay({ employeeWorkingDays: empWorkingDays, workingDay });
                             }}
                           >
                             <p className="text-lg font-medium">
@@ -203,27 +206,32 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
               {editingWorkingDay.workingDay.workingHours.length > 0 ? (
                 <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
                   <p className="text-lg font-semibold">ویرایش این روز</p>
-                  <NextImage src="/pen.svg" alt="ویرایش این روز" width={24} height={24}/>
+                  <NextImage src="/pen.svg" alt="ویرایش این روز" width={24} height={24} />
                 </button>
               ) : null}
               {editingWorkingDay.workingDay.workingHours.length === 0 ? (
                 <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
                   <p className="text-lg font-semibold">افزودن زمان کاری</p>
-                  <NextImage src="/plus.svg" alt="افزودن زمان کاری" width={24} height={24}/>
+                  <NextImage src="/plus.svg" alt="افزودن زمان کاری" width={24} height={24} />
                 </button>
               ) : null}
               <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
                 <p className="text-lg font-semibold">تنظیم شیفت هفتگی</p>
-                <NextImage src="/time.svg" alt="تنظیم شیفت هفتگی" width={24} height={24}/>
+                <NextImage src="/time.svg" alt="تنظیم شیفت هفتگی" width={24} height={24} />
               </button>
               <button className="flex flex-row justify-between p-5 bg-white active:transform-none rounded-b-2xl">
                 <p className="text-lg font-semibold">افزودن مرخصی یا زمان غیر کاری</p>
-                <NextImage src="/calendar-cross.svg" alt="افزودن مرخصی یا زمان غیر کاری" width={24} height={24}/>
+                <NextImage
+                  src="/calendar-cross.svg"
+                  alt="افزودن مرخصی یا زمان غیر کاری"
+                  width={24}
+                  height={24}
+                />
               </button>
               {editingWorkingDay.workingDay.workingHours.length > 0 ? (
                 <button className="flex flex-row justify-between p-5 bg-white active:transform-none rounded-b-2xl">
                   <p className="text-lg text-red-500 font-semibold">حذف این روز</p>
-                  <NextImage src="/delete.svg" alt="حذف این روز" width={24} height={24}/>
+                  <NextImage src="/delete.svg" alt="حذف این روز" width={24} height={24} />
                 </button>
               ) : null}
             </div>
