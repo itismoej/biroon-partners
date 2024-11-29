@@ -17,7 +17,7 @@ function PhoneNumberInput({ value, title = "شماره همراه *", className,
       </label>
       <div className="flex items-center text-2xl" style={{ direction: "ltr" }}>
         <div
-          className="flex-shrink-0 z-10 inline-flex items-center py-2.5 px-4 font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-s-lg"
+          className="flex-shrink-0 z-[1] inline-flex items-center py-2.5 px-4 font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-s-lg"
           style={{ direction: "ltr" }}
         >
           +۹۸

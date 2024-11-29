@@ -12,7 +12,7 @@ import {
   fetchAvailableEmployeesByService,
 } from "@/app/api";
 import { formatPriceWithSeparator, toFarsiDigits, useShallowRouter } from "@/app/utils";
-import AddNewCustomerModal from "@/components/AddNewCustomerModal";
+import CustomerSelectionModal from "@/components/CustomerSelectionModal";
 import type FullCalendar from "@fullcalendar/react";
 import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
 import { usePathname } from "next/navigation";
@@ -25,7 +25,6 @@ interface AddAppointmentModalProps {
   onClose: () => void;
   currentDate: Date;
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
-  clients: Customer[];
   location: Location | undefined;
   calendarRef: React.RefObject<FullCalendar>;
 }
@@ -183,7 +182,7 @@ interface ActionButtonsProps {
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ onClose, onSave, saveDisabled }) => (
-  <div className="flex fixed bottom-0 w-[100vw] -mx-5 bottom-0 bg-white border-t py-5 px-5">
+  <div className="flex fixed bottom-0 w-[100vw] -mx-5 bg-white border-t py-5 px-5">
     <div className="relative w-full me-2.5">
       <button
         type="button"
@@ -237,33 +236,6 @@ const EmployeeTilesLoading: React.FC = () => (
   </>
 );
 
-interface CustomerListItemProps {
-  customer: Customer;
-  onSelect: (customer: Customer) => void;
-}
-
-const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, onSelect }) => (
-  <li key={customer.id}>
-    <button
-      type="button"
-      className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
-      onClick={() => onSelect(customer)}
-    >
-      <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-        <img src="/person-purple.svg" className="w-7 h-7" />
-      </div>
-      <p className="font-medium text-lg" style={{ direction: "ltr" }}>
-        {toFarsiDigits(
-          `${customer.user.username.slice(0, 3)} ${customer.user.username.slice(
-            3,
-            6,
-          )} ${customer.user.username.slice(6, 9)} ${customer.user.username.slice(9)}`,
-        )}
-      </p>
-    </button>
-  </li>
-);
-
 interface TimePickerListItemProps {
   time: Date;
   selected: boolean;
@@ -288,7 +260,6 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
   onClose,
   currentDate,
   setCurrentDate,
-  clients,
   location,
   calendarRef,
 }) => {
@@ -303,7 +274,6 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
   );
   const addServiceInNewAppointmentIsOpen = pathname.endsWith("/select-service");
   const [createCustomerModalIsOpen, setCreateCustomerModalIsOpen] = useState(false);
-  const [addNewCustomerModalIsOpen, setAddNewCustomerModalIsOpen] = useState(false);
   const [newAppointmentCustomer, setNewAppointmentCustomer] = useState<Customer | null>(null);
   const [selectedServiceToAddInNewAppointment, setSelectedServiceToAddInNewAppointment] = useState<
     Service | undefined
@@ -555,63 +525,10 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
       )}
 
       {/* Customer Selection Modal */}
-      <Modal
+      <CustomerSelectionModal
         isOpen={createCustomerModalIsOpen}
         onClose={() => setCreateCustomerModalIsOpen(false)}
-        title="انتخاب مشتری"
-      >
-        <hr className="-mx-5" />
-        <ul className="-mx-5">
-          <li>
-            <button
-              className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
-              onClick={() => setAddNewCustomerModalIsOpen(true)}
-              type="button"
-            >
-              <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-                <img src="/plus-purple.svg" alt="plus person" className="w-7 h-7" />
-              </div>
-              <p className="font-medium text-lg">افزودن مشتری جدید</p>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
-              onClick={() => {
-                setNewAppointmentCustomer(null);
-                setCreateCustomerModalIsOpen(false);
-              }}
-            >
-              <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-                <img src="/walk-in.svg" className="w-8 h-8" />
-              </div>
-              <p className="font-medium text-lg">مراجعهکنندهی حضوری</p>
-            </button>
-          </li>
-        </ul>
-        {clients.length > 0 && (
-          <>
-            <hr />
-            <ul className="-mx-5">
-              {clients.map((customer) => (
-                <CustomerListItem
-                  key={customer.id}
-                  customer={customer}
-                  onSelect={(selectedCustomer) => {
-                    setNewAppointmentCustomer(selectedCustomer);
-                    setCreateCustomerModalIsOpen(false);
-                  }}
-                />
-              ))}
-            </ul>
-          </>
-        )}
-      </Modal>
-
-      <AddNewCustomerModal
-        isOpen={addNewCustomerModalIsOpen}
-        onClose={() => setAddNewCustomerModalIsOpen(false)}
+        setNewAppointmentCustomer={setNewAppointmentCustomer}
       />
 
       {/* Employee Selection BottomSheet */}

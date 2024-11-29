@@ -254,7 +254,6 @@ export function Calendar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [clients, setClients] = useState<Customer[]>([]);
   const [location, setLocation] = useState<Location | undefined>();
 
   const actionsBSIsOpen = pathname.endsWith("/calendar-add-modal");
@@ -310,10 +309,6 @@ export function Calendar() {
       }
     });
 
-    fetchCustomers().then(({ data }) => {
-      setClients(data);
-    });
-
     fetchLocation().then(({ data, response }) => {
       if (response.status === 401) router.push("/auth");
       else if (response.status !== 200)
@@ -327,7 +322,7 @@ export function Calendar() {
 
     fetchCategories().then(({ data, response }) => {
       if (response.status !== 200)
-        toast.error("دریافت لیست سرویس‌های قابل انتخاب", {
+        toast.error("دریافت لیست سرویسهای قابل انتخاب", {
           duration: 5000,
           position: "top-center",
           className: "w-full font-medium",
@@ -581,8 +576,8 @@ export function Calendar() {
                 shallowRouter.push("/services");
               }}
             >
-              <NextImage width={24} height={24} alt="سرویس‌ها" src="/catalog.svg" />
-              <p className="text-lg font-medium">سرویس‌ها</p>
+              <NextImage width={24} height={24} alt="سرویسها" src="/catalog.svg" />
+              <p className="text-lg font-medium">سرویسها</p>
             </button>
             <button
               className={
@@ -600,8 +595,8 @@ export function Calendar() {
                 "relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5"
               }
             >
-              <NextImage width={24} height={24} alt="پرداخت‌ها" src="/payments.svg" />
-              <p className="text-lg font-medium">پرداخت‌ها</p>
+              <NextImage width={24} height={24} alt="پرداختها" src="/payments.svg" />
+              <p className="text-lg font-medium">پرداختها</p>
             </button>
           </div>
           <Modal
@@ -609,13 +604,13 @@ export function Calendar() {
             onClose={() => shallowRouter.push("/more")}
             title={
               <div className="-mt-4">
-                <h1 className="text-3xl">منوی سرویس‌ها</h1>
+                <h1 className="text-3xl">منوی سرویسها</h1>
                 <p className="text-lg font-normal text-gray-500">
-                  مشاهده و مدیریت سرویس‌هایی که در کسب‌و‌کار شما ارائه می‌شود.
+                  مشاهده و مدیریت سرویسهایی که در کسبوکار شما ارائه میشود.
                 </p>
               </div>
             }
-            topBarTitle={<h2 className="text-xl font-bold">منوی سرویس‌ها</h2>}
+            topBarTitle={<h2 className="text-xl font-bold">منوی سرویسها</h2>}
             leftBtn={
               <button
                 className="bg-black px-3 py-2 text-white text-lg rounded-lg font-bold flex flex-row gap-2 items-center justify-center"
@@ -718,7 +713,7 @@ export function Calendar() {
                   setAddNewServiceCategoryBSIsOpen(true);
                 }}
               >
-                افزودن دسته‌بندی جدید در منو
+                افزودن دستهبندی جدید در منو
               </button>
             </div>
           </BottomSheet>
@@ -837,7 +832,6 @@ export function Calendar() {
         }}
         currentDate={currentDate}
         setCurrentDate={setCurrentDate}
-        clients={clients}
         calendarRef={calendarRef}
         location={location}
       />
