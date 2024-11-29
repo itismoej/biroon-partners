@@ -47,6 +47,9 @@ export interface User {
   avatar: Image;
   name: string;
   description?: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
 }
 
 export interface BusinessHour {
@@ -189,9 +192,6 @@ export async function login(
 
 interface AddedUser extends Omit<User, "avatar"> {
   username: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
 }
 
 export interface Customer {
