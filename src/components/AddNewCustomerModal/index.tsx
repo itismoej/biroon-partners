@@ -58,7 +58,7 @@ function AddNewCustomerModal({ isOpen, customersList, setCustomersList, onClose 
                 className: "w-full font-medium",
               });
             else if (cleanedPhoneNumber.length !== 13 || !cleanedPhoneNumber.startsWith("+989"))
-              toast.error("فیلد شماره‌همراه، اجباری می‌باشد و باید به شکل صحیح وارد شود", {
+              toast.error("فیلد شمارهه‌مراه، اجباری می‌باشد و باید به شکل صحیح وارد شود", {
                 duration: 5000,
                 position: "top-center",
                 className: "w-full font-medium",

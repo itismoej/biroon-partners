@@ -51,7 +51,7 @@ function PhoneNumberInput({ value, title = "شماره همراه *", className,
               }
 
               if (val.length > 10) {
-                toast.error("طول شماره حداکثر ۱۰ رقم میباشد", {
+                toast.error("طول شماره حداکثر ۱۰ رقم می‌باشد", {
                   duration: 3000,
                   position: "top-center",
                 });
