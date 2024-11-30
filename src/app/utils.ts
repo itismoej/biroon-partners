@@ -1,5 +1,7 @@
+import clsx, { type ClassValue } from "clsx";
 import { useSearchParams } from "next/navigation";
 import { type RefObject, useCallback, useEffect, useState } from "react";
+import { twMerge } from "tailwind-merge";
 
 export function toFarsiDigits(num: number | string): string {
   const farsiDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -41,6 +43,10 @@ export function formatDurationInFarsi(minutes: number): string {
   }
 
   return result;
+}
+
+export function cn(...classes: ClassValue[]) {
+  return twMerge(clsx(classes.filter(Boolean)));
 }
 
 interface UseOnTopOptions {

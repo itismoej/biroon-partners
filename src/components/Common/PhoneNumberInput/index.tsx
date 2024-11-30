@@ -1,5 +1,4 @@
-import { isJustDigits, toEnglishDigits, toFarsiDigits } from "@/app/utils";
-import { cn } from "@/helpers/cn";
+import { cn, isJustDigits, toEnglishDigits, toFarsiDigits } from "@/app/utils";
 import toast from "react-hot-toast";
 
 type Props = {
