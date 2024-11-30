@@ -49,7 +49,7 @@ function CustomerSelectionModal({ isOpen, onClose, setNewAppointmentCustomer }: 
               <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
                 <img src="/walk-in.svg" alt="walk-in" className="w-8 h-8" />
               </div>
-              <p className="font-medium text-lg">مراجعهکنندهی حضوری</p>
+              <p className="font-medium text-lg">مراجعه‌کنندهی حضوری</p>
             </button>
           </li>
         </ul>

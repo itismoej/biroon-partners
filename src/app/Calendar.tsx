@@ -588,7 +588,7 @@ export function Calendar() {
               }}
             >
               <NextImage width={24} height={24} alt="تیم متخصصان" src="/team.svg" />
-              <p className="text-lg font-medium">تیم متخ‌صصان</p>
+              <p className="text-lg font-medium">تیم متخصصان</p>
             </button>
             <button
               className={
@@ -606,7 +606,7 @@ export function Calendar() {
               <div className="-mt-4">
                 <h1 className="text-3xl">منوی سرویس‌ها</h1>
                 <p className="text-lg font-normal text-gray-500">
-                  مشاهده و مدیریت سرویس‌هایی که در کسبوکار شما ارائه میشود.
+                  مشاهده و مدیریت سرویس‌هایی که در کسبوکار شما ارائه می‌شود.
                 </p>
               </div>
             }
