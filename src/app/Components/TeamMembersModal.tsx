@@ -118,7 +118,7 @@ export function TeamMembersModal({ allEmployees, setAllEmployees }: TeamMembersM
                         });
                       } else {
                         toast.success(
-                          `متخصص «${editingEmployee.nickname || editingEmployee.user.name}» با موفقیت از کسب‌و‌کار شما حذف شد`,
+                          `متخصص «${editingEmployee.nickname || editingEmployee.user.fullName}» با موفقیت از کسب‌و‌کار شما حذف شد`,
                           {
                             duration: 5000,
                             position: "top-center",
@@ -269,7 +269,7 @@ export function TeamMembersModal({ allEmployees, setAllEmployees }: TeamMembersM
                     });
                   } else {
                     toast.success(
-                      `متخصص «${data.nickname || data.user.name}» با موفقیت به کسب‌و‌کار اضافه شد`,
+                      `متخصص «${data.nickname || data.user.fullName}» با موفقیت به کسب‌و‌کار اضافه شد`,
                       {
                         duration: 5000,
                         position: "top-center",

@@ -46,7 +46,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
           />
         ) : userData?.user ? (
           <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold bg-purple-200">
-            {userData.user.name.slice(0, 2)}
+            {userData.user.fullName.slice(0, 2)}
           </div>
         ) : null}
       </button>

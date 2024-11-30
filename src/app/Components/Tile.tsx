@@ -18,10 +18,10 @@ export const Tile = ({ employee, onTileChange }: TileProps) => {
       <div className="flex flex-col items-center">
         <img
           src={employee.user.avatar.url}
-          alt={employee.nickname || employee.user.name}
+          alt={employee.nickname || employee.user.fullName}
           className="w-20 h-20 rounded-full mb-4"
         />
-        <p className="font-medium">{employee.nickname || employee.user.name}</p>
+        <p className="font-medium">{employee.nickname || employee.user.fullName}</p>
         <p className="font-normal">{employee.formattedPrice}</p>
       </div>
     </button>

@@ -360,7 +360,7 @@ export function Calendar() {
     () =>
       allEmployees.map((employee) => ({
         id: employee.id,
-        title: employee.nickname || employee.user.name,
+        title: employee.nickname || employee.user.fullName,
         avatar: employee.user.avatar.url,
         businessHours: employee.businessHours.map((i) => ({
           daysOfWeek: [i.weekday],
