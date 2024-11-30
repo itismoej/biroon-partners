@@ -254,7 +254,6 @@ export function Calendar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [clients, setClients] = useState<Customer[]>([]);
   const [location, setLocation] = useState<Location | undefined>();
 
   const actionsBSIsOpen = pathname.endsWith("/calendar-add-modal");
@@ -308,10 +307,6 @@ export function Calendar() {
           }
         });
       }
-    });
-
-    fetchCustomers().then(({ data }) => {
-      setClients(data);
     });
 
     fetchLocation().then(({ data, response }) => {
@@ -837,7 +832,6 @@ export function Calendar() {
         }}
         currentDate={currentDate}
         setCurrentDate={setCurrentDate}
-        clients={clients}
         calendarRef={calendarRef}
         location={location}
       />

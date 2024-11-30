@@ -45,8 +45,10 @@ export interface Image {
 export interface User {
   id: string;
   avatar: Image;
-  name: string;
   description?: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
 }
 
 export interface BusinessHour {
@@ -62,7 +64,7 @@ export interface Employee {
   businessHours: BusinessHour[];
 }
 
-export type Weekday = "شنبه" | "یکشنبه" | "دوشنبه" | "سه‌شنبه" | "چهارشنبه" | "پنج‌شنبه" | "جمعه";
+export type Weekday = "شنبه" | "یک‌شنبه" | "دوشنبه" | "سه‌شنبه" | "چهارشنبه" | "پنج‌شنبه" | "جمعه";
 
 export interface OpeningTime {
   weekday: Weekday;
@@ -206,13 +208,18 @@ export async function fetchCustomers(): Promise<{ data: Customer[]; response: Re
   return { data, response };
 }
 
-export async function createCustomer(
-  phoneNumber: string,
-  code: string,
-): Promise<{ data: Customer[]; response: Response }> {
+export async function createCustomer({
+  firstName,
+  lastName,
+  phoneNumber,
+}: {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+}): Promise<{ data: Customer; response: Response }> {
   const response = await fetch(`${apiUrl}/partners/clients/`, {
     method: "POST",
-    body: JSON.stringify({ phoneNumber, code }),
+    body: JSON.stringify({ phoneNumber, firstName, lastName }),
     headers: {
       "Content-Type": "application/json",
     },
