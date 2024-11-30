@@ -163,7 +163,7 @@ const ServiceSelectionButton: React.FC<ServiceSelectionButtonProps> = ({
   ) : (
     <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
       <img src="/service.png" className="w-16 h-16" />
-      <p className="text-lg text-gray-500 text-center mt-4">برای ذخیرهی این نوبت یک سرویس اضافه کنید</p>
+      <p className="text-lg text-gray-500 text-center mt-4">برای ذخیره‌ی این نوبت یک سرویس اضافه کنید</p>
       <button
         className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
         type="button"
@@ -564,7 +564,7 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
               ))
             ) : (
               <div className="text-lg border text-center p-8 py-24 rounded-xl">
-                متأسفانه در حال حاضر هیچ متخصصی این سرویس را ارائه نمیکند
+                متأسفانه در حال حاضر هیچ متخصصی این سرویس را ارائه نمی‌کند
               </div>
             )
           ) : (

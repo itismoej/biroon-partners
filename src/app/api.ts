@@ -65,7 +65,7 @@ export interface Employee {
   businessHours: BusinessHour[];
 }
 
-export type Weekday = "شنبه" | "یکشنبه" | "دوشنبه" | "سهشنبه" | "چهارشنبه" | "پنجشنبه" | "جمعه";
+export type Weekday = "شنبه" | "یک‌شنبه" | "دوشنبه" | "سه‌شنبه" | "چهارشنبه" | "پنجشنبه" | "جمعه";
 
 export interface OpeningTime {
   weekday: Weekday;
