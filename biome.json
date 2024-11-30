@@ -8,5 +8,12 @@
     "indentWidth": 2,
     "lineWidth": 110,
     "lineEnding": "lf"
+  },
+  "linter": {
+    "rules": {
+      "nursery": {
+        "noIrregularWhitespace": "off"
+      }
+    }
   }
 }
