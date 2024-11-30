@@ -45,7 +45,6 @@ export interface Image {
 export interface User {
   id: string;
   avatar: Image;
-  name: string;
   description?: string;
   firstName: string;
   lastName: string;
