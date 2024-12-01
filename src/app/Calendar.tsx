@@ -46,6 +46,7 @@ import { TeamModal } from "@/app/Components/TeamModal";
 import { goToNow } from "@/app/calendarUtils";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
+import Clients from "@/components/pages/clients";
 
 const generateDurations = () => {
   const durations = [];
@@ -562,7 +563,7 @@ export function Calendar() {
       ) : page === 1 ? (
         "sales"
       ) : page === 2 ? (
-        "clients"
+        <Clients/>
       ) : page === 3 ? (
         <div className="p-5 bg-gray-100" style={{ minHeight: "calc(100dvh - 119px)" }}>
           <div className="py-5 grid grid-cols-2 gap-3">
