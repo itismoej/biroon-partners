@@ -189,13 +189,21 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
         {editingWorkingDay && (
           <div className="flex flex-col">
             <div className="flex flex-col gap-1 items-center justify-center my-6">
-              <NextImage
-                className="rounded-full border-2 border-gray-300"
-                src={editingWorkingDay.employeeWorkingDays.employee.user.avatar.url || ""}
-                alt={editingWorkingDay.employeeWorkingDays.employee.nickname || ""}
-                width={70}
-                height={70}
-              />
+              {editingWorkingDay.employeeWorkingDays.employee.user.avatar.url ? (
+                <NextImage
+                  className="rounded-full border-2 border-gray-300"
+                  src={editingWorkingDay.employeeWorkingDays.employee.user.avatar.url}
+                  alt={editingWorkingDay.employeeWorkingDays.employee.nickname || ""}
+                  width={70}
+                  height={70}
+                />
+              ) : (
+                <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center text-2xl font-bold bg-purple-200">
+                  {editingWorkingDay.employeeWorkingDays.employee.nickname
+                    ? editingWorkingDay.employeeWorkingDays.employee.nickname.slice(0, 2)
+                    : ""}
+                </div>
+              )}
               <h2 className="text-xl font-bold">{editingWorkingDay.employeeWorkingDays.employee.nickname}</h2>
               <h2 className="font-normal">
                 {toFarsiDigits(format(parseISO(editingWorkingDay.workingDay.day), "EEEE، dd MMMM"))}
