@@ -547,7 +547,7 @@ export interface EmployeesShifts {
 }
 
 export async function fetchShifts(date: Date): Promise<{ data: EmployeesShifts; response: Response }> {
-  const response = await fetch(`${apiUrl}/partners/shifts?date=${format(date, "yyyy-MM-dd")}`, {
+  const response = await fetch(`${apiUrl}/partners/shifts/?date=${format(date, "yyyy-MM-dd")}`, {
     credentials: "include",
   });
   return { data: await response.json(), response };
