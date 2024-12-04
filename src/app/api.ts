@@ -88,7 +88,7 @@ export interface Location {
   team: User[];
   about: {
     description: string;
-    openingTimes: OpeningTime[];
+    workingDays: WorkingDay[];
   };
 }
 
@@ -549,6 +549,21 @@ export interface EmployeesShifts {
 export async function fetchShifts(date: Date): Promise<{ data: EmployeesShifts; response: Response }> {
   const response = await fetch(`${apiUrl}/partners/shifts?date=${format(date, "yyyy-MM-dd")}`, {
     credentials: "include",
+  });
+  return { data: await response.json(), response };
+}
+
+export async function addFreeTimeForEmployee(
+  employeeId: Employee["id"],
+  freeTimes: WorkingTime[],
+): Promise<{ data: WorkingTime[]; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/shifts/${employeeId}/`, {
+    method: "PUT",
+    credentials: "include",
+    body: JSON.stringify(freeTimes),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
   return { data: await response.json(), response };
 }

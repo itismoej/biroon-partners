@@ -1,7 +1,7 @@
 import { Modal } from "@/app/Components/Modal";
 import { ScheduledShiftsModal } from "@/app/Components/ScheduledShiftsModal";
 import { TeamMembersModal } from "@/app/Components/TeamMembersModal";
-import type { Employee } from "@/app/api";
+import type { Employee, Location } from "@/app/api";
 import { useShallowRouter } from "@/app/utils";
 import NextImage from "next/image";
 import type React from "react";
@@ -11,9 +11,16 @@ interface TeamModalProps {
   onClose: () => void;
   allEmployees: Employee[];
   setAllEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
+  location: Location;
 }
 
-export const TeamModal: React.FC<TeamModalProps> = ({ allEmployees, setAllEmployees, isOpen, onClose }) => {
+export const TeamModal: React.FC<TeamModalProps> = ({
+  location,
+  allEmployees,
+  setAllEmployees,
+  isOpen,
+  onClose,
+}) => {
   const shallowRouter = useShallowRouter();
 
   return (
@@ -45,7 +52,11 @@ export const TeamModal: React.FC<TeamModalProps> = ({ allEmployees, setAllEmploy
         </button>
       </div>
       <TeamMembersModal allEmployees={allEmployees} setAllEmployees={setAllEmployees} />
-      <ScheduledShiftsModal allEmployees={allEmployees} setAllEmployees={setAllEmployees} />
+      <ScheduledShiftsModal
+        location={location}
+        allEmployees={allEmployees}
+        setAllEmployees={setAllEmployees}
+      />
     </Modal>
   );
 };
