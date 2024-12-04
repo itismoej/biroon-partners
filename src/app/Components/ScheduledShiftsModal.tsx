@@ -6,16 +6,15 @@ import { WeekPicker } from "@/app/Components/WeekPicker";
 import {
   type Employee,
   type EmployeeWorkingDays,
-  type Location,
+  fetchAllEmployees,
   fetchShifts,
   modifyFreeTimeForEmployee,
 } from "@/app/api";
 import { formatDurationInFarsi, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { differenceInMinutes, endOfWeek, format, parseISO, startOfWeek } from "date-fns-jalali";
 import NextImage from "next/image";
-import { usePathname } from "next/navigation";
-import type React from "react";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 function computeWorkingTimeInMinutes(wd?: EmployeeWorkingDays): number {
@@ -30,19 +29,15 @@ function computeWorkingTimeInMinutes(wd?: EmployeeWorkingDays): number {
     .reduce((partialSum, a) => partialSum + a, 0);
 }
 
-interface ScheduledShiftsModalProps {
-  allEmployees: Employee[];
-  setAllEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
-  location: Location;
-}
-
-export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps) {
+export function ScheduledShiftsModal() {
   const pathname = usePathname();
+  const isThisModalOpen = pathname.startsWith("/team/scheduled-shifts");
   const shallowRouter = useShallowRouter();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [internalSelectedDate, setInternalSelectedDate] = useState<Date>(new Date());
   const [selectingWeekBSIsOpen, setSelectingWeekBSIsOpen] = useState(false);
   const [openEmployeeIds, setOpenEmployeeIds] = useState<Employee["id"][]>([]);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 6 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 6 });
@@ -60,26 +55,36 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
 
   const [shifts, setShifts] = useState<EmployeeWorkingDays[]>([]);
   const weekStartISO = weekStart.toISOString();
+  const router = useRouter();
 
   useEffect(() => {
-    fetchShifts(weekStart).then(({ data, response }) => {
-      if (response.status !== 200) {
-        toast.error("دریافت لیست شیفت‌ها با خطا مواجه شد", {
-          duration: 5000,
-          position: "top-center",
-          className: "w-full font-medium",
-        });
-      } else {
-        setShifts(data.shifts);
-      }
-    });
-  }, [weekStartISO]);
+    if (isThisModalOpen) {
+      fetchShifts(weekStart).then(({ data, response }) => {
+        if (response.status !== 200) {
+          toast.error("دریافت لیست شیفت‌ها با خطا مواجه شد", {
+            duration: 5000,
+            position: "top-center",
+            className: "w-full font-medium",
+          });
+        } else {
+          setShifts(data.shifts);
+        }
+      });
+
+      fetchAllEmployees().then(({ data: employees, response }) => {
+        if (response.status === 401) router.push("/auth");
+        else {
+          setAllEmployees(employees);
+        }
+      });
+    }
+  }, [weekStartISO, isThisModalOpen]);
 
   const [editingWorkingDay, setEditingWorkingDay] = useState<ShiftEditModalProps["editingWorkingDay"]>();
 
   return (
     <Modal
-      isOpen={pathname.startsWith("/team/scheduled-shifts")}
+      isOpen={isThisModalOpen}
       onClose={() => {
         setTimeout(() => {
           setCurrentDate(new Date());

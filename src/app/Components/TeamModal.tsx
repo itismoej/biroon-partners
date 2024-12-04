@@ -15,7 +15,6 @@ interface TeamModalProps {
 }
 
 export const TeamModal: React.FC<TeamModalProps> = ({
-  location,
   allEmployees,
   setAllEmployees,
   isOpen,
@@ -52,11 +51,7 @@ export const TeamModal: React.FC<TeamModalProps> = ({
         </button>
       </div>
       <TeamMembersModal allEmployees={allEmployees} setAllEmployees={setAllEmployees} />
-      <ScheduledShiftsModal
-        location={location}
-        allEmployees={allEmployees}
-        setAllEmployees={setAllEmployees}
-      />
+      <ScheduledShiftsModal />
     </Modal>
   );
 };
