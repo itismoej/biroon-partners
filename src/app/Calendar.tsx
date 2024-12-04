@@ -841,12 +841,15 @@ export function Calendar() {
         calendarRef={calendarRef}
         location={location}
       />
-      <TeamModal
-        allEmployees={allEmployees}
-        setAllEmployees={setAllEmployees}
-        isOpen={teamModalIsOpen}
-        onClose={() => shallowRouter.push("/more")}
-      />
+      {location && (
+        <TeamModal
+          location={location}
+          allEmployees={allEmployees}
+          setAllEmployees={setAllEmployees}
+          isOpen={teamModalIsOpen}
+          onClose={() => shallowRouter.push("/more")}
+        />
+      )}
     </div>
   );
 }

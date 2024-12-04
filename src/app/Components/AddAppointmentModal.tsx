@@ -182,7 +182,7 @@ interface ActionButtonsProps {
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ onClose, onSave, saveDisabled }) => (
-  <div className="flex fixed bottom-0 w-[100vw] -mx-5 bottom-0 bg-white border-t py-5 px-5">
+  <div className="flex fixed bottom-0 w-[100vw] -mx-5 bg-white border-t py-5 px-5">
     <div className="relative w-full me-2.5">
       <button
         type="button"

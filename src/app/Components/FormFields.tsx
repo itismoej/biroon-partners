@@ -86,6 +86,7 @@ type SelectFieldProps = {
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   options: SelectOption[];
   className?: string;
+  containerClassName?: string;
 };
 
 export const SelectField: React.FC<SelectFieldProps> = ({
@@ -94,8 +95,9 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   onChange,
   options,
   className = "",
+  containerClassName = "",
 }) => (
-  <div className="flex flex-col gap-2">
+  <div className={`flex flex-col gap-2 ${containerClassName}`}>
     <label className="font-bold text-md">{label}</label>
     <select
       value={value}

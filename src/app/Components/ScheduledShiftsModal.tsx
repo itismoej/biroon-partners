@@ -1,33 +1,33 @@
 import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
 import { MenuPopup } from "@/app/Components/MenuPopup";
 import { Modal } from "@/app/Components/Modal";
+import { ShiftEditModal, type ShiftEditModalProps } from "@/app/Components/ShiftEditModal";
 import { WeekPicker } from "@/app/Components/WeekPicker";
-import { type Employee, type EmployeeWorkingDays, type WorkingDay, fetchShifts } from "@/app/api";
-import { toFarsiDigits, useShallowRouter } from "@/app/utils";
-import { endOfWeek, format, parseISO, startOfWeek } from "date-fns-jalali";
+import { type Employee, type EmployeeWorkingDays, type Location, fetchShifts } from "@/app/api";
+import { formatDurationInFarsi, toFarsiDigits, useShallowRouter } from "@/app/utils";
+import { differenceInMinutes, endOfWeek, format, parseISO, startOfWeek } from "date-fns-jalali";
 import NextImage from "next/image";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-function computeWeeklyHours(emp: Employee): number {
-  return emp.businessHours.reduce((total, bh) => {
-    const [startHour, startMinute] = bh.startTime.split(":").map(Number);
-    const [endHour, endMinute] = bh.endTime.split(":").map(Number);
-
-    const start = startHour * 60 + startMinute;
-    const end = endHour * 60 + endMinute;
-
-    const duration = (end - start) / 60;
-    return total + duration;
-  }, 0);
+function computeWorkingTimeInMinutes(wd?: EmployeeWorkingDays): number {
+  if (!wd) return 0;
+  return wd.workingDays
+    .map(({ workingHours }) =>
+      workingHours.reduce(
+        (total, wt) => total + differenceInMinutes(parseISO(wt.endTime), parseISO(wt.startTime)),
+        0,
+      ),
+    )
+    .reduce((partialSum, a) => partialSum + a, 0);
 }
 
 interface ScheduledShiftsModalProps {
   allEmployees: Employee[];
   setAllEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
+  location: Location;
 }
 
 export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps) {
@@ -69,10 +69,7 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
     });
   }, [weekStartISO]);
 
-  const [editingWorkingDay, setEditingWorkingDay] = useState<{
-    employeeWorkingDays: EmployeeWorkingDays;
-    workingDay: WorkingDay;
-  }>();
+  const [editingWorkingDay, setEditingWorkingDay] = useState<ShiftEditModalProps["editingWorkingDay"]>();
 
   return (
     <Modal
@@ -125,7 +122,9 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
                 <div className="flex flex-col items-start">
                   <span className="text-lg font-medium">{emp.nickname}</span>
                   <span className="font-normal text-gray-500 text-sm">
-                    {toFarsiDigits(computeWeeklyHours(emp))} ساعت
+                    {formatDurationInFarsi(
+                      computeWorkingTimeInMinutes(shifts.find(({ employee }) => employee.id === emp.id)),
+                    )}
                   </span>
                 </div>
               </div>
@@ -203,18 +202,30 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
               </h2>
             </div>
             <div className="flex flex-col divide-y">
-              {editingWorkingDay.workingDay.workingHours.length > 0 ? (
-                <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
-                  <p className="text-lg font-semibold">ویرایش این روز</p>
-                  <NextImage src="/pen.svg" alt="ویرایش این روز" width={24} height={24} />
-                </button>
-              ) : null}
-              {editingWorkingDay.workingDay.workingHours.length === 0 ? (
-                <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
-                  <p className="text-lg font-semibold">افزودن زمان کاری</p>
-                  <NextImage src="/plus.svg" alt="افزودن زمان کاری" width={24} height={24} />
-                </button>
-              ) : null}
+              <button
+                className="flex flex-row justify-between p-5 bg-white active:transform-none"
+                onClick={() => {
+                  shallowRouter.push(
+                    `/team/scheduled-shifts/working-hours/${editingWorkingDay.employeeWorkingDays.employee.id}:${editingWorkingDay.workingDay.day}`,
+                  );
+                }}
+              >
+                <p className="text-lg font-semibold">
+                  {editingWorkingDay.workingDay.workingHours.length > 0
+                    ? "ویرایش این روز"
+                    : "افزودن زمان کاری"}
+                </p>
+                <NextImage
+                  src={editingWorkingDay.workingDay.workingHours.length > 0 ? "/pen.svg" : "/plus.svg"}
+                  alt={
+                    editingWorkingDay.workingDay.workingHours.length > 0
+                      ? "ویرایش این روز"
+                      : "افزودن زمان کاری"
+                  }
+                  width={24}
+                  height={24}
+                />
+              </button>
               <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
                 <p className="text-lg font-semibold">تنظیم شیفت هفتگی</p>
                 <NextImage src="/time.svg" alt="تنظیم شیفت هفتگی" width={24} height={24} />
@@ -262,6 +273,24 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
           }}
         />
       </BottomSheet>
+      {editingWorkingDay && (
+        <ShiftEditModal
+          editingWorkingDay={editingWorkingDay}
+          onSave={(newWorkingDay) => {
+            setShifts((prev) => {
+              const empIdx = prev.findIndex(({ employee }) => employee.id === newWorkingDay.employee.id);
+              if (empIdx === -1) return prev;
+
+              const dayIdx = prev[empIdx].workingDays.findIndex(({ day }) => day === newWorkingDay.day);
+              if (dayIdx === -1) return prev;
+
+              const newEmployeeWorkingDay = [...prev];
+              newEmployeeWorkingDay[empIdx].workingDays[dayIdx].workingHours = newWorkingDay.workingHours;
+              return newEmployeeWorkingDay;
+            });
+          }}
+        />
+      )}
     </Modal>
   );
 }
