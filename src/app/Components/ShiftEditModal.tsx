@@ -5,7 +5,7 @@ import {
   type EmployeeWorkingDays,
   type WorkingDay,
   type WorkingTime,
-  addFreeTimeForEmployee,
+  modifyFreeTimeForEmployee,
 } from "@/app/api";
 import { formatDurationInFarsi, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { parse } from "date-fns";
@@ -196,7 +196,7 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
                   filter: workingHours.length === 1 ? "saturate(0) brightness(2.5)" : "",
                 }}
                 src="/delete.svg"
-                alt="حذف این روز"
+                alt="حذف این شیفت"
                 width={24}
                 height={24}
               />
@@ -216,11 +216,27 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
               <button
                 type="button"
                 onClick={() => {
-                  shallowRouter.push("/team/scheduled-shifts");
+                  modifyFreeTimeForEmployee(
+                    editingWorkingDay.employeeWorkingDays.employee.id,
+                    [],
+                    parseISO(editingWorkingDay.workingDay.day),
+                  ).then(({ data, response }) => {
+                    if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
+                    else {
+                      shallowRouter.push("/team/scheduled-shifts");
+                      setWorkingHours(data);
+                      if (onSave)
+                        onSave({
+                          employee: editingWorkingDay.employeeWorkingDays.employee,
+                          day: editingWorkingDay.workingDay.day,
+                          workingHours: data,
+                        });
+                    }
+                  });
                 }}
                 className="w-full text-red-500 font-medium p-3 bg-white border rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300"
               >
-                حذف شیفت
+                حذف روز
               </button>
             ) : (
               <button
@@ -236,22 +252,24 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
             <button
               type="button"
               onClick={() => {
-                addFreeTimeForEmployee(editingWorkingDay.employeeWorkingDays.employee.id, workingHours).then(
-                  ({ data, response }) => {
-                    if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
-                    else {
-                      console.log("api response data: ", data);
-                      shallowRouter.push("/team/scheduled-shifts");
-                      setWorkingHours(data);
-                      if (onSave)
-                        onSave({
-                          employee: editingWorkingDay.employeeWorkingDays.employee,
-                          day: editingWorkingDay.workingDay.day,
-                          workingHours: data,
-                        });
-                    }
-                  },
-                );
+                modifyFreeTimeForEmployee(
+                  editingWorkingDay.employeeWorkingDays.employee.id,
+                  workingHours,
+                  parseISO(editingWorkingDay.workingDay.day),
+                ).then(({ data, response }) => {
+                  if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
+                  else {
+                    console.log("api response data: ", data);
+                    shallowRouter.push("/team/scheduled-shifts");
+                    setWorkingHours(data);
+                    if (onSave)
+                      onSave({
+                        employee: editingWorkingDay.employeeWorkingDays.employee,
+                        day: editingWorkingDay.workingDay.day,
+                        workingHours: data,
+                      });
+                  }
+                });
               }}
               className={
                 "w-full font-medium p-3 text-white rounded-md text-xl cursor-pointer hover:bg-opacity-90 transition duration-300 bg-black"

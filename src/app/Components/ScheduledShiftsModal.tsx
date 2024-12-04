@@ -3,7 +3,13 @@ import { MenuPopup } from "@/app/Components/MenuPopup";
 import { Modal } from "@/app/Components/Modal";
 import { ShiftEditModal, type ShiftEditModalProps } from "@/app/Components/ShiftEditModal";
 import { WeekPicker } from "@/app/Components/WeekPicker";
-import { type Employee, type EmployeeWorkingDays, type Location, fetchShifts } from "@/app/api";
+import {
+  type Employee,
+  type EmployeeWorkingDays,
+  type Location,
+  fetchShifts,
+  modifyFreeTimeForEmployee,
+} from "@/app/api";
 import { formatDurationInFarsi, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { differenceInMinutes, endOfWeek, format, parseISO, startOfWeek } from "date-fns-jalali";
 import NextImage from "next/image";
@@ -248,7 +254,37 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
                 />
               </button>
               {editingWorkingDay.workingDay.workingHours.length > 0 ? (
-                <button className="flex flex-row justify-between p-5 bg-white active:transform-none rounded-b-2xl">
+                <button
+                  className="flex flex-row justify-between p-5 bg-white active:transform-none rounded-b-2xl"
+                  onClick={() => {
+                    modifyFreeTimeForEmployee(
+                      editingWorkingDay.employeeWorkingDays.employee.id,
+                      [],
+                      parseISO(editingWorkingDay.workingDay.day),
+                    ).then(({ data, response }) => {
+                      if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
+                      else {
+                        shallowRouter.push("/team/scheduled-shifts");
+                        setShifts((prev) => {
+                          const empIdx = prev.findIndex(
+                            ({ employee }) =>
+                              employee.id === editingWorkingDay.employeeWorkingDays.employee.id,
+                          );
+                          if (empIdx === -1) return prev;
+
+                          const dayIdx = prev[empIdx].workingDays.findIndex(
+                            ({ day }) => day === editingWorkingDay.workingDay.day,
+                          );
+                          if (dayIdx === -1) return prev;
+
+                          const newEmployeeWorkingDay = [...prev];
+                          newEmployeeWorkingDay[empIdx].workingDays[dayIdx].workingHours = data;
+                          return newEmployeeWorkingDay;
+                        });
+                      }
+                    });
+                  }}
+                >
                   <p className="text-lg text-red-500 font-semibold">حذف این روز</p>
                   <NextImage src="/delete.svg" alt="حذف این روز" width={24} height={24} />
                 </button>

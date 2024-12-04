@@ -553,17 +553,21 @@ export async function fetchShifts(date: Date): Promise<{ data: EmployeesShifts; 
   return { data: await response.json(), response };
 }
 
-export async function addFreeTimeForEmployee(
+export async function modifyFreeTimeForEmployee(
   employeeId: Employee["id"],
   freeTimes: WorkingTime[],
+  modifyingDate: Date,
 ): Promise<{ data: WorkingTime[]; response: Response }> {
-  const response = await fetch(`${apiUrl}/partners/shifts/${employeeId}/`, {
-    method: "PUT",
-    credentials: "include",
-    body: JSON.stringify(freeTimes),
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${apiUrl}/partners/shifts/${employeeId}/${format(modifyingDate, "yyyy-MM-dd")}/`,
+    {
+      method: "PUT",
+      credentials: "include",
+      body: JSON.stringify(freeTimes),
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
   return { data: await response.json(), response };
 }
