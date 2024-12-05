@@ -16,14 +16,14 @@ function Clients() {
 
   return (
     <>
-      <div className="px-5">
+      <div className="px-5 pb-16">
         <div className="flex items-center justify-between">
           <h2 className="my-8 text-3xl font-semibold">انتخاب مشتری</h2>
           <button
             type="button"
             className="bg-black px-3 py-2 text-white text-lg rounded-lg font-bold flex flex-row gap-2 items-center justify-center"
             onClick={() => {
-              console.log("salam");
+              setAddNewCustomerModalIsOpen(true);
             }}
           >
             <NextImage src="/plus-white.svg" alt="افزودن سرویس" width={20} height={20} />
