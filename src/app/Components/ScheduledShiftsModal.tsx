@@ -1,42 +1,43 @@
 import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
 import { MenuPopup } from "@/app/Components/MenuPopup";
 import { Modal } from "@/app/Components/Modal";
+import { ShiftEditModal, type ShiftEditModalProps } from "@/app/Components/ShiftEditModal";
 import { WeekPicker } from "@/app/Components/WeekPicker";
-import { type Employee, type EmployeeWorkingDays, type WorkingDay, fetchShifts } from "@/app/api";
-import { toFarsiDigits, useShallowRouter } from "@/app/utils";
-import { endOfWeek, format, parseISO, startOfWeek } from "date-fns-jalali";
+import {
+  type Employee,
+  type EmployeeWorkingDays,
+  fetchAllEmployees,
+  fetchShifts,
+  modifyFreeTimeForEmployee,
+} from "@/app/api";
+import { formatDurationInFarsi, toFarsiDigits, useShallowRouter } from "@/app/utils";
+import { differenceInMinutes, endOfWeek, format, parseISO, startOfWeek } from "date-fns-jalali";
 import NextImage from "next/image";
-import { usePathname } from "next/navigation";
-import type React from "react";
-import { useEffect } from "react";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-function computeWeeklyHours(emp: Employee): number {
-  return emp.businessHours.reduce((total, bh) => {
-    const [startHour, startMinute] = bh.startTime.split(":").map(Number);
-    const [endHour, endMinute] = bh.endTime.split(":").map(Number);
-
-    const start = startHour * 60 + startMinute;
-    const end = endHour * 60 + endMinute;
-
-    const duration = (end - start) / 60;
-    return total + duration;
-  }, 0);
+function computeWorkingTimeInMinutes(wd?: EmployeeWorkingDays): number {
+  if (!wd) return 0;
+  return wd.workingDays
+    .map(({ workingHours }) =>
+      workingHours.reduce(
+        (total, wt) => total + differenceInMinutes(parseISO(wt.endTime), parseISO(wt.startTime)),
+        0,
+      ),
+    )
+    .reduce((partialSum, a) => partialSum + a, 0);
 }
 
-interface ScheduledShiftsModalProps {
-  allEmployees: Employee[];
-  setAllEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
-}
-
-export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps) {
+export function ScheduledShiftsModal() {
   const pathname = usePathname();
+  const isThisModalOpen = pathname.startsWith("/team/scheduled-shifts");
   const shallowRouter = useShallowRouter();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [internalSelectedDate, setInternalSelectedDate] = useState<Date>(new Date());
   const [selectingWeekBSIsOpen, setSelectingWeekBSIsOpen] = useState(false);
   const [openEmployeeIds, setOpenEmployeeIds] = useState<Employee["id"][]>([]);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 6 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 6 });
@@ -54,29 +55,36 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
 
   const [shifts, setShifts] = useState<EmployeeWorkingDays[]>([]);
   const weekStartISO = weekStart.toISOString();
+  const router = useRouter();
 
   useEffect(() => {
-    fetchShifts(weekStart).then(({ data, response }) => {
-      if (response.status !== 200) {
-        toast.error("دریافت لیست شیفت‌ها با خطا مواجه شد", {
-          duration: 5000,
-          position: "top-center",
-          className: "w-full font-medium",
-        });
-      } else {
-        setShifts(data.shifts);
-      }
-    });
-  }, [weekStartISO]);
+    if (isThisModalOpen) {
+      fetchShifts(weekStart).then(({ data, response }) => {
+        if (response.status !== 200) {
+          toast.error("دریافت لیست شیفت‌ها با خطا مواجه شد", {
+            duration: 5000,
+            position: "top-center",
+            className: "w-full font-medium",
+          });
+        } else {
+          setShifts(data.shifts);
+        }
+      });
 
-  const [editingWorkingDay, setEditingWorkingDay] = useState<{
-    employeeWorkingDays: EmployeeWorkingDays;
-    workingDay: WorkingDay;
-  }>();
+      fetchAllEmployees().then(({ data: employees, response }) => {
+        if (response.status === 401) router.push("/auth");
+        else {
+          setAllEmployees(employees);
+        }
+      });
+    }
+  }, [weekStartISO, isThisModalOpen]);
+
+  const [editingWorkingDay, setEditingWorkingDay] = useState<ShiftEditModalProps["editingWorkingDay"]>();
 
   return (
     <Modal
-      isOpen={pathname.startsWith("/team/scheduled-shifts")}
+      isOpen={isThisModalOpen}
       onClose={() => {
         setTimeout(() => {
           setCurrentDate(new Date());
@@ -125,7 +133,9 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
                 <div className="flex flex-col items-start">
                   <span className="text-lg font-medium">{emp.nickname}</span>
                   <span className="font-normal text-gray-500 text-sm">
-                    {toFarsiDigits(computeWeeklyHours(emp))} ساعت
+                    {formatDurationInFarsi(
+                      computeWorkingTimeInMinutes(shifts.find(({ employee }) => employee.id === emp.id)),
+                    )}
                   </span>
                 </div>
               </div>
@@ -190,31 +200,51 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
         {editingWorkingDay && (
           <div className="flex flex-col">
             <div className="flex flex-col gap-1 items-center justify-center my-6">
-              <NextImage
-                className="rounded-full border-2 border-gray-300"
-                src={editingWorkingDay.employeeWorkingDays.employee.user.avatar.url || ""}
-                alt={editingWorkingDay.employeeWorkingDays.employee.nickname || ""}
-                width={70}
-                height={70}
-              />
+              {editingWorkingDay.employeeWorkingDays.employee.user.avatar.url ? (
+                <NextImage
+                  className="rounded-full border-2 border-gray-300"
+                  src={editingWorkingDay.employeeWorkingDays.employee.user.avatar.url}
+                  alt={editingWorkingDay.employeeWorkingDays.employee.nickname || ""}
+                  width={70}
+                  height={70}
+                />
+              ) : (
+                <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center text-2xl font-bold bg-purple-200">
+                  {editingWorkingDay.employeeWorkingDays.employee.nickname
+                    ? editingWorkingDay.employeeWorkingDays.employee.nickname.slice(0, 2)
+                    : ""}
+                </div>
+              )}
               <h2 className="text-xl font-bold">{editingWorkingDay.employeeWorkingDays.employee.nickname}</h2>
               <h2 className="font-normal">
                 {toFarsiDigits(format(parseISO(editingWorkingDay.workingDay.day), "EEEE، dd MMMM"))}
               </h2>
             </div>
             <div className="flex flex-col divide-y">
-              {editingWorkingDay.workingDay.workingHours.length > 0 ? (
-                <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
-                  <p className="text-lg font-semibold">ویرایش این روز</p>
-                  <NextImage src="/pen.svg" alt="ویرایش این روز" width={24} height={24} />
-                </button>
-              ) : null}
-              {editingWorkingDay.workingDay.workingHours.length === 0 ? (
-                <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
-                  <p className="text-lg font-semibold">افزودن زمان کاری</p>
-                  <NextImage src="/plus.svg" alt="افزودن زمان کاری" width={24} height={24} />
-                </button>
-              ) : null}
+              <button
+                className="flex flex-row justify-between p-5 bg-white active:transform-none"
+                onClick={() => {
+                  shallowRouter.push(
+                    `/team/scheduled-shifts/working-hours/${editingWorkingDay.employeeWorkingDays.employee.id}:${editingWorkingDay.workingDay.day}`,
+                  );
+                }}
+              >
+                <p className="text-lg font-semibold">
+                  {editingWorkingDay.workingDay.workingHours.length > 0
+                    ? "ویرایش این روز"
+                    : "افزودن زمان کاری"}
+                </p>
+                <NextImage
+                  src={editingWorkingDay.workingDay.workingHours.length > 0 ? "/pen.svg" : "/plus.svg"}
+                  alt={
+                    editingWorkingDay.workingDay.workingHours.length > 0
+                      ? "ویرایش این روز"
+                      : "افزودن زمان کاری"
+                  }
+                  width={24}
+                  height={24}
+                />
+              </button>
               <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
                 <p className="text-lg font-semibold">تنظیم شیفت هفتگی</p>
                 <NextImage src="/time.svg" alt="تنظیم شیفت هفتگی" width={24} height={24} />
@@ -229,7 +259,37 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
                 />
               </button>
               {editingWorkingDay.workingDay.workingHours.length > 0 ? (
-                <button className="flex flex-row justify-between p-5 bg-white active:transform-none rounded-b-2xl">
+                <button
+                  className="flex flex-row justify-between p-5 bg-white active:transform-none rounded-b-2xl"
+                  onClick={() => {
+                    modifyFreeTimeForEmployee(
+                      editingWorkingDay.employeeWorkingDays.employee.id,
+                      [],
+                      parseISO(editingWorkingDay.workingDay.day),
+                    ).then(({ data, response }) => {
+                      if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
+                      else {
+                        shallowRouter.push("/team/scheduled-shifts");
+                        setShifts((prev) => {
+                          const empIdx = prev.findIndex(
+                            ({ employee }) =>
+                              employee.id === editingWorkingDay.employeeWorkingDays.employee.id,
+                          );
+                          if (empIdx === -1) return prev;
+
+                          const dayIdx = prev[empIdx].workingDays.findIndex(
+                            ({ day }) => day === editingWorkingDay.workingDay.day,
+                          );
+                          if (dayIdx === -1) return prev;
+
+                          const newEmployeeWorkingDay = [...prev];
+                          newEmployeeWorkingDay[empIdx].workingDays[dayIdx].workingHours = data;
+                          return newEmployeeWorkingDay;
+                        });
+                      }
+                    });
+                  }}
+                >
                   <p className="text-lg text-red-500 font-semibold">حذف این روز</p>
                   <NextImage src="/delete.svg" alt="حذف این روز" width={24} height={24} />
                 </button>
@@ -262,6 +322,24 @@ export function ScheduledShiftsModal({ allEmployees }: ScheduledShiftsModalProps
           }}
         />
       </BottomSheet>
+      {editingWorkingDay && (
+        <ShiftEditModal
+          editingWorkingDay={editingWorkingDay}
+          onSave={(newWorkingDay) => {
+            setShifts((prev) => {
+              const empIdx = prev.findIndex(({ employee }) => employee.id === newWorkingDay.employee.id);
+              if (empIdx === -1) return prev;
+
+              const dayIdx = prev[empIdx].workingDays.findIndex(({ day }) => day === newWorkingDay.day);
+              if (dayIdx === -1) return prev;
+
+              const newEmployeeWorkingDay = [...prev];
+              newEmployeeWorkingDay[empIdx].workingDays[dayIdx].workingHours = newWorkingDay.workingHours;
+              return newEmployeeWorkingDay;
+            });
+          }}
+        />
+      )}
     </Modal>
   );
 }

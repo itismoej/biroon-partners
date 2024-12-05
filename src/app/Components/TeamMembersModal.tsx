@@ -258,7 +258,7 @@ export function TeamMembersModal({ allEmployees, setAllEmployees }: TeamMembersM
                   lastName,
                   description,
                   nickname,
-                  phoneNumber,
+                  phoneNumber: cleanedPhoneNumber,
                   isLocationOwner,
                 }).then(({ data, response }) => {
                   if (response.status !== 201) {
