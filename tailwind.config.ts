@@ -11,6 +11,9 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        primary: {
+          400: "#6950f3"
+        },
       },
       fontFamily: {
         sans: ['var(--font-vazir)'],

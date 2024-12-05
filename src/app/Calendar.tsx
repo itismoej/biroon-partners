@@ -34,8 +34,7 @@ import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { addDays, format } from "date-fns-jalali";
 import NextImage from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
@@ -46,6 +45,7 @@ import { TeamModal } from "@/app/Components/TeamModal";
 import { goToNow } from "@/app/calendarUtils";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
+import Clients from "@/components/pages/clients";
 
 const generateDurations = () => {
   const durations = [];
@@ -283,6 +283,15 @@ export function Calendar() {
 
   const teamModalIsOpen = pathname.startsWith("/team");
 
+  const showHeader = useMemo(() => {
+    switch (page) {
+      case 2:
+        return false;
+      default:
+        return true;
+    }
+  }, [page])
+
   const shallowRouter = useShallowRouter();
 
   useEffect(() => {
@@ -388,7 +397,7 @@ export function Calendar() {
 
   return (
     <div className="relative overflow-x-clip">
-      <CalendarHeader page={page} currentDate={currentDate} />
+      {showHeader && <CalendarHeader page={page} currentDate={currentDate} />}
 
       {page === 0 ? (
         <div
@@ -562,7 +571,7 @@ export function Calendar() {
       ) : page === 1 ? (
         "sales"
       ) : page === 2 ? (
-        "clients"
+        <Clients/>
       ) : page === 3 ? (
         <div className="p-5 bg-gray-100" style={{ minHeight: "calc(100dvh - 119px)" }}>
           <div className="py-5 grid grid-cols-2 gap-3">
