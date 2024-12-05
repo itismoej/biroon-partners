@@ -31,20 +31,6 @@ function Clients() {
           </button>
         </div>
         <hr className="-mx-5" />
-        <ul className="-mx-5">
-          <li>
-            <button
-              className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
-              onClick={() => setAddNewCustomerModalIsOpen(true)}
-              type="button"
-            >
-              <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-                <img src="/plus-purple.svg" alt="plus person" className="w-7 h-7" />
-              </div>
-              <p className="font-medium text-lg">افزودن مشتری جدید</p>
-            </button>
-          </li>
-        </ul>
         {clients.length > 0 && (
           <>
             <hr />
