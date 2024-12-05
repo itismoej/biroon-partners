@@ -34,8 +34,7 @@ import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { addDays, format } from "date-fns-jalali";
 import NextImage from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
@@ -284,6 +283,15 @@ export function Calendar() {
 
   const teamModalIsOpen = pathname.startsWith("/team");
 
+  const showHeader = useMemo(() => {
+    switch (page) {
+      case 2:
+        return false;
+      default:
+        return true;
+    }
+  }, [page])
+
   const shallowRouter = useShallowRouter();
 
   useEffect(() => {
@@ -389,7 +397,7 @@ export function Calendar() {
 
   return (
     <div className="relative overflow-x-clip">
-      <CalendarHeader page={page} currentDate={currentDate} />
+      {showHeader && <CalendarHeader page={page} currentDate={currentDate} />}
 
       {page === 0 ? (
         <div
