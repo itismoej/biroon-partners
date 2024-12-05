@@ -535,6 +535,7 @@ export interface WorkingTime {
 export interface WorkingDay {
   day: string;
   workingHours: WorkingTime[];
+  regularWorkingHours: WorkingTime[];
 }
 
 export interface EmployeeWorkingDays {
@@ -564,6 +565,25 @@ export async function modifyFreeTimeForEmployee(
       method: "PUT",
       credentials: "include",
       body: JSON.stringify(freeTimes),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  return { data: await response.json(), response };
+}
+
+export async function modifyRegularShiftForEmployee(
+  employeeId: Employee["id"],
+  regularTimes: WorkingTime[],
+  modifyingDate: Date,
+): Promise<{ data: WorkingTime[]; response: Response }> {
+  const response = await fetch(
+    `${apiUrl}/partners/regular-shifts/${employeeId}/${format(modifyingDate, "yyyy-MM-dd")}/`,
+    {
+      method: "PUT",
+      credentials: "include",
+      body: JSON.stringify(regularTimes),
       headers: {
         "Content-Type": "application/json",
       },
