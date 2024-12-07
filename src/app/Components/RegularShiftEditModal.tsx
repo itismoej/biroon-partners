@@ -5,7 +5,7 @@ import {
   type EmployeeWorkingDays,
   type WorkingDay,
   type WorkingTime,
-  modifyFreeTimeForEmployee,
+  modifyRegularShiftForEmployee,
 } from "@/app/api";
 import { formatDurationInFarsi, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { parse } from "date-fns";
@@ -15,7 +15,7 @@ import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-export interface ShiftEditModalProps {
+export interface RegularShiftEditModalProps {
   editingWorkingDay: {
     employeeWorkingDays: EmployeeWorkingDays;
     workingDay: WorkingDay;
@@ -23,17 +23,17 @@ export interface ShiftEditModalProps {
   onSave?: (data: WorkingDay & { employee: Employee }) => void;
 }
 
-export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProps) {
+export function RegularShiftEditModal({ editingWorkingDay, onSave }: RegularShiftEditModalProps) {
   const pathname = usePathname();
   const shallowRouter = useShallowRouter();
 
-  const shiftEditModalIsOpen =
+  const regularShiftEditModalIsOpen =
     editingWorkingDay !== undefined &&
-    pathname.startsWith("/team/scheduled-shifts/working-hours/") &&
-    /^\d+:\d{4}-\d{2}-\d{2}$/.test(pathname.split("/").pop() || "");
+    pathname.startsWith("/team/scheduled-shifts/regular-working-hours/") &&
+    /^\d+$/.test(pathname.split("/").pop() || "");
 
   // State for managing working hours in the shift edit modal
-  const [workingHours, setWorkingHours] = useState<WorkingTime[]>([]);
+  const [regularWorkingHours, setRegularWorkingHours] = useState<WorkingTime[]>([]);
 
   const defaultStartTime = editingWorkingDay
     ? setMinutes(setHours(parse(editingWorkingDay.workingDay.day, "yyyy-MM-dd", new Date()), 9), 0)
@@ -41,11 +41,11 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
 
   useEffect(() => {
     if (editingWorkingDay) {
-      if (editingWorkingDay.workingDay.workingHours.length > 0) {
-        setWorkingHours(editingWorkingDay.workingDay.workingHours);
+      if (editingWorkingDay.workingDay.regularWorkingHours.length > 0) {
+        setRegularWorkingHours(editingWorkingDay.workingDay.regularWorkingHours);
       } else {
         // Initialize with default working hour
-        setWorkingHours([
+        setRegularWorkingHours([
           { startTime: defaultStartTime.toISOString(), endTime: addHours(defaultStartTime, 8).toISOString() },
         ]);
       }
@@ -63,7 +63,7 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
   ];
 
   const handleStartTimeChange = (index: number, newValue: string) => {
-    setWorkingHours((prevWorkingHours) => {
+    setRegularWorkingHours((prevWorkingHours) => {
       const updatedWorkingHours = [...prevWorkingHours];
       const [hour, minute] = newValue.split(":").map(Number);
       updatedWorkingHours[index] = {
@@ -79,7 +79,7 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
   };
 
   const handleEndTimeChange = (index: number, newValue: string) => {
-    setWorkingHours((prevWorkingHours) => {
+    setRegularWorkingHours((prevWorkingHours) => {
       const updatedWorkingHours = [...prevWorkingHours];
       const [hour, minute] = newValue.split(":").map(Number);
       updatedWorkingHours[index] = {
@@ -96,7 +96,7 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
   };
 
   const handleDelete = (index: number) => {
-    setWorkingHours((prevWorkingHours) => {
+    setRegularWorkingHours((prevWorkingHours) => {
       const updatedWorkingHours = [...prevWorkingHours];
       updatedWorkingHours.splice(index, 1);
       return updatedWorkingHours;
@@ -104,7 +104,7 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
   };
 
   const handleAddShift = () => {
-    setWorkingHours((prevWorkingHours) => {
+    setRegularWorkingHours((prevWorkingHours) => {
       const newShift =
         prevWorkingHours.length > 0
           ? {
@@ -127,7 +127,7 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
 
   const computeTotalMinutes = () => {
     let totalMinutes = 0;
-    for (const wh of workingHours) {
+    for (const wh of regularWorkingHours) {
       totalMinutes += differenceInMinutes(parseISO(wh.endTime), parseISO(wh.startTime));
     }
     return totalMinutes;
@@ -160,16 +160,21 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
 
   return (
     <Modal
-      isOpen={shiftEditModalIsOpen}
+      isOpen={regularShiftEditModalIsOpen}
       onClose={() => {
         shallowRouter.push("/team/scheduled-shifts");
       }}
-      title={`شیفت ${editingWorkingDay.employeeWorkingDays.employee.nickname} ${toFarsiDigits(
-        format(parseISO(editingWorkingDay.workingDay.day), "EEEE، dd MMMM"),
-      )}`}
+      title={`ثبت شیفت هفتگی ${editingWorkingDay.employeeWorkingDays.employee.nickname} برای ${format(
+        parseISO(editingWorkingDay.workingDay.day),
+        "EEEE",
+      )}‌ها`}
     >
       <div className="pb-32">
-        {workingHours.map((wh, index) => (
+        <div className="-mt-5 pb-6 text-lg">
+          <p>این شیفت‌ها به‌طور هفتگی تکرار می‌شوند.</p>
+          <p>هر مقداری که در این صفحه ذخیره کنید، در تمامی هفته‌ها اعمال خواهد شد.</p>
+        </div>
+        {regularWorkingHours.map((wh, index) => (
           <div key={index} className="grid grid-cols-12 items-end gap-4 mt-4">
             <SelectField
               containerClassName="col-span-5"
@@ -188,12 +193,12 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
             <button
               className="col-span-2 w-[48px] h-[48px] bg-white rounded-xl p-2"
               onClick={() => handleDelete(index)}
-              disabled={workingHours.length === 1}
+              disabled={regularWorkingHours.length === 1}
             >
               <NextImage
                 className="m-auto"
                 style={{
-                  filter: workingHours.length === 1 ? "saturate(0) brightness(2.5)" : "",
+                  filter: regularWorkingHours.length === 1 ? "saturate(0) brightness(2.5)" : "",
                 }}
                 src="/delete.svg"
                 alt="حذف این شیفت"
@@ -212,11 +217,11 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
         </div>
         <div className="flex fixed bottom-0 w-[100vw] -mx-5 bg-white border-t py-5 px-5">
           <div className="relative w-full me-2.5">
-            {editingWorkingDay.workingDay.workingHours.length > 0 ? (
+            {editingWorkingDay.workingDay.regularWorkingHours.length > 0 ? (
               <button
                 type="button"
                 onClick={() => {
-                  modifyFreeTimeForEmployee(
+                  modifyRegularShiftForEmployee(
                     editingWorkingDay.employeeWorkingDays.employee.id,
                     [],
                     parseISO(editingWorkingDay.workingDay.day),
@@ -224,13 +229,13 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
                     if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
                     else {
                       shallowRouter.push("/team/scheduled-shifts");
-                      setWorkingHours(data);
+                      setRegularWorkingHours(data);
                       if (onSave)
                         onSave({
                           employee: editingWorkingDay.employeeWorkingDays.employee,
                           day: editingWorkingDay.workingDay.day,
-                          workingHours: data,
-                          regularWorkingHours: editingWorkingDay.workingDay.regularWorkingHours,
+                          workingHours: editingWorkingDay.workingDay.workingHours,
+                          regularWorkingHours: data,
                         });
                     }
                   });
@@ -253,21 +258,21 @@ export function ShiftEditModal({ editingWorkingDay, onSave }: ShiftEditModalProp
             <button
               type="button"
               onClick={() => {
-                modifyFreeTimeForEmployee(
+                modifyRegularShiftForEmployee(
                   editingWorkingDay.employeeWorkingDays.employee.id,
-                  workingHours,
+                  regularWorkingHours,
                   parseISO(editingWorkingDay.workingDay.day),
                 ).then(({ data, response }) => {
                   if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
                   else {
                     shallowRouter.push("/team/scheduled-shifts");
-                    setWorkingHours(data);
+                    setRegularWorkingHours(data);
                     if (onSave)
                       onSave({
                         employee: editingWorkingDay.employeeWorkingDays.employee,
                         day: editingWorkingDay.workingDay.day,
-                        workingHours: data,
-                        regularWorkingHours: editingWorkingDay.workingDay.regularWorkingHours,
+                        workingHours: editingWorkingDay.workingDay.workingHours,
+                        regularWorkingHours: data,
                       });
                   }
                 });
