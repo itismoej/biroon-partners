@@ -43,9 +43,10 @@ import { AddNewServiceCategoryBottomSheet } from "@/app/Components/AddNewService
 import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
 import { TeamModal } from "@/app/Components/TeamModal";
 import { goToNow } from "@/app/calendarUtils";
+import Clients from "@/components/pages/clients";
+import Events from "@/components/pages/events";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
-import Clients from "@/components/pages/clients";
 
 const generateDurations = () => {
   const durations = [];
@@ -277,6 +278,7 @@ export function Calendar() {
       pathname.startsWith("/payments")
     )
       return 3;
+    if (pathname.startsWith("/events")) return 4;
 
     return 0;
   }, [pathname]);
@@ -290,7 +292,7 @@ export function Calendar() {
       default:
         return true;
     }
-  }, [page])
+  }, [page]);
 
   const shallowRouter = useShallowRouter();
 
@@ -329,7 +331,7 @@ export function Calendar() {
 
     fetchCategories().then(({ data, response }) => {
       if (response.status !== 200)
-        toast.error("دریافت لیست سرویس‌های قابل انتخاب", {
+        toast.error("دریافت لیست سرویسهای قابل انتخاب", {
           duration: 5000,
           position: "top-center",
           className: "w-full font-medium",
@@ -466,7 +468,8 @@ export function Calendar() {
                 setIsAnimating(false);
                 setTranslateX(0);
               }}
-              eventClick={() => {
+              eventClick={(event) => {
+                shallowRouter.push(`/events?id=${event.event.id}`);
                 canSwipeDirectionRef.current = false;
                 setIsAnimating(false);
                 setTranslateX(0);
@@ -571,7 +574,7 @@ export function Calendar() {
       ) : page === 1 ? (
         "sales"
       ) : page === 2 ? (
-        <Clients/>
+        <Clients />
       ) : page === 3 ? (
         <div className="p-5 bg-gray-100" style={{ minHeight: "calc(100dvh - 119px)" }}>
           <div className="py-5 grid grid-cols-2 gap-3">
@@ -583,8 +586,8 @@ export function Calendar() {
                 shallowRouter.push("/services");
               }}
             >
-              <NextImage width={24} height={24} alt="سرویس‌ها" src="/catalog.svg" />
-              <p className="text-lg font-medium">سرویس‌ها</p>
+              <NextImage width={24} height={24} alt="سرویسها" src="/catalog.svg" />
+              <p className="text-lg font-medium">سرویسها</p>
             </button>
             <button
               className={
@@ -602,8 +605,8 @@ export function Calendar() {
                 "relative bg-white border rounded-xl flex flex-col gap-4 items-start justify-between text-right px-6 py-5"
               }
             >
-              <NextImage width={24} height={24} alt="پرداخت‌ها" src="/payments.svg" />
-              <p className="text-lg font-medium">پرداخت‌ها</p>
+              <NextImage width={24} height={24} alt="پرداختها" src="/payments.svg" />
+              <p className="text-lg font-medium">پرداختها</p>
             </button>
           </div>
           <Modal
@@ -611,13 +614,13 @@ export function Calendar() {
             onClose={() => shallowRouter.push("/more")}
             title={
               <div className="-mt-4">
-                <h1 className="text-3xl">منوی سرویس‌ها</h1>
+                <h1 className="text-3xl">منوی سرویسها</h1>
                 <p className="text-lg font-normal text-gray-500">
-                  مشاهده و مدیریت سرویس‌هایی که در کسب‌و‌کار شما ارائه می‌شود.
+                  مشاهده و مدیریت سرویسهایی که در کسبوکار شما ارائه میشود.
                 </p>
               </div>
             }
-            topBarTitle={<h2 className="text-xl font-bold">منوی سرویس‌ها</h2>}
+            topBarTitle={<h2 className="text-xl font-bold">منوی سرویسها</h2>}
             leftBtn={
               <button
                 className="bg-black px-3 py-2 text-white text-lg rounded-lg font-bold flex flex-row gap-2 items-center justify-center"
@@ -720,7 +723,7 @@ export function Calendar() {
                   setAddNewServiceCategoryBSIsOpen(true);
                 }}
               >
-                افزودن دسته‌بندی جدید در منو
+                افزودن دستهبندی جدید در منو
               </button>
             </div>
           </BottomSheet>
@@ -740,6 +743,8 @@ export function Calendar() {
             onClose={() => setAddNewServiceCategoryBSIsOpen(false)}
           />
         </div>
+      ) : page === 4 ? (
+        <Events />
       ) : null}
 
       <CalendarFooter calendarRef={calendarRef} />
