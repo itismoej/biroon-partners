@@ -35,7 +35,7 @@ button {
   transition: transform 0.1s ease, filter 0.1s ease;
 }
 
-button:active {
+button:active:enabled {
   transform: scale(0.95);
   filter: brightness(0.97);
 }

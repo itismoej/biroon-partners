@@ -96,6 +96,7 @@ type ReserveStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "ARCHIVED";
 
 export interface ReserveData {
   id: string;
+  customer: Customer;
   location: Location;
   startDateTime: string;
   endDateTime: string;
@@ -123,6 +124,11 @@ export interface CalendarEvent {
 
 export async function fetchAllEvents(): Promise<{ data: CalendarEvent[]; response: Response }> {
   const response = await fetch(`${apiUrl}/partners/events/`, { credentials: "include" });
+  return { data: await response.json(), response };
+}
+
+export async function fetchEvent(id: string): Promise<{ data: CalendarEvent; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/events/${id}/`, { credentials: "include" });
   return { data: await response.json(), response };
 }
 

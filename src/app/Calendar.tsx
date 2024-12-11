@@ -82,7 +82,7 @@ function renderEventContent(eventInfo: EventContentArg) {
   );
 }
 
-const LoadingSpinner: React.FC = () => (
+export const LoadingSpinner: React.FC = () => (
   <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">
     <svg
       aria-hidden="true"
@@ -744,7 +744,7 @@ export function Calendar() {
           />
         </div>
       ) : page === 4 ? (
-        <Events />
+        <Events location={location} calendarRef={calendarRef} />
       ) : null}
 
       <CalendarFooter calendarRef={calendarRef} />
