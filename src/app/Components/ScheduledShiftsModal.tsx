@@ -1,6 +1,7 @@
 import { BottomSheet, BottomSheetFooter } from "@/app/Components/BottomSheet";
 import { MenuPopup } from "@/app/Components/MenuPopup";
 import { Modal } from "@/app/Components/Modal";
+import { RegularShiftEditModal } from "@/app/Components/RegularShiftEditModal";
 import { ShiftEditModal, type ShiftEditModalProps } from "@/app/Components/ShiftEditModal";
 import { WeekPicker } from "@/app/Components/WeekPicker";
 import {
@@ -245,7 +246,15 @@ export function ScheduledShiftsModal() {
                   height={24}
                 />
               </button>
-              <button className="flex flex-row justify-between p-5 bg-white active:transform-none">
+              <button
+                type="button"
+                className="flex flex-row justify-between p-5 bg-white active:transform-none"
+                onClick={() => {
+                  shallowRouter.push(
+                    `/team/scheduled-shifts/regular-working-hours/${editingWorkingDay.employeeWorkingDays.employee.id}`,
+                  );
+                }}
+              >
                 <p className="text-lg font-semibold">تنظیم شیفت هفتگی</p>
                 <NextImage src="/time.svg" alt="تنظیم شیفت هفتگی" width={24} height={24} />
               </button>
@@ -323,22 +332,25 @@ export function ScheduledShiftsModal() {
         />
       </BottomSheet>
       {editingWorkingDay && (
-        <ShiftEditModal
-          editingWorkingDay={editingWorkingDay}
-          onSave={(newWorkingDay) => {
-            setShifts((prev) => {
-              const empIdx = prev.findIndex(({ employee }) => employee.id === newWorkingDay.employee.id);
-              if (empIdx === -1) return prev;
+        <>
+          <ShiftEditModal
+            editingWorkingDay={editingWorkingDay}
+            onSave={(newWorkingDay) => {
+              setShifts((prev) => {
+                const empIdx = prev.findIndex(({ employee }) => employee.id === newWorkingDay.employee.id);
+                if (empIdx === -1) return prev;
 
-              const dayIdx = prev[empIdx].workingDays.findIndex(({ day }) => day === newWorkingDay.day);
-              if (dayIdx === -1) return prev;
+                const dayIdx = prev[empIdx].workingDays.findIndex(({ day }) => day === newWorkingDay.day);
+                if (dayIdx === -1) return prev;
 
-              const newEmployeeWorkingDay = [...prev];
-              newEmployeeWorkingDay[empIdx].workingDays[dayIdx].workingHours = newWorkingDay.workingHours;
-              return newEmployeeWorkingDay;
-            });
-          }}
-        />
+                const newEmployeeWorkingDay = [...prev];
+                newEmployeeWorkingDay[empIdx].workingDays[dayIdx].workingHours = newWorkingDay.workingHours;
+                return newEmployeeWorkingDay;
+              });
+            }}
+          />
+          <RegularShiftEditModal editingWorkingDay={editingWorkingDay} />
+        </>
       )}
     </Modal>
   );

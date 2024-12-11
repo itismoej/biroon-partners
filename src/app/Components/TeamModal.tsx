@@ -14,12 +14,7 @@ interface TeamModalProps {
   location: Location;
 }
 
-export const TeamModal: React.FC<TeamModalProps> = ({
-  allEmployees,
-  setAllEmployees,
-  isOpen,
-  onClose,
-}) => {
+export const TeamModal: React.FC<TeamModalProps> = ({ allEmployees, setAllEmployees, isOpen, onClose }) => {
   const shallowRouter = useShallowRouter();
 
   return (
