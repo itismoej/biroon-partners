@@ -3,6 +3,7 @@ import { Modal } from "@/app/Components/Modal";
 import {
   type Employee,
   type EmployeeWorkingDays,
+  type ModifyRegularWorkingTimesResponse,
   type WorkingDay,
   type WorkingTime,
   modifyRegularShiftForEmployee,
@@ -20,7 +21,9 @@ export interface RegularShiftEditModalProps {
     employeeWorkingDays: EmployeeWorkingDays;
     workingDay: WorkingDay;
   };
-  onSave?: (data: WorkingDay & { employee: Employee }) => void;
+  onSave?: (
+    data: WorkingDay & { employee: Employee; shifts: ModifyRegularWorkingTimesResponse["shifts"] },
+  ) => void;
 }
 
 export function RegularShiftEditModal({ editingWorkingDay, onSave }: RegularShiftEditModalProps) {
@@ -229,13 +232,14 @@ export function RegularShiftEditModal({ editingWorkingDay, onSave }: RegularShif
                     if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
                     else {
                       shallowRouter.push("/team/scheduled-shifts");
-                      setRegularWorkingHours(data);
+                      setRegularWorkingHours(data.regularWorkingHours);
                       if (onSave)
                         onSave({
                           employee: editingWorkingDay.employeeWorkingDays.employee,
                           day: editingWorkingDay.workingDay.day,
                           workingHours: editingWorkingDay.workingDay.workingHours,
-                          regularWorkingHours: data,
+                          regularWorkingHours: data.regularWorkingHours,
+                          shifts: data.shifts,
                         });
                     }
                   });
@@ -266,13 +270,14 @@ export function RegularShiftEditModal({ editingWorkingDay, onSave }: RegularShif
                   if (response.status !== 200) toast.error("ویرایش شیفت‌ها با مشکل مواجه شد");
                   else {
                     shallowRouter.push("/team/scheduled-shifts");
-                    setRegularWorkingHours(data);
+                    setRegularWorkingHours(data.regularWorkingHours);
                     if (onSave)
                       onSave({
                         employee: editingWorkingDay.employeeWorkingDays.employee,
                         day: editingWorkingDay.workingDay.day,
                         workingHours: editingWorkingDay.workingDay.workingHours,
-                        regularWorkingHours: data,
+                        regularWorkingHours: data.regularWorkingHours,
+                        shifts: data.shifts,
                       });
                   }
                 });

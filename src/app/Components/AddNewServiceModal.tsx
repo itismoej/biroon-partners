@@ -12,6 +12,7 @@ import { formatDurationInFarsi, formatPriceWithSeparator, toEnglishDigits, toFar
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import type React from "react";
+import { useEffect } from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { BottomSheet, BottomSheetFooter } from "./BottomSheet";
@@ -67,6 +68,10 @@ export function AddNewServiceModal(props: {
     setNewServiceAdvancedPerEmployeeSettings({});
     setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee(undefined);
   }
+
+  useEffect(() => {
+    console.log(newServiceUpfrontPrice);
+  }, [newServiceUpfrontPrice]);
 
   return (
     <Modal
@@ -267,7 +272,7 @@ export function AddNewServiceModal(props: {
                   : "۲۵۰٫۰۰۰"
               }
               value={
-                newServiceUpfrontPrice
+                newServiceUpfrontPrice !== undefined
                   ? toFarsiDigits(formatPriceWithSeparator(Number(newServiceUpfrontPrice)))
                   : ""
               }
@@ -463,9 +468,10 @@ export function AddNewServiceModal(props: {
                             newServiceAdvancedPerEmployeeSettings[
                               newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
                             ]?.upfrontPrice;
-                          const upfrontPrice = prevUpfrontPrice
-                            ? Math.min(+val, prevUpfrontPrice)
-                            : prevUpfrontPrice;
+                          const upfrontPrice =
+                            prevUpfrontPrice !== undefined
+                              ? Math.min(+val, prevUpfrontPrice)
+                              : prevUpfrontPrice;
                           if (!Number.isNaN(Number(val)) && +val < 100000000) {
                             setNewServiceAdvancedPerEmployeeSettings({
                               ...newServiceAdvancedPerEmployeeSettings,
@@ -502,7 +508,7 @@ export function AddNewServiceModal(props: {
                         value={
                           newServiceAdvancedPerEmployeeSettings[
                             newServiceAdvancedPerEmployeeSettingsIsEditingEmployee.id
-                          ]?.upfrontPrice
+                          ]?.upfrontPrice !== undefined
                             ? toFarsiDigits(
                                 formatPriceWithSeparator(
                                   Number(

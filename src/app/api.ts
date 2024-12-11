@@ -538,6 +538,11 @@ export interface WorkingDay {
   regularWorkingHours: WorkingTime[];
 }
 
+export interface ModifyRegularWorkingTimesResponse {
+  shifts: EmployeeWorkingDays[];
+  regularWorkingHours: WorkingTime[];
+}
+
 export interface EmployeeWorkingDays {
   employee: Employee;
   workingDays: WorkingDay[];
@@ -577,7 +582,7 @@ export async function modifyRegularShiftForEmployee(
   employeeId: Employee["id"],
   regularTimes: WorkingTime[],
   modifyingDate: Date,
-): Promise<{ data: WorkingTime[]; response: Response }> {
+): Promise<{ data: ModifyRegularWorkingTimesResponse; response: Response }> {
   const response = await fetch(
     `${apiUrl}/partners/regular-shifts/${employeeId}/${format(modifyingDate, "yyyy-MM-dd")}/`,
     {
