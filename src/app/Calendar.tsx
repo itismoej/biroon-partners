@@ -260,6 +260,7 @@ export function Calendar() {
   const selectDateInCalendarBSIsOpen = pathname.startsWith("/calendar/select-date");
   const servicesModalIsOpen = pathname.startsWith("/services");
   const addNewServicesModalIsOpen = pathname.startsWith("/services/add-new");
+  const eventsModalIsOpen = pathname.includes("/events");
 
   const [addNewServiceCategoryBSIsOpen, setAddNewServiceCategoryBSIsOpen] = useState(false);
   const [addNewServiceOrServiceCategoryBSIsOpen, setAddNewServiceOrServiceCategoryBSIsOpen] = useState(false);
@@ -278,7 +279,6 @@ export function Calendar() {
       pathname.startsWith("/payments")
     )
       return 3;
-    if (pathname.startsWith("/events")) return 4;
 
     return 0;
   }, [pathname]);
@@ -469,7 +469,7 @@ export function Calendar() {
                 setTranslateX(0);
               }}
               eventClick={(event) => {
-                shallowRouter.push(`/events?id=${event.event.id}`);
+                shallowRouter.push(`/calendar/events?id=${event.event.id}`);
                 canSwipeDirectionRef.current = false;
                 setIsAnimating(false);
                 setTranslateX(0);
@@ -620,7 +620,7 @@ export function Calendar() {
                 </p>
               </div>
             }
-            topBarTitle={<h2 className="text-xl font-bold">منوی سرویس ها</h2>}
+            topBarTitle={<h2 className="text-xl font-bold">منوی سرویس‌ها</h2>}
             leftBtn={
               <button
                 className="bg-black px-3 py-2 text-white text-lg rounded-lg font-bold flex flex-row gap-2 items-center justify-center"
@@ -743,8 +743,6 @@ export function Calendar() {
             onClose={() => setAddNewServiceCategoryBSIsOpen(false)}
           />
         </div>
-      ) : page === 4 ? (
-        <Events location={location} calendarRef={calendarRef} />
       ) : null}
 
       <CalendarFooter calendarRef={calendarRef} />
@@ -836,6 +834,8 @@ export function Calendar() {
           </button>
         </div>
       </BottomSheet>
+
+      {eventsModalIsOpen && <Events calendarRef={calendarRef} />}
 
       <AddAppointmentModal
         isOpen={addAppointmentModalIsOpen}

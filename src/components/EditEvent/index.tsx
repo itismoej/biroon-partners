@@ -35,7 +35,6 @@
 //
 // export default EditEvent;
 
-import { LoadingSpinner } from "@/app/Calendar";
 import { BottomSheet } from "@/app/Components/BottomSheet";
 import { DatePicker } from "@/app/Components/DatePicker";
 import { Modal } from "@/app/Components/Modal";
@@ -43,14 +42,13 @@ import {
   type AvailableEmployee,
   type CalendarEvent,
   type Customer,
-  type Location,
   type Service,
-  createReservation,
   fetchEvent,
+  updateEvent,
 } from "@/app/api";
 import { formatPriceWithSeparator, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import type FullCalendar from "@fullcalendar/react";
-import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
+import { addDays, addMinutes, format, setHours, setMinutes, startOfDay } from "date-fns-jalali";
 import { useSearchParams } from "next/navigation";
 import type React from "react";
 import { useEffect } from "react";
@@ -58,7 +56,6 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface AddAppointmentModalProps {
-  location: Location | undefined;
   calendarRef: React.RefObject<FullCalendar>;
 }
 
@@ -250,6 +247,26 @@ const TimePickerListItem: React.FC<TimePickerListItemProps> = ({ time, selected,
   </li>
 );
 
+const SkeletonEditEvent: React.FC<{}> = () => (
+  <div className="animate-pulse flex flex-col w-full px-2 py-4">
+    <div className="w-full border border-gray-300 rounded-lg p-[21px]">
+      <div className="w-2/3 h-6 bg-gray-300 rounded-full mr-auto" />
+    </div>
+    <div className="flex justify-between w-full border border-gray-300 rounded-lg p-[21px] mt-6">
+      <div className="w-[110px] h-6 bg-gray-300 rounded-full" />
+      <div className="w-[70px] h-6 bg-gray-300 rounded-full" />
+    </div>
+    <div className="w-[80px] h-7 bg-gray-300 rounded-full mt-8" />
+    <div className="flex justify-between w-full border border-gray-300 rounded-lg p-[21px] mt-2">
+      <div className="flex flex-col gap-2">
+        <div className="w-[70px] h-6 bg-gray-300 rounded-full" />
+        <div className="w-[110px] h-4 bg-gray-300 rounded-full" />
+      </div>
+      <div className="w-[60px] h-4 bg-gray-300 rounded-full" />
+    </div>
+  </div>
+);
+
 // Now the main component
 
 export const EditEvent: React.FC<AddAppointmentModalProps> = ({ calendarRef }) => {
@@ -265,220 +282,221 @@ export const EditEvent: React.FC<AddAppointmentModalProps> = ({ calendarRef }) =
     AvailableEmployee | undefined
   >();
   const [event, setEvent] = useState<CalendarEvent>({} as CalendarEvent);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const searchParams = useSearchParams();
-  const [newAppointmentTime, setNewAppointmentTime] = useState<Date>(
-    setMinutes(setSeconds(new Date(), 0), 0),
-  );
 
   useEffect(() => {
     const eventId = searchParams.get("id");
     if (eventId) {
-      fetchEvent(eventId).then((res) => {
-        setEvent(res.data);
-        setCurrentDate(new Date(res?.data?.startDateTime));
-        if (res?.data?.employee) {
-          setSelectedEmployeeForNewAppointment(res.data.employee as unknown as AvailableEmployee);
-        }
-        if (res?.data?.service) {
-          setSelectedServiceToAddInNewAppointment(res.data.service as unknown as Service);
-        }
-      });
+      setIsLoading(true);
+      fetchEvent(eventId)
+        .then((res) => {
+          setEvent(res.data);
+          setCurrentDate(new Date(res?.data?.startDateTime));
+          if (res?.data?.employee) {
+            setSelectedEmployeeForNewAppointment(res.data.employee as unknown as AvailableEmployee);
+          }
+          if (res?.data?.service) {
+            setSelectedServiceToAddInNewAppointment(res.data.service as unknown as Service);
+          }
+        })
+        .finally(() => setIsLoading(false));
     }
   }, [searchParams]);
 
-  if (event) {
-    console.log("TTTTTTTTTTTTTTT");
-    console.log(new Date(event.startDateTime));
-  }
-
   return (
     <>
-      {event.id ? (
-        <Modal
-          isOpen={true}
-          onClose={() => {
-            console.log("do nothing");
-          }}
-          title={
+      <Modal
+        isOpen={true}
+        onClose={() => {
+          shallowRouter.back();
+        }}
+        title={
+          isLoading ? (
+            <div className="animate-pulse w-[150px] h-8 bg-gray-300 rounded-full" />
+          ) : (
             <DateHeaderButton
               currentDate={currentDate}
               onClick={() => setSelectDateInAddAppointmentModalBSIsOpen(true)}
             />
-          }
-          topBarTitle={
-            <TopBarDateHeaderButton
-              currentDate={currentDate}
-              onClick={() => setSelectDateInAddAppointmentModalBSIsOpen(true)}
-            />
-          }
-        >
-          <div className="pb-32">
-            <div className="-mx-5 mt-2 mb-6">
-              <hr />
-            </div>
-            {/* Customer Selection */}
-            <CustomerSelectionButton
-              newAppointmentCustomer={event?.reserve?.customer}
-              disabled
-              onClick={() => {
-                // currently disabled
-              }}
-            />
-
-            {/* Date and Time Selection */}
-            <DateTimeSelection
-              currentDate={currentDate}
-              onDateClick={() => setSelectDateInAddAppointmentModalBSIsOpen(true)}
-              onTimeClick={() => setSelectTimeInAddAppointmentModalBSIsOpen(true)}
-            />
-            {/* Service Selection */}
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold">سرویس</h2>
-              <ServiceSelectionButton
-                currentDate={currentDate}
-                selectedServiceToAddInNewAppointment={selectedServiceToAddInNewAppointment}
-                selectedEmployeeForNewAppointment={selectedEmployeeForNewAppointment}
+          )
+        }
+        topBarTitle={
+          <TopBarDateHeaderButton
+            currentDate={currentDate}
+            onClick={() => setSelectDateInAddAppointmentModalBSIsOpen(true)}
+          />
+        }
+      >
+        {isLoading ? (
+          <SkeletonEditEvent />
+        ) : (
+          <>
+            <div className="pb-32">
+              <div className="-mx-5 mt-2 mb-6">
+                <hr />
+              </div>
+              {/* Customer Selection */}
+              <CustomerSelectionButton
+                newAppointmentCustomer={event?.reserve?.customer}
+                disabled
                 onClick={() => {
-                  console.log("do nothing");
+                  // currently disabled
                 }}
               />
+
+              {/* Date and Time Selection */}
+              <DateTimeSelection
+                currentDate={currentDate}
+                onDateClick={() => setSelectDateInAddAppointmentModalBSIsOpen(true)}
+                onTimeClick={() => setSelectTimeInAddAppointmentModalBSIsOpen(true)}
+              />
+              {/* Service Selection */}
+              <div className="mt-8">
+                <h2 className="text-2xl font-bold">سرویس</h2>
+                <ServiceSelectionButton
+                  currentDate={currentDate}
+                  selectedServiceToAddInNewAppointment={selectedServiceToAddInNewAppointment}
+                  selectedEmployeeForNewAppointment={selectedEmployeeForNewAppointment}
+                  onClick={() => {
+                    console.log("do nothing");
+                  }}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Action Buttons */}
-          <ActionButtons
-            onClose={() => {
-              console.log("do nothing");
-            }}
-            onSave={() => {
-              if (!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment) {
-                toast.error("ابتدا یک سرویس انتخاب کنید", {
-                  duration: 5000,
-                  position: "top-center",
-                  className: "w-full font-medium",
-                });
-                return;
-              }
-
-              createReservation({
-                customerId: newAppointmentCustomer ? newAppointmentCustomer.id : undefined,
-                startDateTime: setMinutes(
-                  setHours(currentDate, newAppointmentTime.getHours()),
-                  newAppointmentTime.getMinutes(),
-                ).toISOString(),
-                cartInput: [
-                  {
-                    serviceId: selectedServiceToAddInNewAppointment.id,
-                    employeeAssociations: [selectedEmployeeForNewAppointment.id],
-                  },
-                ],
-              }).then(({ data, response }) => {
-                if (response.status === 201 && calendarRef.current) {
-                  calendarRef.current.getApi().addEvent({
-                    id: data.id,
-                    title: selectedServiceToAddInNewAppointment.name,
-                    start: data.startDateTime,
-                    end: data.endDateTime,
-                    editable: true,
-                    resourceId: selectedEmployeeForNewAppointment.id,
-                  });
-                  toast.success(
-                    `نوبت «${selectedServiceToAddInNewAppointment.name}» با متخصص «${selectedEmployeeForNewAppointment.nickname}» در «${toFarsiDigits(
-                      format(currentDate, "EEEE، d MMMM y"),
-                    )}» اضافه شد.`,
-                    {
-                      duration: 5000,
-                      position: "top-center",
-                      className: "w-full font-medium",
-                    },
-                  );
-                  shallowRouter.push("/calendar");
-                  calendarRef.current.getApi().gotoDate(currentDate);
-                } else {
-                  response.text().then((error) => {
-                    console.log(error);
-                  });
-                  console.log(response.status);
-                }
-              });
-            }}
-            saveDisabled={!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment}
-          />
-
-          {/* Date Picker BottomSheet */}
-          <BottomSheet
-            isOpen={selectDateInAddAppointmentModalBSIsOpen}
-            onClose={() => setSelectDateInAddAppointmentModalBSIsOpen(false)}
-          >
-            <DatePicker
-              selectedDate={currentDate}
-              onDateSelect={(date) => {
-                if (calendarRef.current) {
-                  calendarRef.current.getApi().gotoDate(date);
-                  setCurrentDate(date);
-                  setSelectDateInAddAppointmentModalBSIsOpen(false);
-                }
+            {/* Action Buttons */}
+            <ActionButtons
+              onClose={() => {
+                shallowRouter.back();
               }}
-            />
-            <div className="mt-9">
-              <button
-                type="button"
-                className={"px-5 py-2 text-xl border rounded-full me-1"}
-                onClick={() => {
-                  if (calendarRef.current) {
-                    const today = new Date();
-                    calendarRef.current.getApi().gotoDate(today);
-                    setCurrentDate(today);
-                    setSelectDateInAddAppointmentModalBSIsOpen(false);
-                  }
-                }}
-              >
-                امروز
-              </button>
-              <button
-                type="button"
-                className={"px-5 py-2 text-xl border rounded-full me-1"}
-                onClick={() => {
-                  if (calendarRef.current) {
-                    const tomorrow = addDays(new Date(), 1);
-                    calendarRef.current.getApi().gotoDate(tomorrow);
-                    setCurrentDate(tomorrow);
-                    setSelectDateInAddAppointmentModalBSIsOpen(false);
-                  }
-                }}
-              >
-                فردا
-              </button>
-            </div>
-          </BottomSheet>
+              onSave={() => {
+                if (!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment) {
+                  toast.error("ابتدا یک سرویس انتخاب کنید", {
+                    duration: 5000,
+                    position: "top-center",
+                    className: "w-full font-medium",
+                  });
+                  return;
+                }
 
-          {/* Time Picker BottomSheet */}
-          <BottomSheet
-            isOpen={selectTimeInAddAppointmentModalBSIsOpen}
-            onClose={() => setSelectTimeInAddAppointmentModalBSIsOpen(false)}
-            title="زمان شروع"
-          >
-            <ul>
-              {Array.from({ length: 24 * 4 }, (_, i) => addMinutes(startOfDay(new Date()), i * 15)).map(
-                (time) => (
-                  <TimePickerListItem
-                    key={time.toISOString()}
-                    time={time}
-                    selected={format(time, "HH:mm") === format(currentDate, "HH:mm")}
-                    onSelect={(selectedTime) => {
-                      setNewAppointmentTime(selectedTime);
-                      setSelectTimeInAddAppointmentModalBSIsOpen(false);
-                    }}
-                  />
-                ),
-              )}
-            </ul>
-          </BottomSheet>
-        </Modal>
-      ) : (
-        <LoadingSpinner />
-      )}
+                updateEvent(event.id, {
+                  employeeId: event.employee.id,
+                  startDateTime: setMinutes(
+                    setHours(currentDate, currentDate.getHours()),
+                    currentDate.getMinutes(),
+                  ).toISOString(),
+                  endDateTime: setMinutes(
+                    setHours(currentDate, currentDate.getHours()),
+                    currentDate.getMinutes() + event.service.durationInMins,
+                  ).toISOString(),
+                }).then(({ data, response }) => {
+                  if (response.status === 200 && calendarRef.current) {
+                    calendarRef.current.getApi().getEventById(event.id)?.remove();
+                    calendarRef.current.getApi().addEvent({
+                      id: data.id,
+                      title: selectedServiceToAddInNewAppointment.name,
+                      start: data.startDateTime,
+                      end: data.endDateTime,
+                      editable: true,
+                      resourceId: selectedEmployeeForNewAppointment.id,
+                    });
+                    toast.success(
+                      `نوبت «${selectedServiceToAddInNewAppointment.name}» با متخصص «${selectedEmployeeForNewAppointment.nickname}» در «${toFarsiDigits(
+                        format(currentDate, "EEEE، d MMMM y"),
+                      )}» ویرایش شد.`,
+                      {
+                        duration: 5000,
+                        position: "top-center",
+                        className: "w-full font-medium",
+                      },
+                    );
+                    shallowRouter.back();
+                    calendarRef.current.getApi().gotoDate(currentDate);
+                  } else {
+                    response.text().then((error) => {
+                      console.log(error);
+                    });
+                    console.log(response.status);
+                  }
+                });
+              }}
+              saveDisabled={!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment}
+            />
+
+            {/* Date Picker BottomSheet */}
+            <BottomSheet
+              isOpen={selectDateInAddAppointmentModalBSIsOpen}
+              onClose={() => setSelectDateInAddAppointmentModalBSIsOpen(false)}
+            >
+              <DatePicker
+                selectedDate={currentDate}
+                onDateSelect={(date) => {
+                  if (calendarRef.current) {
+                    calendarRef.current.getApi().gotoDate(date);
+                    setCurrentDate(date);
+                    setSelectDateInAddAppointmentModalBSIsOpen(false);
+                  }
+                }}
+              />
+              <div className="mt-9">
+                <button
+                  type="button"
+                  className={"px-5 py-2 text-xl border rounded-full me-1"}
+                  onClick={() => {
+                    if (calendarRef.current) {
+                      const today = new Date();
+                      calendarRef.current.getApi().gotoDate(today);
+                      setCurrentDate(today);
+                      setSelectDateInAddAppointmentModalBSIsOpen(false);
+                    }
+                  }}
+                >
+                  امروز
+                </button>
+                <button
+                  type="button"
+                  className={"px-5 py-2 text-xl border rounded-full me-1"}
+                  onClick={() => {
+                    if (calendarRef.current) {
+                      const tomorrow = addDays(new Date(), 1);
+                      calendarRef.current.getApi().gotoDate(tomorrow);
+                      setCurrentDate(tomorrow);
+                      setSelectDateInAddAppointmentModalBSIsOpen(false);
+                    }
+                  }}
+                >
+                  فردا
+                </button>
+              </div>
+            </BottomSheet>
+
+            {/* Time Picker BottomSheet */}
+            <BottomSheet
+              isOpen={selectTimeInAddAppointmentModalBSIsOpen}
+              onClose={() => setSelectTimeInAddAppointmentModalBSIsOpen(false)}
+              title="زمان شروع"
+            >
+              <ul>
+                {Array.from({ length: 24 * 4 }, (_, i) => addMinutes(startOfDay(currentDate), i * 15)).map(
+                  (time) => (
+                    <TimePickerListItem
+                      key={time.toISOString()}
+                      time={time}
+                      selected={format(time, "HH:mm") === format(currentDate, "HH:mm")}
+                      onSelect={(selectedTime) => {
+                        setCurrentDate(selectedTime);
+                        setSelectTimeInAddAppointmentModalBSIsOpen(false);
+                      }}
+                    />
+                  ),
+                )}
+              </ul>
+            </BottomSheet>
+          </>
+        )}
+      </Modal>
     </>
   );
 };
