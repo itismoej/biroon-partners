@@ -349,7 +349,12 @@ export function ScheduledShiftsModal() {
               });
             }}
           />
-          <RegularShiftEditModal editingWorkingDay={editingWorkingDay} />
+          <RegularShiftEditModal
+            editingWorkingDay={editingWorkingDay}
+            onSave={({ shifts }) => {
+              setShifts(shifts);
+            }}
+          />
         </>
       )}
     </Modal>
