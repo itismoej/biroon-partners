@@ -36,11 +36,7 @@ function Clients() {
             <hr />
             <ul className="-mx-5">
               {clients.map((customer) => (
-                <CustomerListItem
-                  key={customer.id}
-                  customer={customer}
-                  onSelect={(_selectedCustomer) => {}}
-                />
+                <CustomerListItem key={customer.id} customer={customer} onSelect={() => {}} />
               ))}
             </ul>
           </>

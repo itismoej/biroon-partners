@@ -1,40 +1,3 @@
-// import { type CalendarEvent, fetchEvent } from "@/app/api";
-// import { useSearchParams } from "next/navigation";
-// import type React from "react";
-// import { useEffect, useState } from "react";
-//
-// function EditEvent() {
-//   const [event, setEvent] = useState<CalendarEvent>({} as CalendarEvent);
-//   const searchParams = useSearchParams();
-//
-//   useEffect(() => {
-//     const eventId = searchParams.get("id");
-//     if (eventId) {
-//       fetchEvent(eventId).then((res) => {
-//         setEvent(res.data);
-//       });
-//     }
-//   }, [searchParams]);
-//   return (
-//     <div className="flex flex-col items-center w-full p-5">
-//       <div className="flex items-center justify-between gap-5 w-full border rounded-lg p-6">
-//         <div className="h-16 w-16 flex items-center justify-center bg-purple-100 font-bold text-2xl text-primary-400 rounded-full">
-//           {/*{event.user.fullName.slice(0, 2)}*/}
-//         </div>
-//         <p className="font-medium text-lg" style={{ direction: "ltr" }}>
-//           {/*{customer.user.fullName}*/}
-//         </p>
-//       </div>
-//       <div className=" border rounded-lg">date picker</div>
-//       <div className="flex flex-col gap-4">
-//         <p>سرویس ها</p>
-//       </div>
-//     </div>
-//   );
-// }
-//
-// export default EditEvent;
-
 import { BottomSheet } from "@/app/Components/BottomSheet";
 import { DatePicker } from "@/app/Components/DatePicker";
 import { Modal } from "@/app/Components/Modal";
@@ -258,7 +221,7 @@ const TimePickerListItem: React.FC<TimePickerListItemProps> = ({ time, selected,
   </li>
 );
 
-const SkeletonEditEvent: React.FC<{}> = () => (
+const SkeletonEditEvent: React.FC = () => (
   <div className="animate-pulse flex flex-col w-full px-2 py-4">
     <div className="w-full border border-gray-300 rounded-lg p-[21px]">
       <div className="w-2/3 h-6 bg-gray-300 rounded-full mr-auto" />
@@ -277,8 +240,6 @@ const SkeletonEditEvent: React.FC<{}> = () => (
     </div>
   </div>
 );
-
-// Now the main component
 
 export const EditEvent: React.FC<AddAppointmentModalProps> = ({ calendarRef }) => {
   const shallowRouter = useShallowRouter();
