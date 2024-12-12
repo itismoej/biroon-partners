@@ -39,7 +39,7 @@ function Clients() {
                 <CustomerListItem
                   key={customer.id}
                   customer={customer}
-                  onSelect={(selectedCustomer) => {}}
+                  onSelect={(_selectedCustomer) => {}}
                 />
               ))}
             </ul>
