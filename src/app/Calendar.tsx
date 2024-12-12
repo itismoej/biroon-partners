@@ -112,7 +112,9 @@ const EditingIndicator: React.FC<EditingIndicatorProps> = ({ editingEvents, curr
 
   return (
     <div className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
-      <h2 className="z-50 text-2xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
+      <h2 className="z-50 text-2xl font-bold">
+        {toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}
+      </h2>
       <h2 className="animate-pulse">حالت ویرایش</h2>
     </div>
   );
@@ -263,7 +265,8 @@ export function Calendar() {
   const eventsModalIsOpen = pathname.includes("/events");
 
   const [addNewServiceCategoryBSIsOpen, setAddNewServiceCategoryBSIsOpen] = useState(false);
-  const [addNewServiceOrServiceCategoryBSIsOpen, setAddNewServiceOrServiceCategoryBSIsOpen] = useState(false);
+  const [addNewServiceOrServiceCategoryBSIsOpen, setAddNewServiceOrServiceCategoryBSIsOpen] =
+    useState(false);
   const [editingServiceInServicesPage, setEditingServiceInServicesPage] = useState<Service>();
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
@@ -442,7 +445,8 @@ export function Calendar() {
                 if (element) {
                   const handleScroll = () => {
                     const _isAtStart = element.scrollLeft === 0;
-                    const _isAtEnd = element.scrollWidth + element.scrollLeft === element.clientWidth;
+                    const _isAtEnd =
+                      element.scrollWidth + element.scrollLeft === element.clientWidth;
                     if (_isAtStart) canSwipeDirectionRef.current = "Left";
                     if (_isAtEnd) canSwipeDirectionRef.current = "Right";
                     if (!_isAtStart && !_isAtEnd) canSwipeDirectionRef.current = false;
@@ -481,7 +485,8 @@ export function Calendar() {
                 if (element) {
                   const handleScroll = () => {
                     const _isAtStart = element.scrollLeft === 0;
-                    const _isAtEnd = element.scrollWidth + element.scrollLeft === element.clientWidth;
+                    const _isAtEnd =
+                      element.scrollWidth + element.scrollLeft === element.clientWidth;
                     if (_isAtStart) canSwipeDirectionRef.current = "Left";
                     if (_isAtEnd) canSwipeDirectionRef.current = "Right";
                     if (!_isAtStart && !_isAtEnd) canSwipeDirectionRef.current = false;
@@ -556,7 +561,8 @@ export function Calendar() {
 
                   const scheduleNextUpdate = () => {
                     const now = new Date();
-                    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+                    const msUntilNextMinute =
+                      (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
                     setTimeout(() => {
                       updateNowIndicator();
@@ -664,36 +670,40 @@ export function Calendar() {
                           className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
                           onClick={() => {
                             if (editingServiceInServicesPage) {
-                              deleteService(editingServiceInServicesPage.id).then(({ response }) => {
-                                if (response.status !== 204) {
-                                  toast.error("حذف سرویس با مشکل مواجه شد", {
-                                    duration: 5000,
-                                    position: "top-center",
-                                    className: "w-full font-medium",
-                                  });
-                                } else {
-                                  fetchLocation().then(({ data, response }) => {
-                                    toast.success(
-                                      `سرویس «${editingServiceInServicesPage.name}» با موفقیت حذف شد`,
-                                      {
-                                        duration: 5000,
-                                        position: "top-center",
-                                        className: "w-full font-medium",
-                                      },
-                                    );
+                              deleteService(editingServiceInServicesPage.id).then(
+                                ({ response }) => {
+                                  if (response.status !== 204) {
+                                    toast.error("حذف سرویس با مشکل مواجه شد", {
+                                      duration: 5000,
+                                      position: "top-center",
+                                      className: "w-full font-medium",
+                                    });
+                                  } else {
+                                    fetchLocation().then(({ data, response }) => {
+                                      toast.success(
+                                        `سرویس «${editingServiceInServicesPage.name}» با موفقیت حذف شد`,
+                                        {
+                                          duration: 5000,
+                                          position: "top-center",
+                                          className: "w-full font-medium",
+                                        },
+                                      );
 
-                                    if (response.status !== 200) router.push("/");
-                                    else {
-                                      setLocation(data);
-                                      setEditingServiceInServicesPage(undefined);
-                                    }
-                                  });
-                                }
-                              });
+                                      if (response.status !== 200) router.push("/");
+                                      else {
+                                        setLocation(data);
+                                        setEditingServiceInServicesPage(undefined);
+                                      }
+                                    });
+                                  }
+                                },
+                              );
                             }
                           }}
                         >
-                          <p className="text-lg text-red-600 font-medium">حذف دائمی (غیر قابل بازگشت)</p>
+                          <p className="text-lg text-red-600 font-medium">
+                            حذف دائمی (غیر قابل بازگشت)
+                          </p>
                         </button>
                       </li>
                     </ul>

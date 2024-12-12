@@ -20,7 +20,9 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
   const codeRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className={`relative bg-white w-full overflow-y-scroll ${compact ? "h-[350px]" : "h-dvh p-5"}`}>
+    <div
+      className={`relative bg-white w-full overflow-y-scroll ${compact ? "h-[350px]" : "h-dvh p-5"}`}
+    >
       {!compact && (
         <button
           type="button"
@@ -49,7 +51,11 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                 >
                   +۹۸
                 </div>
-                <div id="phone-div" className="relative w-full !tabular-nums" style={{ direction: "ltr" }}>
+                <div
+                  id="phone-div"
+                  className="relative w-full !tabular-nums"
+                  style={{ direction: "ltr" }}
+                >
                   <input
                     type="tel"
                     style={{ direction: "ltr" }}
@@ -74,7 +80,10 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                     }}
                     inputMode="numeric"
                   />
-                  <div className="absolute p-2.5 top-0 pointer-events-none" style={{ direction: "ltr" }}>
+                  <div
+                    className="absolute p-2.5 top-0 pointer-events-none"
+                    style={{ direction: "ltr" }}
+                  >
                     <span className="text-black tracking-[4px]">{phoneNumber}</span>
                     <span className="text-gray-400 tracking-[1.3px]">
                       {Array(10 - phoneNumber.length)
@@ -106,7 +115,9 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
         )}
         {step === "otp" && (
           <>
-            <p className="text-gray-500 text-lg text-center px-4">کد تأیید به شماره زیر ارسال شد.</p>
+            <p className="text-gray-500 text-lg text-center px-4">
+              کد تأیید به شماره زیر ارسال شد.
+            </p>
             <p className="font-bold text-gray-800 text-2xl" dir="ltr" style={{ direction: "ltr" }}>
               +۹۸ {`${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3, 6)} ${phoneNumber.slice(6)}`}
             </p>

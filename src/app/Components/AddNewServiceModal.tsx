@@ -8,7 +8,12 @@ import type {
   Service,
   ServiceCategory,
 } from "@/app/api";
-import { formatDurationInFarsi, formatPriceWithSeparator, toEnglishDigits, toFarsiDigits } from "@/app/utils";
+import {
+  formatDurationInFarsi,
+  formatPriceWithSeparator,
+  toEnglishDigits,
+  toFarsiDigits,
+} from "@/app/utils";
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -27,8 +32,15 @@ export function AddNewServiceModal(props: {
   serviceCategories: ServiceCategory[];
   durations: { value: number; label: string }[];
 }) {
-  const { isOpen, onClose, allEmployees, setLocation, availableCategories, serviceCategories, durations } =
-    props;
+  const {
+    isOpen,
+    onClose,
+    allEmployees,
+    setLocation,
+    availableCategories,
+    serviceCategories,
+    durations,
+  } = props;
   const router = useRouter();
 
   const [newServiceName, setNewServiceName] = useState<Service["name"]>("");
@@ -43,17 +55,18 @@ export function AddNewServiceModal(props: {
   const [newServicePrice, setNewServicePrice] = useState<Service["price"]>();
   const [newServiceUpfrontPrice, setNewServiceUpfrontPrice] = useState<Service["upfrontPrice"]>();
   const [newServiceGender, setNewServiceGender] = useState<"f" | "m" | "">("f");
-  const [newServiceIsRecommendedByLocation, setNewServiceIsRecommendedByLocation] = useState<boolean>(false);
+  const [newServiceIsRecommendedByLocation, setNewServiceIsRecommendedByLocation] =
+    useState<boolean>(false);
   const [newServiceAdvancedSettingsModalIsOpen, setNewServiceAdvancedSettingsModalIsOpen] =
     useState<boolean>(false);
-  const [newServiceAdvancedPerEmployeeSettings, setNewServiceAdvancedPerEmployeeSettings] = useState<
-    Record<Employee["id"], NewServicePerEmployee>
-  >({});
+  const [newServiceAdvancedPerEmployeeSettings, setNewServiceAdvancedPerEmployeeSettings] =
+    useState<Record<Employee["id"], NewServicePerEmployee>>({});
   const [
     newServiceAdvancedPerEmployeeSettingsIsEditingEmployee,
     setNewServiceAdvancedPerEmployeeSettingsIsEditingEmployee,
   ] = useState<Employee>();
-  const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] = useState<boolean>(false);
+  const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] =
+    useState<boolean>(false);
 
   function makeAllFieldsEmpty() {
     setNewServiceName("");
@@ -141,8 +154,8 @@ export function AddNewServiceModal(props: {
             </BottomSheet>
           </div>
           <p className="text-gray-500 text-sm font-light">
-            انتخاب درست این فیلد، برای پیدا کردن شما در پلتفرم بیرون توسط مشتریان، تأثیر مهمی دارد. این گزینه
-            فقط در موتور جستجوی بیرون اثرگذاری دارد و به کاربران نمایش داده نمی‌شود.
+            انتخاب درست این فیلد، برای پیدا کردن شما در پلتفرم بیرون توسط مشتریان، تأثیر مهمی دارد.
+            این گزینه فقط در موتور جستجوی بیرون اثرگذاری دارد و به کاربران نمایش داده نمی‌شود.
           </p>
         </div>
         <div className="flex flex-col gap-2">
@@ -223,13 +236,19 @@ export function AddNewServiceModal(props: {
               className="w-full border text-lg rounded-lg py-3 px-5 outline-0"
               style={{ direction: "ltr" }}
               placeholder="۵۰۰٫۰۰۰"
-              value={newServicePrice ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice))) : ""}
+              value={
+                newServicePrice
+                  ? toFarsiDigits(formatPriceWithSeparator(Number(newServicePrice)))
+                  : ""
+              }
               onChange={(e) => {
                 const val = toEnglishDigits(e.target.value).replaceAll("٫", "");
                 if (!Number.isNaN(Number(val)) && +val < 100000000) {
                   setNewServicePrice(+val);
                   setNewServiceUpfrontPrice(
-                    newServiceUpfrontPrice ? Math.min(+val, newServiceUpfrontPrice) : newServiceUpfrontPrice,
+                    newServiceUpfrontPrice
+                      ? Math.min(+val, newServiceUpfrontPrice)
+                      : newServiceUpfrontPrice,
                   );
                   setNewServiceAdvancedPerEmployeeSettings((prevSettings) => {
                     return Object.keys(prevSettings).reduce(
@@ -373,19 +392,25 @@ export function AddNewServiceModal(props: {
                       <div className="flex flex-col gap-1 items-end">
                         <div
                           className={`font-normal text-lg ${
-                            newServiceAdvancedPerEmployeeSettings[emp.id]?.price ? "" : "text-gray-500"
+                            newServiceAdvancedPerEmployeeSettings[emp.id]?.price
+                              ? ""
+                              : "text-gray-500"
                           }`}
                         >
                           {toFarsiDigits(
                             formatPriceWithSeparator(
-                              newServiceAdvancedPerEmployeeSettings[emp.id]?.price || newServicePrice || 0,
+                              newServiceAdvancedPerEmployeeSettings[emp.id]?.price ||
+                                newServicePrice ||
+                                0,
                             ),
                           )}
                           <span className="text-xs font-light text-gray-500"> تومان</span>
                         </div>
                         <div
                           className={`font-normal text-sm ${
-                            newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice ? "" : "text-gray-500"
+                            newServiceAdvancedPerEmployeeSettings[emp.id]?.upfrontPrice
+                              ? ""
+                              : "text-gray-500"
                           }`}
                         >
                           {toFarsiDigits(
@@ -502,7 +527,9 @@ export function AddNewServiceModal(props: {
                           newServiceUpfrontPrice
                             ? toFarsiDigits(formatPriceWithSeparator(newServiceUpfrontPrice))
                             : newServicePrice
-                              ? toFarsiDigits(formatPriceWithSeparator(Math.ceil(newServicePrice / 2)))
+                              ? toFarsiDigits(
+                                  formatPriceWithSeparator(Math.ceil(newServicePrice / 2)),
+                                )
                               : "۲۵۰٫۰۰۰"
                         }
                         value={

@@ -49,7 +49,10 @@ export function TeamMembersModal({ allEmployees, setAllEmployees }: TeamMembersM
     >
       <div className="flex flex-col divide-y">
         {allEmployees.map((emp) => (
-          <div key={emp.id} className="flex flex-row bg-white py-4 px-1 justify-between items-center">
+          <div
+            key={emp.id}
+            className="flex flex-row bg-white py-4 px-1 justify-between items-center"
+          >
             <div className="flex flex-row items-center gap-4">
               {emp.user.avatar?.url ? (
                 <NextImage
@@ -125,7 +128,9 @@ export function TeamMembersModal({ allEmployees, setAllEmployees }: TeamMembersM
                             className: "w-full font-medium",
                           },
                         );
-                        setAllEmployees((prev) => prev.filter((emp) => emp.id !== editingEmployee.id));
+                        setAllEmployees((prev) =>
+                          prev.filter((emp) => emp.id !== editingEmployee.id),
+                        );
                         setEditingEmployee(undefined);
                       }
                     });
@@ -189,7 +194,11 @@ export function TeamMembersModal({ allEmployees, setAllEmployees }: TeamMembersM
               >
                 +۹۸
               </div>
-              <div id="phone-div" className="relative w-full !tabular-nums" style={{ direction: "ltr" }}>
+              <div
+                id="phone-div"
+                className="relative w-full !tabular-nums"
+                style={{ direction: "ltr" }}
+              >
                 <input
                   type="tel"
                   style={{ direction: "ltr" }}
@@ -214,7 +223,10 @@ export function TeamMembersModal({ allEmployees, setAllEmployees }: TeamMembersM
                   }}
                   inputMode="numeric"
                 />
-                <div className="absolute p-2.5 top-0 pointer-events-none" style={{ direction: "ltr" }}>
+                <div
+                  className="absolute p-2.5 top-0 pointer-events-none"
+                  style={{ direction: "ltr" }}
+                >
                   <span className="text-black tracking-[4px]">{phoneNumber}</span>
                   <span className="text-gray-400 tracking-[1.3px]">
                     {Array(10 - phoneNumber.length)

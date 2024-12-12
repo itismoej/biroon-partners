@@ -76,7 +76,10 @@ interface TopBarDateHeaderButtonProps {
   onClick: () => void;
 }
 
-const TopBarDateHeaderButton: React.FC<TopBarDateHeaderButtonProps> = ({ currentDate, onClick }) => (
+const TopBarDateHeaderButton: React.FC<TopBarDateHeaderButtonProps> = ({
+  currentDate,
+  onClick,
+}) => (
   <button className="flex flex-row gap-2" type="button" onClick={onClick}>
     <h1 className="text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}</h1>
     <img src="/dropdown.svg" alt="dropdown" />
@@ -130,12 +133,18 @@ interface DateTimeSelectionProps {
   onTimeClick: () => void;
 }
 
-const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({ currentDate, onDateClick, onTimeClick }) => {
+const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
+  currentDate,
+  onDateClick,
+  onTimeClick,
+}) => {
   return (
     <div className="mt-7 flex flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7">
       <button className="flex flex-row gap-2" type="button" onClick={onDateClick}>
         <img src="/calendar.svg" alt="calandar shape" className="w-6 h-6" />
-        <span className="text-lg font-normal">{toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}</span>
+        <span className="text-lg font-normal">
+          {toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}
+        </span>
       </button>
       <button className="flex flex-row gap-2" type="button" onClick={onTimeClick}>
         <img src="/time.svg" alt="clock shape" className="w-6 h-6" />
@@ -186,7 +195,9 @@ const ServiceSelectionButton: React.FC<ServiceSelectionButtonProps> = ({
   ) : (
     <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
       <img src="/service.png" alt="service" className="w-16 h-16" />
-      <p className="text-lg text-gray-500 text-center mt-4">برای ذخیرهی این نوبت یک سرویس اضافه کنید</p>
+      <p className="text-lg text-gray-500 text-center mt-4">
+        برای ذخیرهی این نوبت یک سرویس اضافه کنید
+      </p>
       <button
         className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
         type="button"
@@ -422,7 +433,9 @@ export const EditEvent: React.FC<AddAppointmentModalProps> = ({ calendarRef }) =
                   }
                 });
               }}
-              saveDisabled={!selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment}
+              saveDisabled={
+                !selectedServiceToAddInNewAppointment || !selectedEmployeeForNewAppointment
+              }
             />
 
             {/* Date Picker BottomSheet */}
@@ -479,19 +492,19 @@ export const EditEvent: React.FC<AddAppointmentModalProps> = ({ calendarRef }) =
               title="زمان شروع"
             >
               <ul>
-                {Array.from({ length: 24 * 4 }, (_, i) => addMinutes(startOfDay(currentDate), i * 15)).map(
-                  (time) => (
-                    <TimePickerListItem
-                      key={time.toISOString()}
-                      time={time}
-                      selected={format(time, "HH:mm") === format(currentDate, "HH:mm")}
-                      onSelect={(selectedTime) => {
-                        setCurrentDate(selectedTime);
-                        setSelectTimeInAddAppointmentModalBSIsOpen(false);
-                      }}
-                    />
-                  ),
-                )}
+                {Array.from({ length: 24 * 4 }, (_, i) =>
+                  addMinutes(startOfDay(currentDate), i * 15),
+                ).map((time) => (
+                  <TimePickerListItem
+                    key={time.toISOString()}
+                    time={time}
+                    selected={format(time, "HH:mm") === format(currentDate, "HH:mm")}
+                    onSelect={(selectedTime) => {
+                      setCurrentDate(selectedTime);
+                      setSelectTimeInAddAppointmentModalBSIsOpen(false);
+                    }}
+                  />
+                ))}
               </ul>
             </BottomSheet>
           </>
