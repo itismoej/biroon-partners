@@ -81,6 +81,9 @@ function AddNewCustomerModal({ isOpen, customersList, setCustomersList, onClose 
                     position: "top-center",
                     className: "w-full font-medium",
                   });
+                  setPhoneNumber("");
+                  setFirstName("");
+                  setLastName("");
                   setCustomersList([...customersList, data]);
                   onClose();
                 }
