@@ -68,7 +68,12 @@ type CheckboxFieldProps = {
   className?: string;
 };
 
-export const CheckboxField: React.FC<CheckboxFieldProps> = ({ label, checked, onChange, className = "" }) => (
+export const CheckboxField: React.FC<CheckboxFieldProps> = ({
+  label,
+  checked,
+  onChange,
+  className = "",
+}) => (
   <label className={`flex flex-row gap-2 font-bold text-md items-center ${className}`}>
     <input type="checkbox" className="w-5 h-5" checked={checked} onChange={onChange} />
     {label}

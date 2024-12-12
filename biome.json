@@ -6,7 +6,7 @@
     "attributePosition": "auto",
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 110,
+    "lineWidth": 100,
     "lineEnding": "lf"
   },
   "linter": {

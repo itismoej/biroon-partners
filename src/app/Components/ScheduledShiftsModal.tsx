@@ -81,7 +81,8 @@ export function ScheduledShiftsModal() {
     }
   }, [weekStartISO, isThisModalOpen]);
 
-  const [editingWorkingDay, setEditingWorkingDay] = useState<ShiftEditModalProps["editingWorkingDay"]>();
+  const [editingWorkingDay, setEditingWorkingDay] =
+    useState<ShiftEditModalProps["editingWorkingDay"]>();
 
   return (
     <Modal
@@ -135,7 +136,9 @@ export function ScheduledShiftsModal() {
                   <span className="text-lg font-medium">{emp.nickname}</span>
                   <span className="font-normal text-gray-500 text-sm">
                     {formatDurationInFarsi(
-                      computeWorkingTimeInMinutes(shifts.find(({ employee }) => employee.id === emp.id)),
+                      computeWorkingTimeInMinutes(
+                        shifts.find(({ employee }) => employee.id === emp.id),
+                      ),
                     )}
                   </span>
                 </div>
@@ -160,7 +163,10 @@ export function ScheduledShiftsModal() {
                             key={`${workingDay.day}-${workingDay.workingHours[0]?.startTime || 1}`}
                             className="flex flex-row justify-between items-center py-5 -mx-5 px-5 bg-white active:transform-none"
                             onClick={() => {
-                              setEditingWorkingDay({ employeeWorkingDays: empWorkingDays, workingDay });
+                              setEditingWorkingDay({
+                                employeeWorkingDays: empWorkingDays,
+                                workingDay,
+                              });
                             }}
                           >
                             <p className="text-lg font-medium">
@@ -197,7 +203,10 @@ export function ScheduledShiftsModal() {
           </div>
         ))}
       </div>
-      <MenuPopup isOpen={editingWorkingDay !== undefined} onClose={() => setEditingWorkingDay(undefined)}>
+      <MenuPopup
+        isOpen={editingWorkingDay !== undefined}
+        onClose={() => setEditingWorkingDay(undefined)}
+      >
         {editingWorkingDay && (
           <div className="flex flex-col">
             <div className="flex flex-col gap-1 items-center justify-center my-6">
@@ -216,7 +225,9 @@ export function ScheduledShiftsModal() {
                     : ""}
                 </div>
               )}
-              <h2 className="text-xl font-bold">{editingWorkingDay.employeeWorkingDays.employee.nickname}</h2>
+              <h2 className="text-xl font-bold">
+                {editingWorkingDay.employeeWorkingDays.employee.nickname}
+              </h2>
               <h2 className="font-normal">
                 {toFarsiDigits(format(parseISO(editingWorkingDay.workingDay.day), "EEEE، dd MMMM"))}
               </h2>
@@ -236,7 +247,9 @@ export function ScheduledShiftsModal() {
                     : "افزودن زمان کاری"}
                 </p>
                 <NextImage
-                  src={editingWorkingDay.workingDay.workingHours.length > 0 ? "/pen.svg" : "/plus.svg"}
+                  src={
+                    editingWorkingDay.workingDay.workingHours.length > 0 ? "/pen.svg" : "/plus.svg"
+                  }
                   alt={
                     editingWorkingDay.workingDay.workingHours.length > 0
                       ? "ویرایش این روز"
@@ -337,14 +350,19 @@ export function ScheduledShiftsModal() {
             editingWorkingDay={editingWorkingDay}
             onSave={(newWorkingDay) => {
               setShifts((prev) => {
-                const empIdx = prev.findIndex(({ employee }) => employee.id === newWorkingDay.employee.id);
+                const empIdx = prev.findIndex(
+                  ({ employee }) => employee.id === newWorkingDay.employee.id,
+                );
                 if (empIdx === -1) return prev;
 
-                const dayIdx = prev[empIdx].workingDays.findIndex(({ day }) => day === newWorkingDay.day);
+                const dayIdx = prev[empIdx].workingDays.findIndex(
+                  ({ day }) => day === newWorkingDay.day,
+                );
                 if (dayIdx === -1) return prev;
 
                 const newEmployeeWorkingDay = [...prev];
-                newEmployeeWorkingDay[empIdx].workingDays[dayIdx].workingHours = newWorkingDay.workingHours;
+                newEmployeeWorkingDay[empIdx].workingDays[dayIdx].workingHours =
+                  newWorkingDay.workingHours;
                 return newEmployeeWorkingDay;
               });
             }}

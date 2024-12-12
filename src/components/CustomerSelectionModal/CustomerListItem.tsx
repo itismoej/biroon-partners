@@ -15,7 +15,7 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, onSelect 
         onClick={() => onSelect(customer)}
       >
         <div className="h-16 w-16 flex items-center justify-center bg-purple-100 font-bold text-2xl text-primary-400 rounded-full">
-            {customer.user.fullName.slice(0, 2)}
+          {customer.user.fullName.slice(0, 2)}
         </div>
         <p className="font-medium text-lg" style={{ direction: "ltr" }}>
           {customer.user.fullName}

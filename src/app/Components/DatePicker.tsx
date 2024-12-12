@@ -1,5 +1,12 @@
 import { toFarsiDigits } from "@/app/utils";
-import { addMonths, eachDayOfInterval, endOfMonth, format, isSameDay, startOfMonth } from "date-fns-jalali";
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  format,
+  isSameDay,
+  startOfMonth,
+} from "date-fns-jalali";
 import { useEffect, useMemo, useState } from "react";
 import type React from "react";
 
@@ -75,7 +82,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
     return calendarDays.map(({ day, key }) => {
       if (day === null) {
-        return <div key={key} className="flex justify-center items-center cursor-default bg-transparent" />;
+        return (
+          <div
+            key={key}
+            className="flex justify-center items-center cursor-default bg-transparent"
+          />
+        );
       }
 
       const currentSelectedDate = selectedDate !== undefined ? selectedDate : internalSelectedDate;
@@ -114,7 +126,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <button onClick={handlePrevMonth} className="p-3">
           <img src="/right.svg" />
         </button>
-        <div className="font-bold text-2xl">{toFarsiDigits(format(startOfMonthDate, "MMMM yyyy"))}</div>
+        <div className="font-bold text-2xl">
+          {toFarsiDigits(format(startOfMonthDate, "MMMM yyyy"))}
+        </div>
         <button onClick={handleNextMonth} className="p-3">
           <img src="/left.svg" />
         </button>

@@ -37,7 +37,9 @@ export const ServicesSection = ({
           <h2 className="text-lg font-medium">همه‌ی دسته‌بندی‌ها</h2>
           <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-50 border text-gray-500 rounded-full font-bold">
             <span className="translate-y-[2px] text-sm font-normal">
-              {toFarsiDigits(location.serviceCatalog.reduce((acc, { items }) => acc + items.length, 0))}
+              {toFarsiDigits(
+                location.serviceCatalog.reduce((acc, { items }) => acc + items.length, 0),
+              )}
             </span>
           </div>
         </div>
@@ -51,7 +53,9 @@ export const ServicesSection = ({
           <div className="flex flex-row gap-2 items-center justify-between">
             <h2 className="text-lg font-medium">{name}</h2>
             <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-50 border text-gray-500 rounded-full font-bold">
-              <span className="translate-y-[2px] text-sm font-normal">{toFarsiDigits(items.length)}</span>
+              <span className="translate-y-[2px] text-sm font-normal">
+                {toFarsiDigits(items.length)}
+              </span>
             </div>
           </div>
         ),
@@ -65,9 +69,9 @@ export const ServicesSection = ({
   };
 
   const router = useRouter();
-  const [deletingServiceCategory, setDeletingServiceCategory] = useState<ServiceCategory | undefined>(
-    undefined,
-  );
+  const [deletingServiceCategory, setDeletingServiceCategory] = useState<
+    ServiceCategory | undefined
+  >(undefined);
 
   return (
     <div className="w-full pb-[70px]">
@@ -129,7 +133,9 @@ export const ServicesSection = ({
       >
         {deletingServiceCategory && (
           <div className="space-y-8 pb-12">
-            <h2 className="text-3xl font-bold -mt-6">حذف دائمی دسته‌بندی «{deletingServiceCategory.name}»</h2>
+            <h2 className="text-3xl font-bold -mt-6">
+              حذف دائمی دسته‌بندی «{deletingServiceCategory.name}»
+            </h2>
             <p className="text-lg font-normal text-red-600">
               همه‌ی سرویس‌های موجود در این دسته‌بندی نیز حذف خواهند شد! آیا اطمینان دارید؟
             </p>

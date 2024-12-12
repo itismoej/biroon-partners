@@ -19,7 +19,13 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
       {page === 0 ? (
         <div className="flex flex-row gap-2 items-center">
           <button className="bg-white p-3 rounded-xl">
-            <NextImage width={24} height={24} alt="منو" src="/hamburger.svg" className="w-[24px] h-[24px]" />
+            <NextImage
+              width={24}
+              height={24}
+              alt="منو"
+              src="/hamburger.svg"
+              className="w-[24px] h-[24px]"
+            />
           </button>
           <button
             className="flex flex-row gap-1"
@@ -28,7 +34,9 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
               shallowRouter.push(`${pathname}/select-date`);
             }}
           >
-            <h2 className="z-50 text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM"))}</h2>
+            <h2 className="z-50 text-xl font-bold">
+              {toFarsiDigits(format(currentDate, "EEEE، d MMMM"))}
+            </h2>
             <NextImage width={24} height={24} alt="باز کردن تقویم" src="/dropdown.svg" />
           </button>
         </div>

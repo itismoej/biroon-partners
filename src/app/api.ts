@@ -350,7 +350,9 @@ export async function fetchOnboarding(): Promise<{ data: Onboarding; response: R
   return { data: await response.json(), response };
 }
 
-export async function updateOnboarding(data: Onboarding): Promise<{ data: Onboarding; response: Response }> {
+export async function updateOnboarding(
+  data: Onboarding,
+): Promise<{ data: Onboarding; response: Response }> {
   const response = await fetch(`${apiUrl}/partners/onboarding/`, {
     method: "PATCH",
     credentials: "include",
@@ -408,11 +410,14 @@ export const fetchReverseGeocode = async (
   latitude: number,
   longitude: number,
 ): Promise<ReverseGeocodeResponse> => {
-  const response = await fetch(`https://api.neshan.org/v5/reverse?lat=${latitude}&lng=${longitude}`, {
-    headers: {
-      "Api-Key": "service.af65e25ca7c24b3081d0a330bfbfdf25",
+  const response = await fetch(
+    `https://api.neshan.org/v5/reverse?lat=${latitude}&lng=${longitude}`,
+    {
+      headers: {
+        "Api-Key": "service.af65e25ca7c24b3081d0a330bfbfdf25",
+      },
     },
-  });
+  );
   if (!response.ok) {
     throw new Error("Failed to fetch data");
   }
@@ -424,7 +429,10 @@ export interface ServiceCategory {
   name: string;
 }
 
-export async function fetchServiceCategories(): Promise<{ data: ServiceCategory[]; response: Response }> {
+export async function fetchServiceCategories(): Promise<{
+  data: ServiceCategory[];
+  response: Response;
+}> {
   const response = await fetch(`${apiUrl}/partners/service-categories/`, {
     credentials: "include",
   });
@@ -466,7 +474,9 @@ export interface CreateNewService {
   perEmployeeSettings: NewServicePerEmployee[];
 }
 
-export async function createNewService(newService: CreateNewService): Promise<{ response: Response }> {
+export async function createNewService(
+  newService: CreateNewService,
+): Promise<{ response: Response }> {
   const response = await fetch(`${apiUrl}/partners/services/`, {
     method: "POST",
     body: JSON.stringify(newService),
@@ -552,7 +562,9 @@ export interface EmployeesShifts {
   shifts: EmployeeWorkingDays[];
 }
 
-export async function fetchShifts(date: Date): Promise<{ data: EmployeesShifts; response: Response }> {
+export async function fetchShifts(
+  date: Date,
+): Promise<{ data: EmployeesShifts; response: Response }> {
   const response = await fetch(`${apiUrl}/partners/shifts/?date=${format(date, "yyyy-MM-dd")}`, {
     credentials: "include",
   });

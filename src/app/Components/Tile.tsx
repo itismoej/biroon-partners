@@ -10,7 +10,9 @@ export const Tile = ({ employee, onTileChange }: TileProps) => {
   return (
     <button
       type="button"
-      className={"flex bg-white min-w-48 justify-center pt-12 pb-7 px-2 cursor-pointer border-2 rounded-lg"}
+      className={
+        "flex bg-white min-w-48 justify-center pt-12 pb-7 px-2 cursor-pointer border-2 rounded-lg"
+      }
       onClick={() => {
         onTileChange(employee);
       }}
