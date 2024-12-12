@@ -67,7 +67,8 @@ export const Modal: FC<ModalProps> = ({
                     <img src="/back.svg" alt="بازگشت" className={"w-7 h-7"} />
                   </button>
                 )}
-                {!isOnTop && (topBarTitle ? topBarTitle : <h3 className="text-xl font-semibold">{title}</h3>)}
+                {!isOnTop &&
+                  (topBarTitle ? topBarTitle : <h3 className="text-xl font-semibold">{title}</h3>)}
               </div>
               {leftBtn}
             </div>

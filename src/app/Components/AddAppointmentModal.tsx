@@ -14,7 +14,15 @@ import {
 import { formatPriceWithSeparator, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import CustomerSelectionModal from "@/components/CustomerSelectionModal";
 import type FullCalendar from "@fullcalendar/react";
-import { addDays, addMinutes, format, setHours, setMinutes, setSeconds, startOfDay } from "date-fns-jalali";
+import {
+  addDays,
+  addMinutes,
+  format,
+  setHours,
+  setMinutes,
+  setSeconds,
+  startOfDay,
+} from "date-fns-jalali";
 import { usePathname } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
@@ -46,7 +54,10 @@ interface TopBarDateHeaderButtonProps {
   onClick: () => void;
 }
 
-const TopBarDateHeaderButton: React.FC<TopBarDateHeaderButtonProps> = ({ currentDate, onClick }) => (
+const TopBarDateHeaderButton: React.FC<TopBarDateHeaderButtonProps> = ({
+  currentDate,
+  onClick,
+}) => (
   <button className="flex flex-row gap-2" type="button" onClick={onClick}>
     <h1 className="text-xl font-bold">{toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}</h1>
     <img src="/dropdown.svg" />
@@ -114,11 +125,15 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
   <div className="mt-7 flex flex-row justify-between items-center rounded-lg border border-gray-200 py-7 px-7">
     <button className="flex flex-row gap-2" type="button" onClick={onDateClick}>
       <img src="/calendar.svg" className="w-6 h-6" />
-      <span className="text-lg font-normal">{toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}</span>
+      <span className="text-lg font-normal">
+        {toFarsiDigits(format(currentDate, "EEEE dd MMMM"))}
+      </span>
     </button>
     <button className="flex flex-row gap-2" type="button" onClick={onTimeClick}>
       <img src="/time.svg" className="w-6 h-6" />
-      <span className="text-lg font-normal">{toFarsiDigits(format(newAppointmentTime, "HH:mm"))}</span>
+      <span className="text-lg font-normal">
+        {toFarsiDigits(format(newAppointmentTime, "HH:mm"))}
+      </span>
     </button>
   </div>
 );
@@ -163,7 +178,9 @@ const ServiceSelectionButton: React.FC<ServiceSelectionButtonProps> = ({
   ) : (
     <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
       <img src="/service.png" className="w-16 h-16" />
-      <p className="text-lg text-gray-500 text-center mt-4">برای ذخیره‌ی این نوبت یک سرویس اضافه کنید</p>
+      <p className="text-lg text-gray-500 text-center mt-4">
+        برای ذخیره‌ی این نوبت یک سرویس اضافه کنید
+      </p>
       <button
         className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
         type="button"
@@ -278,9 +295,8 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
   const [selectedServiceToAddInNewAppointment, setSelectedServiceToAddInNewAppointment] = useState<
     Service | undefined
   >();
-  const [tempSelectedServiceToAddInNewAppointment, setTempSelectedServiceToAddInNewAppointment] = useState<
-    Service | undefined
-  >();
+  const [tempSelectedServiceToAddInNewAppointment, setTempSelectedServiceToAddInNewAppointment] =
+    useState<Service | undefined>();
   const [availableEmployeesByService, setAvailableEmployeesByService] = useState<
     AvailableEmployeesByService | undefined
   >();
@@ -484,7 +500,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
                   <div className="flex flex-row gap-3">
                     <h2 className="text-2xl font-medium mb-4">{category.name}</h2>
                     <div className="w-6 h-6 flex items-center justify-center text-md bg-gray-200 text-gray-500 rounded-full font-bold">
-                      <span className="translate-y-[2px]">{toFarsiDigits(category.items.length)}</span>
+                      <span className="translate-y-[2px]">
+                        {toFarsiDigits(category.items.length)}
+                      </span>
                     </div>
                   </div>
                   <div className="flex flex-col">
@@ -507,12 +525,16 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
                           <div className="flex flex-row gap-4 justify-between">
                             <h3 className="text-lg font-normal">{svc.name}</h3>
                             <h3 className="text-lg font-normal text-nowrap">
-                              {svc.priceType === "STARTS_AT" && <span className="text-base">از </span>}
+                              {svc.priceType === "STARTS_AT" && (
+                                <span className="text-base">از </span>
+                              )}
                               {toFarsiDigits(formatPriceWithSeparator(svc.price))}
                               <span className="text-xs font-light text-gray-500"> تومان</span>
                             </h3>
                           </div>
-                          <p className="font-normal text-gray-500 text-start">{svc.formattedDuration}</p>
+                          <p className="font-normal text-gray-500 text-start">
+                            {svc.formattedDuration}
+                          </p>
                         </div>
                       </button>
                     ))}
@@ -553,7 +575,9 @@ export const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({
                   key={employee.id}
                   employee={employee}
                   onSelect={(selectedEmployee) => {
-                    setSelectedServiceToAddInNewAppointment(tempSelectedServiceToAddInNewAppointment);
+                    setSelectedServiceToAddInNewAppointment(
+                      tempSelectedServiceToAddInNewAppointment,
+                    );
                     setTempSelectedServiceToAddInNewAppointment(undefined);
                     setSelectedEmployeeForNewAppointment(selectedEmployee);
                     setSelectEmployeeBSIsOpen(false);

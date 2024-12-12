@@ -10,7 +10,14 @@ import {
 } from "@/app/api";
 import { formatDurationInFarsi, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { parse } from "date-fns";
-import { addHours, differenceInMinutes, format, parseISO, setHours, setMinutes } from "date-fns-jalali";
+import {
+  addHours,
+  differenceInMinutes,
+  format,
+  parseISO,
+  setHours,
+  setMinutes,
+} from "date-fns-jalali";
 import NextImage from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -49,7 +56,10 @@ export function RegularShiftEditModal({ editingWorkingDay, onSave }: RegularShif
       } else {
         // Initialize with default working hour
         setRegularWorkingHours([
-          { startTime: defaultStartTime.toISOString(), endTime: addHours(defaultStartTime, 8).toISOString() },
+          {
+            startTime: defaultStartTime.toISOString(),
+            endTime: addHours(defaultStartTime, 8).toISOString(),
+          },
         ]);
       }
     }
@@ -189,7 +199,10 @@ export function RegularShiftEditModal({ editingWorkingDay, onSave }: RegularShif
             <SelectField
               containerClassName="col-span-5"
               label={"زمان پایان"}
-              value={format(wh.endTime ? parseISO(wh.endTime) : addHours(defaultStartTime, 8), "HH:mm")}
+              value={format(
+                wh.endTime ? parseISO(wh.endTime) : addHours(defaultStartTime, 8),
+                "HH:mm",
+              )}
               onChange={(newValue) => handleEndTimeChange(index, newValue.target.value)}
               options={timeOptions}
             />

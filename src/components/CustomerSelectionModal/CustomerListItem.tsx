@@ -14,8 +14,8 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, onSelect 
         className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
         onClick={() => onSelect(customer)}
       >
-        <div className="h-16 w-16 flex items-center justify-center bg-purple-100 rounded-full">
-          <img src="/person-purple.svg" alt="person" className="w-7 h-7" />
+        <div className="h-16 w-16 flex items-center justify-center bg-purple-100 font-bold text-2xl text-primary-400 rounded-full">
+          {customer.user.fullName.slice(0, 2)}
         </div>
         <p className="font-medium text-lg" style={{ direction: "ltr" }}>
           {customer.user.fullName}

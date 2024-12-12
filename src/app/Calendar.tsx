@@ -34,8 +34,7 @@ import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { addDays, format } from "date-fns-jalali";
 import NextImage from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
@@ -44,6 +43,8 @@ import { AddNewServiceCategoryBottomSheet } from "@/app/Components/AddNewService
 import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
 import { TeamModal } from "@/app/Components/TeamModal";
 import { goToNow } from "@/app/calendarUtils";
+import Clients from "@/components/pages/clients";
+import Events from "@/components/pages/events";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
 
@@ -81,7 +82,7 @@ function renderEventContent(eventInfo: EventContentArg) {
   );
 }
 
-const LoadingSpinner: React.FC = () => (
+export const LoadingSpinner: React.FC = () => (
   <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">
     <svg
       aria-hidden="true"
@@ -111,7 +112,9 @@ const EditingIndicator: React.FC<EditingIndicatorProps> = ({ editingEvents, curr
 
   return (
     <div className="fixed flex w-[97%] max-w-[500px] left-1/2 -translate-x-1/2 flex-row justify-between items-center z-50 top-2 rounded-md py-3 px-3 bg-purple-600 text-white font-light text-center text-xl">
-      <h2 className="z-50 text-2xl font-bold">{toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}</h2>
+      <h2 className="z-50 text-2xl font-bold">
+        {toFarsiDigits(format(currentDate, "EEEE، d MMMM y"))}
+      </h2>
       <h2 className="animate-pulse">حالت ویرایش</h2>
     </div>
   );
@@ -259,9 +262,11 @@ export function Calendar() {
   const selectDateInCalendarBSIsOpen = pathname.startsWith("/calendar/select-date");
   const servicesModalIsOpen = pathname.startsWith("/services");
   const addNewServicesModalIsOpen = pathname.startsWith("/services/add-new");
+  const eventsModalIsOpen = pathname.includes("/events");
 
   const [addNewServiceCategoryBSIsOpen, setAddNewServiceCategoryBSIsOpen] = useState(false);
-  const [addNewServiceOrServiceCategoryBSIsOpen, setAddNewServiceOrServiceCategoryBSIsOpen] = useState(false);
+  const [addNewServiceOrServiceCategoryBSIsOpen, setAddNewServiceOrServiceCategoryBSIsOpen] =
+    useState(false);
   const [editingServiceInServicesPage, setEditingServiceInServicesPage] = useState<Service>();
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
@@ -282,6 +287,15 @@ export function Calendar() {
   }, [pathname]);
 
   const teamModalIsOpen = pathname.startsWith("/team");
+
+  const showHeader = useMemo(() => {
+    switch (page) {
+      case 2:
+        return false;
+      default:
+        return true;
+    }
+  }, [page]);
 
   const shallowRouter = useShallowRouter();
 
@@ -388,7 +402,7 @@ export function Calendar() {
 
   return (
     <div className="relative overflow-x-clip">
-      <CalendarHeader page={page} currentDate={currentDate} />
+      {showHeader && <CalendarHeader page={page} currentDate={currentDate} />}
 
       {page === 0 ? (
         <div
@@ -431,7 +445,8 @@ export function Calendar() {
                 if (element) {
                   const handleScroll = () => {
                     const _isAtStart = element.scrollLeft === 0;
-                    const _isAtEnd = element.scrollWidth + element.scrollLeft === element.clientWidth;
+                    const _isAtEnd =
+                      element.scrollWidth + element.scrollLeft === element.clientWidth;
                     if (_isAtStart) canSwipeDirectionRef.current = "Left";
                     if (_isAtEnd) canSwipeDirectionRef.current = "Right";
                     if (!_isAtStart && !_isAtEnd) canSwipeDirectionRef.current = false;
@@ -457,7 +472,8 @@ export function Calendar() {
                 setIsAnimating(false);
                 setTranslateX(0);
               }}
-              eventClick={() => {
+              eventClick={(event) => {
+                shallowRouter.push(`/calendar/events?id=${event.event.id}`);
                 canSwipeDirectionRef.current = false;
                 setIsAnimating(false);
                 setTranslateX(0);
@@ -469,7 +485,8 @@ export function Calendar() {
                 if (element) {
                   const handleScroll = () => {
                     const _isAtStart = element.scrollLeft === 0;
-                    const _isAtEnd = element.scrollWidth + element.scrollLeft === element.clientWidth;
+                    const _isAtEnd =
+                      element.scrollWidth + element.scrollLeft === element.clientWidth;
                     if (_isAtStart) canSwipeDirectionRef.current = "Left";
                     if (_isAtEnd) canSwipeDirectionRef.current = "Right";
                     if (!_isAtStart && !_isAtEnd) canSwipeDirectionRef.current = false;
@@ -544,7 +561,8 @@ export function Calendar() {
 
                   const scheduleNextUpdate = () => {
                     const now = new Date();
-                    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+                    const msUntilNextMinute =
+                      (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
                     setTimeout(() => {
                       updateNowIndicator();
@@ -562,7 +580,7 @@ export function Calendar() {
       ) : page === 1 ? (
         "sales"
       ) : page === 2 ? (
-        "clients"
+        <Clients />
       ) : page === 3 ? (
         <div className="p-5 bg-gray-100" style={{ minHeight: "calc(100dvh - 119px)" }}>
           <div className="py-5 grid grid-cols-2 gap-3">
@@ -604,7 +622,7 @@ export function Calendar() {
               <div className="-mt-4">
                 <h1 className="text-3xl">منوی سرویس‌ها</h1>
                 <p className="text-lg font-normal text-gray-500">
-                  مشاهده و مدیریت سرویس‌هایی که در کسب‌و‌کار شما ارائه می‌شود.
+                  مشاهده و مدیریت سرویس‌هایی که در کسب‌وکار شما ارائه می‌شود.
                 </p>
               </div>
             }
@@ -652,36 +670,40 @@ export function Calendar() {
                           className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
                           onClick={() => {
                             if (editingServiceInServicesPage) {
-                              deleteService(editingServiceInServicesPage.id).then(({ response }) => {
-                                if (response.status !== 204) {
-                                  toast.error("حذف سرویس با مشکل مواجه شد", {
-                                    duration: 5000,
-                                    position: "top-center",
-                                    className: "w-full font-medium",
-                                  });
-                                } else {
-                                  fetchLocation().then(({ data, response }) => {
-                                    toast.success(
-                                      `سرویس «${editingServiceInServicesPage.name}» با موفقیت حذف شد`,
-                                      {
-                                        duration: 5000,
-                                        position: "top-center",
-                                        className: "w-full font-medium",
-                                      },
-                                    );
+                              deleteService(editingServiceInServicesPage.id).then(
+                                ({ response }) => {
+                                  if (response.status !== 204) {
+                                    toast.error("حذف سرویس با مشکل مواجه شد", {
+                                      duration: 5000,
+                                      position: "top-center",
+                                      className: "w-full font-medium",
+                                    });
+                                  } else {
+                                    fetchLocation().then(({ data, response }) => {
+                                      toast.success(
+                                        `سرویس «${editingServiceInServicesPage.name}» با موفقیت حذف شد`,
+                                        {
+                                          duration: 5000,
+                                          position: "top-center",
+                                          className: "w-full font-medium",
+                                        },
+                                      );
 
-                                    if (response.status !== 200) router.push("/");
-                                    else {
-                                      setLocation(data);
-                                      setEditingServiceInServicesPage(undefined);
-                                    }
-                                  });
-                                }
-                              });
+                                      if (response.status !== 200) router.push("/");
+                                      else {
+                                        setLocation(data);
+                                        setEditingServiceInServicesPage(undefined);
+                                      }
+                                    });
+                                  }
+                                },
+                              );
                             }
                           }}
                         >
-                          <p className="text-lg text-red-600 font-medium">حذف دائمی (غیر قابل بازگشت)</p>
+                          <p className="text-lg text-red-600 font-medium">
+                            حذف دائمی (غیر قابل بازگشت)
+                          </p>
                         </button>
                       </li>
                     </ul>
@@ -822,6 +844,8 @@ export function Calendar() {
           </button>
         </div>
       </BottomSheet>
+
+      {eventsModalIsOpen && <Events calendarRef={calendarRef} />}
 
       <AddAppointmentModal
         isOpen={addAppointmentModalIsOpen}

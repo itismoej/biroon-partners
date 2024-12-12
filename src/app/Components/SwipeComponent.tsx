@@ -33,7 +33,8 @@ export const SwipeComponent: React.FC<SwipeComponentProps> = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging || startX === null || startY === null || canSwipeDirectionRef.current === false) return;
+    if (!isDragging || startX === null || startY === null || canSwipeDirectionRef.current === false)
+      return;
 
     const currentX = e.touches[0].pageX;
     const currentY = e.touches[0].clientY;

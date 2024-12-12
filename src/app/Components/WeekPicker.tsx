@@ -147,7 +147,9 @@ export const WeekPicker: React.FC<WeekPickerProps> = ({
         <button onClick={handlePrevMonth} className="p-3">
           <NextImage width={24} height={24} alt="بعدی" src="/right.svg" />
         </button>
-        <div className="font-bold text-2xl">{toFarsiDigits(format(startOfMonthDate, "MMMM yyyy"))}</div>
+        <div className="font-bold text-2xl">
+          {toFarsiDigits(format(startOfMonthDate, "MMMM yyyy"))}
+        </div>
         <button onClick={handleNextMonth} className="p-3">
           <NextImage width={24} height={24} alt="قبلی" src="/left.svg" />
         </button>

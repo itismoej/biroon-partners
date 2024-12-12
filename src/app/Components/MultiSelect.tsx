@@ -43,7 +43,11 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           />
           <div className="flex items-center space-x-2">
             {item.icon && (
-              <img src={item.icon} alt={`${item.label}`} className="h-10 w-10 rounded-full object-cover" />
+              <img
+                src={item.icon}
+                alt={`${item.label}`}
+                className="h-10 w-10 rounded-full object-cover"
+              />
             )}
             <span className="text-gray-900">{item.label}</span>
           </div>

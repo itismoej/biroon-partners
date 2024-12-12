@@ -120,16 +120,22 @@ export default function Onboarding() {
           <h3 className="text-lg font-medium text-gray-400">راه‌اندازی حساب</h3>
           <h1 className="text-3xl font-bold mb-8">ایجاد حساب کسب‌وکار جدید</h1>
           <p className="text-lg font-normal text-gray-500">
-            اطلاعات <span className="font-medium text-gray-800">«شخصی خودتان»</span> را در فرم زیر پر کنید تا
-            در مرحله‌ی بعدی به اطلاعات کسب‌و‌کار بپردازیم.
+            اطلاعات <span className="font-medium text-gray-800">«شخصی خودتان»</span> را در فرم زیر
+            پر کنید تا در مرحله‌ی بعدی به اطلاعات کسب‌و‌کار بپردازیم.
           </p>
         </div>
       }
       topBarTitle={<h2 className="font-bold text-xl">ایجاد کسب‌وکار</h2>}
       stepBar={
-        <div className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3" style={{ direction: "ltr" }}>
+        <div
+          className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3"
+          style={{ direction: "ltr" }}
+        >
           {[0, 1, 2, 3, 4].map((val) => (
-            <div key={val} className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`} />
+            <div
+              key={val}
+              className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`}
+            />
           ))}
         </div>
       }
@@ -226,9 +232,15 @@ export default function Onboarding() {
       }
       topBarTitle={<h2 className="font-bold text-xl">نام کسب‌وکار</h2>}
       stepBar={
-        <div className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3" style={{ direction: "ltr" }}>
+        <div
+          className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3"
+          style={{ direction: "ltr" }}
+        >
           {[0, 1, 2, 3, 4].map((val) => (
-            <div key={val} className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`} />
+            <div
+              key={val}
+              className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`}
+            />
           ))}
         </div>
       }
@@ -325,15 +337,22 @@ export default function Onboarding() {
           <h3 className="text-lg font-medium text-gray-400">راه‌اندازی حساب</h3>
           <h1 className="text-3xl font-bold mb-8">چه خدماتی ارائه می‌دهید؟</h1>
           <p className="text-lg font-normal text-gray-500">
-            سرویس اصلی و همچنین تا حداکثر ۳ سرویس فرعی که در کسب‌و‌کار خود ارائه می‌دهید را انتخاب کنید.
+            سرویس اصلی و همچنین تا حداکثر ۳ سرویس فرعی که در کسب‌و‌کار خود ارائه می‌دهید را انتخاب
+            کنید.
           </p>
         </div>
       }
       topBarTitle={<h2 className="font-bold text-xl">سرویس‌ها</h2>}
       stepBar={
-        <div className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3" style={{ direction: "ltr" }}>
+        <div
+          className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3"
+          style={{ direction: "ltr" }}
+        >
           {[0, 1, 2, 3, 4].map((val) => (
-            <div key={val} className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`} />
+            <div
+              key={val}
+              className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`}
+            />
           ))}
         </div>
       }
@@ -460,16 +479,22 @@ export default function Onboarding() {
           <h3 className="text-lg font-medium text-gray-400">راه‌اندازی حساب</h3>
           <h1 className="text-3xl font-bold mb-8">لوکیشن خود را ثبت کنید!</h1>
           <p className="text-lg font-normal text-gray-500">
-            آدرس کسب‌و‌کار خود را به‌صورت دقیق با استفاده از نقشه ثبت کنید تا مشتریان بتوانند به‌راحتی شما را پیدا
-            کنند.
+            آدرس کسب‌و‌کار خود را به‌صورت دقیق با استفاده از نقشه ثبت کنید تا مشتریان بتوانند به‌راحتی
+            شما را پیدا کنند.
           </p>
         </div>
       }
       topBarTitle={<h2 className="font-bold text-xl">ثبت لوکیشن</h2>}
       stepBar={
-        <div className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3" style={{ direction: "ltr" }}>
+        <div
+          className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3"
+          style={{ direction: "ltr" }}
+        >
           {[0, 1, 2, 3, 4].map((val) => (
-            <div key={val} className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`} />
+            <div
+              key={val}
+              className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`}
+            />
           ))}
         </div>
       }
@@ -544,7 +569,10 @@ export default function Onboarding() {
           <button
             type="button"
             onClick={() => {
-              if (((!address || !address.longitude || !address.latitude) && !searchingAddress) || !map) {
+              if (
+                ((!address || !address.longitude || !address.latitude) && !searchingAddress) ||
+                !map
+              ) {
                 toast.error("انتخاب دقیق لوکیشن اجباری است", {
                   duration: 5000,
                   position: "top-center",
@@ -599,9 +627,15 @@ export default function Onboarding() {
       }
       topBarTitle={<h2 className="font-bold text-xl">تأیید نهایی</h2>}
       stepBar={
-        <div className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3" style={{ direction: "ltr" }}>
+        <div
+          className="top-0 w-full bg-white pb-4 grid grid-cols-5 gap-3"
+          style={{ direction: "ltr" }}
+        >
           {[0, 1, 2, 3, 4].map((val) => (
-            <div key={val} className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`} />
+            <div
+              key={val}
+              className={`h-1 ${step < val ? "bg-gray-200" : "bg-purple-500"} rounded-full`}
+            />
           ))}
         </div>
       }

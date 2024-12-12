@@ -9,7 +9,13 @@ export interface BottomSheetProps {
   className?: string;
 }
 
-export const BottomSheet: FC<BottomSheetProps> = ({ title = "", isOpen, onClose, className, children }) => {
+export const BottomSheet: FC<BottomSheetProps> = ({
+  title = "",
+  isOpen,
+  onClose,
+  className,
+  children,
+}) => {
   const handleClose = () => {
     if (onClose) onClose();
   };
