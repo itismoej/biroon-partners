@@ -134,6 +134,7 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                       setOtpCode(toFarsiDigits(val));
                     }}
                     inputMode="numeric"
+                    autoComplete="one-time-code"
                   />
                   <div
                     className="absolute w-full text-center p-2.5 top-0 pointer-events-none"
