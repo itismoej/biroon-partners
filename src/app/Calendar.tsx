@@ -34,8 +34,7 @@ import scrollGridPlugin from "@fullcalendar/scrollgrid";
 import { addDays, format } from "date-fns-jalali";
 import NextImage from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { DatePicker } from "./Components/DatePicker";
 import { Modal } from "./Components/Modal";
@@ -45,6 +44,7 @@ import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
 import { TeamModal } from "@/app/Components/TeamModal";
 import { goToNow } from "@/app/calendarUtils";
 import Clients from "@/components/pages/clients";
+import Events from "@/components/pages/events";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
 
@@ -82,7 +82,7 @@ function renderEventContent(eventInfo: EventContentArg) {
   );
 }
 
-const LoadingSpinner: React.FC = () => (
+export const LoadingSpinner: React.FC = () => (
   <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 pointer-events-none">
     <svg
       aria-hidden="true"
@@ -262,6 +262,7 @@ export function Calendar() {
   const selectDateInCalendarBSIsOpen = pathname.startsWith("/calendar/select-date");
   const servicesModalIsOpen = pathname.startsWith("/services");
   const addNewServicesModalIsOpen = pathname.startsWith("/services/add-new");
+  const eventsModalIsOpen = pathname.includes("/events");
 
   const [addNewServiceCategoryBSIsOpen, setAddNewServiceCategoryBSIsOpen] = useState(false);
   const [addNewServiceOrServiceCategoryBSIsOpen, setAddNewServiceOrServiceCategoryBSIsOpen] =
@@ -471,7 +472,8 @@ export function Calendar() {
                 setIsAnimating(false);
                 setTranslateX(0);
               }}
-              eventClick={() => {
+              eventClick={(event) => {
+                shallowRouter.push(`/calendar/events?id=${event.event.id}`);
                 canSwipeDirectionRef.current = false;
                 setIsAnimating(false);
                 setTranslateX(0);
@@ -620,7 +622,7 @@ export function Calendar() {
               <div className="-mt-4">
                 <h1 className="text-3xl">منوی سرویس‌ها</h1>
                 <p className="text-lg font-normal text-gray-500">
-                  مشاهده و مدیریت سرویس‌هایی که در کسب‌و‌کار شما ارائه می‌شود.
+                  مشاهده و مدیریت سرویس‌هایی که در کسب‌وکار شما ارائه می‌شود.
                 </p>
               </div>
             }
@@ -842,6 +844,8 @@ export function Calendar() {
           </button>
         </div>
       </BottomSheet>
+
+      {eventsModalIsOpen && <Events calendarRef={calendarRef} />}
 
       <AddAppointmentModal
         isOpen={addAppointmentModalIsOpen}

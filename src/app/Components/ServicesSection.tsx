@@ -64,7 +64,7 @@ export const ServicesSection = ({
   );
   const [activeTab, setActiveTab] = useState<"all" | LocationServiceCatalogCategory["id"]>("all");
 
-  const handleTabClick = (index: number, id: string) => {
+  const handleTabClick = (_index: number, id: string) => {
     setActiveTab(id);
   };
 
