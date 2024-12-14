@@ -63,14 +63,14 @@ const CustomerSelectionButton: React.FC<CustomerSelectionButtonProps> = ({
   newAppointmentCustomer ? (
     <button
       type="button"
-      className="flex w-full flex-row justify-between items-center rounded-lg border border-gray-200 py-6 px-6 border-l-4 border-l-purple-400"
+      className={`flex w-full flex-row justify-between items-center rounded-lg border border-gray-200 py-6 px-6 border-l-4 border-l-purple-400 ${disabled ? "opacity-60" : ""}`}
       onClick={onClick}
       disabled={disabled}
     >
-      <img src="/right.svg" className="w-6 h-6" alt="right arrow" />
+      {/*<img src="/right.svg" className="w-6 h-6" alt="right arrow" />*/}
       <div className="text-left">
         <p className="text-xl font-medium" style={{ direction: "ltr" }}>
-          {newAppointmentCustomer?.user?.fullName}
+          {newAppointmentCustomer.user ? newAppointmentCustomer.user?.fullName : "مراجعه‌کننده حضوری"}
         </p>
       </div>
     </button>
@@ -122,6 +122,7 @@ interface ServiceSelectionButtonProps {
   currentDate: Date;
   selectedEmployeeForNewAppointment: AvailableEmployee | undefined;
   onClick: () => void;
+  disabled: boolean;
 }
 
 const ServiceSelectionButton: React.FC<ServiceSelectionButtonProps> = ({
@@ -129,13 +130,14 @@ const ServiceSelectionButton: React.FC<ServiceSelectionButtonProps> = ({
   currentDate,
   selectedEmployeeForNewAppointment,
   onClick,
+  disabled,
 }) =>
   selectedServiceToAddInNewAppointment && selectedEmployeeForNewAppointment ? (
     <button
       type="button"
-      className="w-full flex flex-row gap-4 items-center bg-white py-2 rounded-xl active:inner-w-8"
+      className={`w-full flex flex-row gap-4 items-center bg-white py-2 rounded-xl active:inner-w-8  ${disabled ? "opacity-60" : ""}`}
       onClick={onClick}
-      disabled={true}
+      disabled={disabled}
     >
       <div className="h-[70px] w-[4px] bg-purple-300 rounded-full" />
       <div className="flex flex-col w-full">
@@ -159,7 +161,7 @@ const ServiceSelectionButton: React.FC<ServiceSelectionButtonProps> = ({
     <div className="mt-4 flex flex-col justify-between items-center rounded-lg border border-gray-200 py-7 px-16">
       <img src="/service.png" alt="service" className="w-16 h-16" />
       <p className="text-lg text-gray-500 text-center mt-4">
-        برای ذخیرهی این نوبت یک سرویس اضافه کنید
+        برای ذخیره‌ی این نوبت یک سرویس اضافه کنید
       </p>
       <button
         className="mt-6 flex flex-row rounded-full px-4 py-2 gap-2 border border-gray-300"
@@ -334,6 +336,7 @@ export const EditEvent: React.FC<AddAppointmentModalProps> = ({ calendarRef }) =
                   onClick={() => {
                     console.log("do nothing");
                   }}
+                  disabled
                 />
               </div>
             </div>
