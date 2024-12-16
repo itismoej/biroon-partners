@@ -1,10 +1,12 @@
 import { MenuPopup } from "@/app/Components/MenuPopup";
+import { logout } from "@/app/api";
 import { formatPriceWithSeparator, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { useUserData } from "@/context/UserContext";
 import { format } from "date-fns-jalali";
 import NextImage from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type React from "react";
+import toast from "react-hot-toast";
 
 interface CalendarHeaderProps {
   page: number;
@@ -15,6 +17,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
   const { userData } = useUserData();
   const shallowRouter = useShallowRouter();
   const pathname = usePathname();
+  const router = useRouter();
   return (
     <div className="sticky top-0 ps-2 pe-5 z-50 h-[59px] bg-white shadow flex flex-row gap-5 items-center justify-between">
       {page === 0 ? (
@@ -112,7 +115,16 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
           <button
             type="button"
             className="flex flex-row justify-between p-5 bg-white active:!transform-none rounded-b-2xl"
-            onClick={() => {}}
+            onClick={() => {
+              logout().then(({ response }) => {
+                if (response.status === 204) router.push("/");
+                else
+                  toast.error("خروج از حساب با خطا مواجه شد", {
+                    duration: 3000,
+                    position: "top-center",
+                  });
+              });
+            }}
           >
             <p className="text-lg font-semibold text-red-600">خروج از حساب</p>
             <NextImage
