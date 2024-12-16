@@ -467,6 +467,30 @@ export interface NewServicePerEmployee {
   durationInMins?: Service["durationInMins"];
 }
 
+export interface GetServiceDto {
+  name: string;
+  category: Category;
+  serviceCategory: ServiceCategory;
+  durationInMins?: number;
+  price: number;
+  upfrontPrice?: number;
+  description?: string;
+  isRecommendedByLocation?: boolean;
+  gender: string;
+  perEmployeeSettings: NewServicePerEmployee[];
+}
+
+export async function getService(id: string): Promise<{ data: GetServiceDto; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/services/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}
+
 export interface CreateNewService {
   name: string;
   category: Category["id"];
@@ -486,6 +510,24 @@ export async function createNewService(
   const response = await fetch(`${apiUrl}/partners/services/`, {
     method: "POST",
     body: JSON.stringify(newService),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+  return { response };
+}
+
+export async function updateService({
+  id,
+  service,
+}: {
+  id: string;
+  service: CreateNewService;
+}): Promise<{ response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/services/${id}/`, {
+    method: "PUT",
+    body: JSON.stringify(service),
     headers: {
       "Content-Type": "application/json",
     },

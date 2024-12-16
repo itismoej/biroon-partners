@@ -659,7 +659,9 @@ export function Calendar() {
                       <li>
                         <button
                           className="flex flex-row gap-4 items-center w-full p-3 px-4 bg-white rounded-xl"
-                          onClick={() => {}}
+                          onClick={() => {
+                            shallowRouter.push(`/services/add-new?id=${editingServiceInServicesPage?.id}`);
+                          }}
                         >
                           <p className="text-lg font-medium">ویرایش</p>
                         </button>

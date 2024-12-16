@@ -1,5 +1,5 @@
 import { CheckboxField, InputField, SelectField, TextAreaField } from "@/app/Components/FormFields";
-import { createNewService, fetchLocation } from "@/app/api";
+import { createNewService, fetchLocation, getService, updateService } from "@/app/api";
 import type {
   Category,
   Employee,
@@ -15,9 +15,8 @@ import {
   toFarsiDigits,
 } from "@/app/utils";
 import NextImage from "next/image";
-import { useRouter } from "next/navigation";
-import type React from "react";
-import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo } from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { BottomSheet, BottomSheetFooter } from "./BottomSheet";
@@ -68,6 +67,11 @@ export function AddNewServiceModal(props: {
   const [isConfirmCloseAddNewServiceBSOpen, setIsConfirmCloseAddNewServiceBSOpen] =
     useState<boolean>(false);
 
+  const searchParams = useSearchParams();
+  const isEditMode = useMemo(() => {
+    return searchParams.get("id");
+  }, [searchParams]);
+
   function makeAllFieldsEmpty() {
     setNewServiceName("");
     setNewServiceMainCategory(undefined);
@@ -83,8 +87,29 @@ export function AddNewServiceModal(props: {
   }
 
   useEffect(() => {
-    console.log(newServiceUpfrontPrice);
-  }, [newServiceUpfrontPrice]);
+    if (isEditMode) {
+      const serviceId = searchParams.get("id") || "";
+      getService(serviceId).then(({ data, response }) => {
+        if (response.status === 200 && data) {
+          setNewServiceName(data.name);
+          setNewServiceMainCategory(data.category);
+          setNewServiceCategory(data.serviceCategory);
+          setNewServiceDescription(data.description || "");
+          setNewServiceDuration(data.durationInMins || 60);
+          setNewServicePrice(data.price);
+          setNewServiceUpfrontPrice(data.upfrontPrice);
+          setNewServiceGender((data.gender as "f" | "m" | "") || "f");
+          setNewServiceIsRecommendedByLocation(!!data.isRecommendedByLocation);
+          setNewServiceAdvancedPerEmployeeSettings(
+            data.perEmployeeSettings.reduce(
+              (allEmployees, employee) => ({ ...allEmployees, [employee.id]: employee }),
+              {},
+            ),
+          );
+        }
+      });
+    }
+  }, [isEditMode]);
 
   return (
     <Modal
@@ -662,7 +687,7 @@ export function AddNewServiceModal(props: {
                 className: "w-full font-medium",
               });
             else {
-              createNewService({
+              const sendData = {
                 name: newServiceName,
                 category: newServiceMainCategory.id,
                 serviceCategory: newServiceCategory.id,
@@ -673,29 +698,60 @@ export function AddNewServiceModal(props: {
                 upfrontPrice: newServiceUpfrontPrice,
                 isRecommendedByLocation: newServiceIsRecommendedByLocation,
                 perEmployeeSettings: Object.values(newServiceAdvancedPerEmployeeSettings),
-              }).then(({ response }) => {
-                if (response.status === 201) {
-                  toast.success(`سرویس جدید ${newServiceName} با موفقیت ایجاد شد`, {
-                    duration: 5000,
-                    position: "top-center",
-                    className: "w-full font-medium",
-                  });
-                  fetchLocation().then(({ data, response }) => {
-                    if (response.status !== 200) router.push("/");
-                    else {
-                      setLocation(data);
-                      onClose();
-                      makeAllFieldsEmpty();
+              };
+
+              if (isEditMode) {
+                const serviceId = searchParams.get("id");
+                if (serviceId) {
+                  updateService({ id: serviceId, service: sendData }).then(({ response }) => {
+                    if (response.status === 201) {
+                      toast.success(`سرویس ${newServiceName} با موفقیت ویرایش شد`, {
+                        duration: 5000,
+                        position: "top-center",
+                        className: "w-full font-medium",
+                      });
+                      // fetchLocation().then(({ data, response }) => {
+                      //   if (response.status !== 200) router.push("/");
+                      //   else {
+                      //     setLocation(data);
+                      //     onClose();
+                      //     makeAllFieldsEmpty();
+                      //   }
+                      // });
+                    } else {
+                      toast.error(`ویرایش سرویس ${newServiceName} با مشکل مواجه شد`, {
+                        duration: 5000,
+                        position: "top-center",
+                        className: "w-full font-medium",
+                      });
                     }
                   });
-                } else {
-                  toast.error(`ایجاد سرویس جدید ${newServiceName} با مشکل مواجه شد`, {
-                    duration: 5000,
-                    position: "top-center",
-                    className: "w-full font-medium",
-                  });
                 }
-              });
+              } else {
+                createNewService(sendData).then(({ response }) => {
+                  if (response.status === 201) {
+                    toast.success(`سرویس جدید ${newServiceName} با موفقیت ایجاد شد`, {
+                      duration: 5000,
+                      position: "top-center",
+                      className: "w-full font-medium",
+                    });
+                    fetchLocation().then(({ data, response }) => {
+                      if (response.status !== 200) router.push("/");
+                      else {
+                        setLocation(data);
+                        onClose();
+                        makeAllFieldsEmpty();
+                      }
+                    });
+                  } else {
+                    toast.error(`ایجاد سرویس جدید ${newServiceName} با مشکل مواجه شد`, {
+                      duration: 5000,
+                      position: "top-center",
+                      className: "w-full font-medium",
+                    });
+                  }
+                });
+              }
             }
           }}
         >
