@@ -614,3 +614,15 @@ export async function modifyRegularShiftForEmployee(
   );
   return { data: await response.json(), response };
 }
+
+export interface Wallet {
+  id: string;
+  balance: number;
+}
+
+export async function fetchMyWallet(): Promise<{ data: Wallet; response: Response }> {
+  const response = await fetch(`${apiUrl}/wallet/my-wallet/`, {
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}

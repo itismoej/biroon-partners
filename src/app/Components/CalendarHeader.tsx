@@ -1,11 +1,11 @@
 import { MenuPopup } from "@/app/Components/MenuPopup";
-import { logout } from "@/app/api";
+import { Wallet, fetchMyWallet, logout } from "@/app/api";
 import { formatPriceWithSeparator, toFarsiDigits, useShallowRouter } from "@/app/utils";
 import { useUserData } from "@/context/UserContext";
 import { format } from "date-fns-jalali";
 import NextImage from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import type React from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 interface CalendarHeaderProps {
@@ -18,6 +18,18 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
   const shallowRouter = useShallowRouter();
   const pathname = usePathname();
   const router = useRouter();
+  const [wallet, setWallet] = useState<Wallet>();
+  useEffect(() => {
+    fetchMyWallet().then(({ response, data }) => {
+      if (response.status === 200) setWallet(data);
+      else
+        toast.error("دریافت موجودی کیف پول با خطا مواجه شد", {
+          duration: 3000,
+          position: "top-center",
+        });
+    });
+  }, []);
+
   return (
     <div className="sticky top-0 ps-2 pe-5 z-50 h-[59px] bg-white shadow flex flex-row gap-5 items-center justify-between">
       {page === 0 ? (
@@ -93,8 +105,8 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
             >
               <p className="text-gray-600">موجودی کیف پول</p>
               <h3 className="text-lg font-semibold text-nowrap">
-                {toFarsiDigits(formatPriceWithSeparator(17261000))}
-                <span className="text-xs font-light text-gray-500"> تومان</span>
+                {wallet ? toFarsiDigits(formatPriceWithSeparator(wallet.balance)) : "خطا!"}
+                {wallet && <span className="text-xs font-light text-gray-500"> تومان</span>}
               </h3>
             </div>
           </div>
