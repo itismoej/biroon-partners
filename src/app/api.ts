@@ -642,19 +642,36 @@ export async function fetchEmployeeProfile(): Promise<{ data: Profile; response:
 
 export interface EditProfile {
   nickname: string;
-  user: Omit<User, "id" | "fullName">;
+  user: {
+    avatar?: File;
+    description?: string;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export async function updateEmployeeProfile(
   profile: EditProfile,
 ): Promise<{ data: Profile; response: Response }> {
+  const formData = new FormData();
+
+  formData.append("nickname", profile.nickname);
+  formData.append("user.firstName", profile.user.firstName);
+  formData.append("user.lastName", profile.user.lastName);
+
+  if (profile.user.description) {
+    formData.append("user.description", profile.user.description);
+  }
+
+  if (profile.user.avatar && profile.user.avatar instanceof File) {
+    formData.append("user.avatar", profile.user.avatar);
+  }
+
   const response = await fetch(`${apiUrl}/partners/profile/`, {
     method: "PUT",
     credentials: "include",
-    body: JSON.stringify(profile),
-    headers: {
-      "Content-Type": "application/json",
-    },
+    body: formData,
   });
+
   return { data: await response.json(), response };
 }

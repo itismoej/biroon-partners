@@ -20,6 +20,8 @@ export default function EditProfileModal() {
   const [avatar, setAvatar] = useState<User["avatar"]>({ url: "" });
   const [isSaving, startTransition] = useTransition();
 
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File>();
+
   const handleClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -29,7 +31,7 @@ export default function EditProfileModal() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      console.log("Selected file:", file);
+      setSelectedAvatarFile(file);
     }
   };
 
@@ -80,7 +82,7 @@ export default function EditProfileModal() {
                 height={118}
                 alt="پروفایل"
                 src={avatar.url}
-                className="rounded-lg"
+                className="w-[118px] h-[118px] rounded-full"
               />
             ) : (
               <div className="mx-auto w-[118px] h-[118px] rounded-full flex items-center justify-center text-3xl font-bold bg-purple-100 text-purple-700">
@@ -133,7 +135,7 @@ export default function EditProfileModal() {
               const { response } = await updateEmployeeProfile({
                 nickname,
                 user: {
-                  avatar,
+                  avatar: selectedAvatarFile,
                   lastName,
                   firstName,
                   description,
