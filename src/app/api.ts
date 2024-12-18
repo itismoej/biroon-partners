@@ -162,7 +162,9 @@ interface SendOTPResponse {
   message: string;
 }
 
-export async function sendOTP(phoneNumber: string): Promise<SendOTPResponse> {
+export async function sendOTP(
+  phoneNumber: string,
+): Promise<{ data: SendOTPResponse; response: Response }> {
   const response = await fetch(`${apiUrl}/otp/`, {
     method: "POST",
     body: JSON.stringify({ phoneNumber }),
@@ -170,7 +172,7 @@ export async function sendOTP(phoneNumber: string): Promise<SendOTPResponse> {
       "Content-Type": "application/json",
     },
   });
-  return await response.json();
+  return { data: await response.json(), response };
 }
 
 interface LoginResponse {
