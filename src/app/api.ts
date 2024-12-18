@@ -626,3 +626,35 @@ export async function fetchMyWallet(): Promise<{ data: Wallet; response: Respons
   });
   return { data: await response.json(), response };
 }
+
+export interface Profile {
+  id: string;
+  nickname: string;
+  user: User;
+}
+
+export async function fetchEmployeeProfile(): Promise<{ data: Profile; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/profile/`, {
+    credentials: "include",
+  });
+  return { data: await response.json(), response };
+}
+
+export interface EditProfile {
+  nickname: string;
+  user: Omit<User, "id" | "fullName">;
+}
+
+export async function updateEmployeeProfile(
+  profile: EditProfile,
+): Promise<{ data: Profile; response: Response }> {
+  const response = await fetch(`${apiUrl}/partners/profile/`, {
+    method: "PUT",
+    credentials: "include",
+    body: JSON.stringify(profile),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return { data: await response.json(), response };
+}

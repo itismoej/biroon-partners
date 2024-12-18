@@ -112,7 +112,12 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
           </div>
         </div>
         <div className="flex flex-col divide-y">
-          <button className="flex flex-row justify-between p-5 bg-white active:!transform-none rounded-b-2xl">
+          <button
+            onClick={() => {
+              shallowRouter.push("/user-account/profile/edit");
+            }}
+            className="flex flex-row justify-between p-5 bg-white active:!transform-none rounded-b-2xl"
+          >
             <p className="text-lg font-semibold">ویرایش پروفایل</p>
             <NextImage src="/profile.svg" alt="ویرایش پروفایل" width={24} height={24} />
           </button>

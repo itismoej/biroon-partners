@@ -70,7 +70,9 @@ const CustomerSelectionButton: React.FC<CustomerSelectionButtonProps> = ({
       {/*<img src="/right.svg" className="w-6 h-6" alt="right arrow" />*/}
       <div className="text-left">
         <p className="text-xl font-medium" style={{ direction: "ltr" }}>
-          {newAppointmentCustomer.user ? newAppointmentCustomer.user?.fullName : "مراجعه‌کننده حضوری"}
+          {newAppointmentCustomer.user
+            ? newAppointmentCustomer.user?.fullName
+            : "مراجعه‌کننده حضوری"}
         </p>
       </div>
     </button>

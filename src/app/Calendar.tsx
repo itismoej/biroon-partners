@@ -41,6 +41,7 @@ import { Modal } from "./Components/Modal";
 import "./calendar.css";
 import { AddNewServiceCategoryBottomSheet } from "@/app/Components/AddNewServiceCategoryBottomSheet";
 import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
+import EditProfileModal from "@/app/Components/EditProfileModal";
 import { TeamModal } from "@/app/Components/TeamModal";
 import { goToNow } from "@/app/calendarUtils";
 import Clients from "@/components/pages/clients";
@@ -866,6 +867,7 @@ export function Calendar() {
           onClose={() => shallowRouter.push("/more")}
         />
       )}
+      <EditProfileModal />
     </div>
   );
 }
