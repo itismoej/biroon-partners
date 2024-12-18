@@ -11,7 +11,7 @@ const CustomerListItem: React.FC<CustomerListItemProps> = ({ customer, onSelect 
     <li key={customer.id}>
       <button
         type="button"
-        className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5"
+        className="flex flex-row gap-5 items-center bg-white w-full py-4 px-5 active:!transform-none"
         onClick={() => onSelect(customer)}
       >
         <div className="h-16 w-16 flex items-center justify-center bg-purple-100 font-bold text-2xl text-primary-400 rounded-full">

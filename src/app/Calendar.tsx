@@ -41,10 +41,10 @@ import { Modal } from "./Components/Modal";
 import "./calendar.css";
 import { AddNewServiceCategoryBottomSheet } from "@/app/Components/AddNewServiceCategoryBottomSheet";
 import { AddNewServiceModal } from "@/app/Components/AddNewServiceModal";
+import { CustomersListPage } from "@/app/Components/CustomersListPage";
 import EditProfileModal from "@/app/Components/EditProfileModal";
 import { TeamModal } from "@/app/Components/TeamModal";
 import { goToNow } from "@/app/calendarUtils";
-import Clients from "@/components/pages/clients";
 import Events from "@/components/pages/events";
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core";
 import type { ResourceApi } from "@fullcalendar/resource";
@@ -581,7 +581,7 @@ export function Calendar() {
       ) : page === 1 ? (
         "sales"
       ) : page === 2 ? (
-        <Clients />
+        <CustomersListPage />
       ) : page === 3 ? (
         <div className="p-5 bg-gray-100" style={{ minHeight: "calc(100dvh - 119px)" }}>
           <div className="py-5 grid grid-cols-2 gap-3">
