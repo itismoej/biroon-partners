@@ -92,7 +92,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ page, currentDat
                 height={70}
                 alt="پروفایل"
                 src={userData.user.avatar.url}
-                className="rounded-lg"
+                className="w-[70px] h-[70px] rounded-lg"
               />
             ) : userData?.user ? (
               <div className="w-[70px] h-[70px] rounded-lg flex items-center justify-center text-2xl font-bold bg-purple-200">
