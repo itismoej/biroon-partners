@@ -47,7 +47,7 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
             <form className="max-w-sm mx-auto px-5" style={{ direction: "ltr" }}>
               <div className="flex items-center text-2xl" style={{ direction: "ltr" }}>
                 <div
-                  className="flex-shrink-0 z-10 inline-flex items-center py-2.5 px-4 font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-s-lg"
+                  className="flex-shrink-0 z-10 inline-flex items-center py-2.5 h-[48px] px-4 font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-s-lg"
                   style={{ direction: "ltr" }}
                 >
                   +۹۸
@@ -62,7 +62,7 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                     style={{ direction: "ltr" }}
                     aria-describedby="شماره تلفن همراه"
                     value={phoneNumber}
-                    className="block tracking-[4px] !tabular-nums p-2.5 w-full text-white caret-black rounded-e-lg border-s-0 border border-gray-300 focus:outline-0 focus:border-gray-400"
+                    className="block tracking-[4px] !tabular-nums p-2.5 h-[48px] w-full text-white caret-black rounded-e-lg border-s-0 border border-gray-300 focus:outline-0 focus:border-gray-400"
                     placeholder=""
                     onChange={(e) => {
                       const engValue = toEnglishDigits(e.target.value.replaceAll(" ", ""));
@@ -82,7 +82,7 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                     inputMode="numeric"
                   />
                   <div
-                    className="absolute p-2.5 top-0 pointer-events-none"
+                    className="absolute flex items-center p-2.5 h-[48px] top-0 pointer-events-none"
                     style={{ direction: "ltr" }}
                   >
                     <span className="text-black tracking-[4px]">{phoneNumber}</span>
@@ -168,7 +168,7 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                     type="text"
                     aria-describedby="کد تأیید"
                     value={farsiOtpCode}
-                    className="text-left mx-auto block tracking-[4px] !tabular-nums p-2.5 w-[90px] text-white caret-black focus:!outline-0 focus:!border-none"
+                    className="text-left h-[48px] mx-auto block tracking-[4px] !tabular-nums p-2.5 w-[90px] text-white caret-black focus:!outline-0 focus:!border-none"
                     placeholder=""
                     onChange={(e) => {
                       const val = e.target.value.replaceAll(" ", "");
@@ -179,7 +179,7 @@ export function Auth({ onAuth, compact = false }: AuthProps) {
                     autoComplete="one-time-code"
                   />
                   <div
-                    className="absolute w-full text-center p-2.5 top-0 pointer-events-none"
+                    className="absolute w-full text-center p-2.5 h-[48px] top-0 pointer-events-none"
                     style={{ direction: "ltr" }}
                   >
                     <span className="text-black tracking-[4px] text-center">{farsiOtpCode}</span>
