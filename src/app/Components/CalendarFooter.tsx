@@ -25,7 +25,15 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) =
               }
             }}
           >
-            <img src="/calendar.svg" className="w-7 h-7" />
+            <img
+              src="/calendar.svg"
+              className="w-7 h-7"
+              style={{
+                filter: pathname.startsWith("/calendar")
+                  ? "invert(20%) sepia(76%) saturate(4498%) hue-rotate(267deg) brightness(97%) contrast(88%)"
+                  : "none",
+              }}
+            />
           </button>
         </Tooltip>
         <Tooltip text="فروش">
@@ -35,7 +43,15 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) =
               shallowRouter.push("/sales");
             }}
           >
-            <img src="/sales.svg" className="w-7 h-7" />
+            <img
+              src="/sales.svg"
+              className="w-7 h-7"
+              style={{
+                filter: pathname.startsWith("/sales")
+                  ? "invert(20%) sepia(76%) saturate(4498%) hue-rotate(267deg) brightness(97%) contrast(88%)"
+                  : "none",
+              }}
+            />
           </button>
         </Tooltip>
         <button
@@ -54,7 +70,15 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) =
               shallowRouter.push("/clients");
             }}
           >
-            <img src="/client.svg" className="w-7 h-7" />
+            <img
+              src="/client.svg"
+              className="w-7 h-7"
+              style={{
+                filter: pathname.startsWith("/clients")
+                  ? "invert(20%) sepia(76%) saturate(4498%) hue-rotate(267deg) brightness(97%) contrast(88%)"
+                  : "none",
+              }}
+            />
           </button>
         </Tooltip>
         <Tooltip text="دیگر امکانات" place="right">
@@ -64,7 +88,15 @@ export const CalendarFooter: React.FC<CalendarFooterProps> = ({ calendarRef }) =
               shallowRouter.push("/more");
             }}
           >
-            <img src="/more.svg" className="w-7 h-7" />
+            <img
+              src="/more.svg"
+              className="w-7 h-7"
+              style={{
+                filter: pathname.startsWith("/more")
+                  ? "invert(20%) sepia(76%) saturate(4498%) hue-rotate(267deg) brightness(97%) contrast(88%)"
+                  : "none",
+              }}
+            />
           </button>
         </Tooltip>
       </div>
